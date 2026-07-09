@@ -1,0 +1,115 @@
+@import "./tokens.css";
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+}
+
+body {
+  font-family: var(--font-sans);
+  background: var(--surface);
+  color: var(--on-surface);
+  font-size: 14px;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+  user-select: none;
+  overflow: hidden;
+}
+
+button {
+  font-family: inherit;
+  cursor: pointer;
+  border: none;
+  background: none;
+  color: inherit;
+}
+
+button:focus-visible,
+input:focus-visible {
+  outline: 2px solid var(--primary);
+  outline-offset: 2px;
+}
+
+input[type="checkbox"] {
+  accent-color: var(--primary);
+  width: 16px;
+  height: 16px;
+  cursor: pointer;
+}
+
+input[type="text"] {
+  font-family: inherit;
+  background: var(--surface-container-high);
+  border: 1px solid var(--outline-variant);
+  border-radius: var(--shape-xs);
+  color: var(--on-surface);
+  padding: 8px 12px;
+  font-size: 13px;
+}
+
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+::-webkit-scrollbar-thumb {
+  background: var(--surface-container-highest);
+  border-radius: var(--shape-full);
+  border: 2px solid var(--surface);
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--outline-variant);
+}
+
+/* 通用:MD3 填充按钮(pill) */
+.btn-filled {
+  background: var(--primary);
+  color: var(--on-primary);
+  padding: 10px 24px;
+  border-radius: var(--shape-full);
+  font-size: 14px;
+  font-weight: 500;
+  transition: transform var(--spring-fast), filter var(--ease-standard);
+}
+.btn-filled:hover:not(:disabled) {
+  filter: brightness(1.08);
+}
+.btn-filled:active:not(:disabled) {
+  transform: scale(0.97);
+}
+.btn-filled:disabled {
+  opacity: 0.38;
+  cursor: not-allowed;
+}
+
+/* 通用:MD3 文字按钮 */
+.btn-text {
+  color: var(--primary);
+  padding: 8px 12px;
+  border-radius: var(--shape-full);
+  font-size: 13px;
+  font-weight: 500;
+  transition: background var(--ease-standard);
+}
+.btn-text:hover {
+  background: var(--surface-container-high);
+}
+
+/* 通用:轮廓小按钮 */
+.btn-outline {
+  border: 1px solid var(--outline);
+  color: var(--on-surface);
+  padding: 6px 14px;
+  border-radius: var(--shape-full);
+  font-size: 12.5px;
+  transition: background var(--ease-standard);
+}
+.btn-outline:hover {
+  background: var(--surface-container-high);
+}

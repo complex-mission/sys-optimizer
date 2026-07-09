@@ -1,0 +1,527 @@
+{
+  "apps": [
+    {
+      "app": "windows",
+      "group": "system",
+      "name": "Windows",
+      "detect_installed": [],
+      "targets": [
+        { "id": "user-temp", "paths": ["%TEMP%"], "risk": "cache", "privilege": "normal", "tier": "quick" },
+        { "id": "system-temp", "paths": ["%WINDIR%/Temp"], "risk": "cache", "privilege": "admin", "tier": "quick" },
+        { "id": "wer", "paths": ["%LOCALAPPDATA%/Microsoft/Windows/WER", "%LOCALAPPDATA%/CrashDumps"], "risk": "cache", "privilege": "normal", "tier": "quick" },
+        { "id": "recycle-bin", "paths": [], "risk": "cache", "privilege": "normal", "tier": "quick", "previewable": false, "special": "recycle-bin" },
+        { "id": "thumbnails", "paths": ["%LOCALAPPDATA%/Microsoft/Windows/Explorer"], "risk": "cache", "privilege": "normal", "tier": "standard", "name_filter": "thumbcache" },
+        { "id": "update-cache", "paths": ["%WINDIR%/SoftwareDistribution/Download"], "risk": "cache", "privilege": "admin", "tier": "standard" },
+        { "id": "prefetch", "paths": ["%WINDIR%/Prefetch"], "risk": "cache", "privilege": "admin", "tier": "deep", "previewable": false },
+        { "id": "windows-logs", "paths": ["%WINDIR%/Logs"], "risk": "cache", "privilege": "admin", "tier": "deep" },
+        { "id": "memory-dumps", "paths": ["%WINDIR%/Minidump"], "risk": "cache", "privilege": "admin", "tier": "deep" }
+      ]
+    },
+    {
+      "app": "chrome",
+      "group": "browser",
+      "name": "Google Chrome",
+      "detect_installed": ["%LOCALAPPDATA%/Google/Chrome/User Data"],
+      "targets": [
+        { "id": "chrome-cache", "paths": ["%LOCALAPPDATA%/Google/Chrome/User Data"], "risk": "cache", "privilege": "normal", "tier": "quick", "detect": "chromium" }
+      ]
+    },
+    {
+      "app": "edge",
+      "group": "browser",
+      "name": "Microsoft Edge",
+      "detect_installed": ["%LOCALAPPDATA%/Microsoft/Edge/User Data"],
+      "targets": [
+        { "id": "edge-cache", "paths": ["%LOCALAPPDATA%/Microsoft/Edge/User Data"], "risk": "cache", "privilege": "normal", "tier": "quick", "detect": "chromium" }
+      ]
+    },
+    {
+      "app": "firefox",
+      "group": "browser",
+      "name": "Mozilla Firefox",
+      "detect_installed": ["%APPDATA%/Mozilla/Firefox", "%LOCALAPPDATA%/Mozilla/Firefox"],
+      "targets": [
+        { "id": "firefox-cache", "paths": [], "risk": "cache", "privilege": "normal", "tier": "quick", "detect": "firefox", "previewable": false }
+      ]
+    },
+    {
+      "app": "davinci",
+      "group": "video",
+      "name": "DaVinci Resolve",
+      "detect_installed": ["%APPDATA%/Blackmagic Design/DaVinci Resolve"],
+      "targets": [
+        {
+          "id": "davinci-cache",
+          "paths": ["%APPDATA%/Blackmagic Design/DaVinci Resolve/Support/CacheClip"],
+          "risk": "cache", "privilege": "normal", "tier": "standard",
+          "detect": "davinci", "subdir": "CacheClip", "supports_override": true
+        },
+        {
+          "id": "davinci-proxy",
+          "paths": ["%APPDATA%/Blackmagic Design/DaVinci Resolve/Support/ProxyMedia"],
+          "risk": "expensive", "privilege": "normal", "tier": "standard",
+          "detect": "davinci", "subdir": "ProxyMedia", "supports_override": true
+        }
+      ]
+    },
+    {
+      "app": "premiere",
+      "group": "video",
+      "name": "Adobe Premiere Pro",
+      "detect_installed": ["%APPDATA%/Adobe/Common"],
+      "targets": [
+        { "id": "premiere-media-cache", "paths": ["%APPDATA%/Adobe/Common/Media Cache Files", "%APPDATA%/Adobe/Common/Media Cache"], "risk": "cache", "privilege": "normal", "tier": "standard", "supports_override": true }
+      ]
+    },
+    {
+      "app": "aftereffects",
+      "group": "video",
+      "name": "Adobe After Effects",
+      "detect_installed": ["%APPDATA%/Adobe"],
+      "targets": [
+        { "id": "ae-disk-cache", "paths": ["%LOCALAPPDATA%/Adobe/After Effects/Disk Cache"], "risk": "cache", "privilege": "normal", "tier": "standard", "supports_override": true }
+      ]
+    },
+    {
+      "app": "jianying",
+      "group": "video",
+      "name": "剪映专业版",
+      "detect_installed": ["%LOCALAPPDATA%/JianyingPro"],
+      "targets": [
+        { "id": "jianying-cache", "paths": ["%LOCALAPPDATA%/JianyingPro/User Data/Cache"], "risk": "expensive", "privilege": "normal", "tier": "standard", "supports_override": true }
+      ]
+    },
+    {
+      "app": "capcut",
+      "group": "video",
+      "name": "CapCut",
+      "detect_installed": ["%LOCALAPPDATA%/CapCut"],
+      "targets": [
+        { "id": "capcut-cache", "paths": ["%LOCALAPPDATA%/CapCut/User Data/Cache"], "risk": "expensive", "privilege": "normal", "tier": "standard", "supports_override": true }
+      ]
+    },
+    {
+      "app": "blender",
+      "group": "3d",
+      "name": "Blender",
+      "detect_installed": ["%APPDATA%/Blender Foundation"],
+      "targets": [
+        { "id": "blender-cache", "paths": ["%TEMP%"], "risk": "cache", "privilege": "normal", "tier": "standard", "name_filter": "blender-temp" }
+      ]
+    },
+    {
+      "app": "unreal",
+      "group": "3d",
+      "name": "Unreal Engine",
+      "detect_installed": ["%LOCALAPPDATA%/UnrealEngine"],
+      "targets": [
+        { "id": "unreal-ddc", "paths": ["%LOCALAPPDATA%/UnrealEngine/Common/DerivedDataCache"], "risk": "expensive", "privilege": "normal", "tier": "deep", "supports_override": true }
+      ]
+    },
+    {
+      "app": "unity",
+      "group": "3d",
+      "name": "Unity",
+      "detect_installed": ["%LOCALAPPDATA%/Unity", "%APPDATA%/Unity"],
+      "targets": [
+        { "id": "unity-cache", "paths": ["%LOCALAPPDATA%/Unity/cache", "%APPDATA%/Unity/Asset Store-5.x"], "risk": "expensive", "privilege": "normal", "tier": "deep", "supports_override": true }
+      ]
+    },
+    {
+      "app": "jetbrains",
+      "group": "dev",
+      "name": "JetBrains IDEs",
+      "detect_installed": ["%LOCALAPPDATA%/JetBrains"],
+      "targets": [
+        { "id": "jetbrains-cache", "paths": [], "risk": "cache", "privilege": "normal", "tier": "standard", "detect": "jetbrains" }
+      ]
+    },
+    {
+      "app": "androidstudio",
+      "group": "dev",
+      "name": "Android Studio",
+      "detect_installed": ["%USERPROFILE%/.android"],
+      "targets": [
+        { "id": "androidstudio-cache", "paths": [], "risk": "cache", "privilege": "normal", "tier": "standard", "detect": "androidstudio" }
+      ]
+    },
+    {
+      "app": "gradle",
+      "group": "dev",
+      "name": "Gradle",
+      "detect_installed": ["%USERPROFILE%/.gradle"],
+      "targets": [
+        { "id": "gradle-cache", "paths": ["%USERPROFILE%/.gradle/caches"], "risk": "expensive", "privilege": "normal", "tier": "deep", "supports_override": true }
+      ]
+    },
+    {
+      "app": "flutter",
+      "group": "dev",
+      "name": "Flutter / Dart",
+      "detect_installed": ["%USERPROFILE%/.pub-cache"],
+      "targets": [
+        { "id": "pub-cache", "paths": ["%USERPROFILE%/.pub-cache"], "risk": "expensive", "privilege": "normal", "tier": "deep", "supports_override": true }
+      ]
+    },
+    {
+      "app": "npm",
+      "group": "dev",
+      "name": "npm",
+      "detect_installed": ["%LOCALAPPDATA%/npm-cache", "%APPDATA%/npm-cache"],
+      "targets": [
+        { "id": "npm-cache", "paths": ["%LOCALAPPDATA%/npm-cache", "%APPDATA%/npm-cache"], "risk": "cache", "privilege": "normal", "tier": "deep" }
+      ]
+    },
+    {
+      "app": "yarn",
+      "group": "dev",
+      "name": "Yarn",
+      "detect_installed": ["%LOCALAPPDATA%/Yarn"],
+      "targets": [
+        { "id": "yarn-cache", "paths": ["%LOCALAPPDATA%/Yarn/Cache", "%LOCALAPPDATA%/Yarn/Berry/cache"], "risk": "cache", "privilege": "normal", "tier": "deep" }
+      ]
+    },
+    {
+      "app": "pnpm",
+      "group": "dev",
+      "name": "pnpm",
+      "detect_installed": ["%LOCALAPPDATA%/pnpm"],
+      "targets": [
+        { "id": "pnpm-store", "paths": ["%LOCALAPPDATA%/pnpm/store"], "risk": "expensive", "privilege": "normal", "tier": "deep", "supports_override": true }
+      ]
+    },
+    {
+      "app": "electron",
+      "group": "dev",
+      "name": "Electron",
+      "detect_installed": ["%LOCALAPPDATA%/electron", "%LOCALAPPDATA%/electron-builder"],
+      "targets": [
+        { "id": "electron-cache", "paths": ["%LOCALAPPDATA%/electron/Cache", "%LOCALAPPDATA%/electron-builder/Cache"], "risk": "cache", "privilege": "normal", "tier": "deep" }
+      ]
+    },
+    {
+      "app": "node-gyp",
+      "group": "dev",
+      "name": "node-gyp",
+      "detect_installed": ["%LOCALAPPDATA%/node-gyp"],
+      "targets": [
+        { "id": "node-gyp-cache", "paths": ["%LOCALAPPDATA%/node-gyp/Cache"], "risk": "cache", "privilege": "normal", "tier": "deep" }
+      ]
+    },
+    {
+      "app": "cargo",
+      "group": "dev",
+      "name": "Rust / Cargo",
+      "detect_installed": ["%USERPROFILE%/.cargo"],
+      "targets": [
+        { "id": "cargo-registry", "paths": ["%USERPROFILE%/.cargo/registry"], "risk": "expensive", "privilege": "normal", "tier": "deep", "supports_override": true }
+      ]
+    },
+    {
+      "app": "go",
+      "group": "dev",
+      "name": "Go",
+      "detect_installed": ["%USERPROFILE%/go/pkg/mod"],
+      "targets": [
+        { "id": "go-modcache", "paths": ["%USERPROFILE%/go/pkg/mod"], "risk": "expensive", "privilege": "normal", "tier": "deep", "supports_override": true }
+      ]
+    },
+    {
+      "app": "maven",
+      "group": "dev",
+      "name": "Maven",
+      "detect_installed": ["%USERPROFILE%/.m2/repository"],
+      "targets": [
+        { "id": "maven-repo", "paths": ["%USERPROFILE%/.m2/repository"], "risk": "expensive", "privilege": "normal", "tier": "deep", "supports_override": true }
+      ]
+    },
+    {
+      "app": "nuget",
+      "group": "dev",
+      "name": "NuGet",
+      "detect_installed": ["%USERPROFILE%/.nuget/packages"],
+      "targets": [
+        { "id": "nuget-packages", "paths": ["%USERPROFILE%/.nuget/packages"], "risk": "expensive", "privilege": "normal", "tier": "deep", "supports_override": true }
+      ]
+    },
+    {
+      "app": "composer",
+      "group": "dev",
+      "name": "Composer",
+      "detect_installed": ["%LOCALAPPDATA%/Composer", "%APPDATA%/Composer"],
+      "targets": [
+        { "id": "composer-cache", "paths": ["%LOCALAPPDATA%/Composer/cache", "%APPDATA%/Composer/cache"], "risk": "cache", "privilege": "normal", "tier": "deep" }
+      ]
+    },
+    {
+      "app": "pip",
+      "group": "dev",
+      "name": "pip (Python)",
+      "detect_installed": ["%LOCALAPPDATA%/pip"],
+      "targets": [
+        { "id": "pip-cache", "paths": ["%LOCALAPPDATA%/pip/cache"], "risk": "cache", "privilege": "normal", "tier": "deep" }
+      ]
+    },
+    {
+      "app": "vscode",
+      "group": "dev",
+      "name": "Visual Studio Code",
+      "detect_installed": ["%APPDATA%/Code"],
+      "targets": [
+        { "id": "vscode-cache", "paths": ["%APPDATA%/Code/Cache", "%APPDATA%/Code/CachedData", "%APPDATA%/Code/Code Cache", "%APPDATA%/Code/GPUCache", "%APPDATA%/Code/User/workspaceStorage"], "risk": "cache", "privilege": "normal", "tier": "deep" }
+      ]
+    },
+    {
+      "app": "conda",
+      "group": "dev",
+      "name": "Conda / Miniconda",
+      "detect_installed": ["%USERPROFILE%/miniconda3", "%USERPROFILE%/anaconda3", "%USERPROFILE%/.conda"],
+      "targets": [
+        { "id": "conda-pkgs", "paths": ["%USERPROFILE%/miniconda3/pkgs", "%USERPROFILE%/anaconda3/pkgs", "%USERPROFILE%/.conda/pkgs"], "risk": "expensive", "privilege": "normal", "tier": "deep", "supports_override": true }
+      ]
+    },
+    {
+      "app": "android-emulator",
+      "group": "dev",
+      "name": "Android Emulator / SDK",
+      "detect_installed": ["%USERPROFILE%/.android"],
+      "targets": [
+        { "id": "android-emulator-cache", "paths": ["%USERPROFILE%/.android/cache"], "risk": "cache", "privilege": "normal", "tier": "deep", "supports_override": true }
+      ]
+    },
+    {
+      "app": "spotify",
+      "group": "media",
+      "name": "Spotify",
+      "detect_installed": ["%LOCALAPPDATA%/Spotify"],
+      "targets": [
+        { "id": "spotify-cache", "paths": ["%LOCALAPPDATA%/Spotify/Storage"], "risk": "expensive", "privilege": "normal", "tier": "deep", "supports_override": true }
+      ]
+    },
+    {
+      "app": "photoshop",
+      "group": "media",
+      "name": "Adobe Photoshop",
+      "detect_installed": ["%LOCALAPPDATA%/Adobe/CameraRaw", "%APPDATA%/Adobe/Adobe Photoshop"],
+      "targets": [
+        { "id": "camera-raw-cache", "paths": ["%LOCALAPPDATA%/Adobe/CameraRaw/Cache"], "risk": "cache", "privilege": "normal", "tier": "standard", "supports_override": true }
+      ]
+    },
+    {
+      "app": "figma",
+      "group": "media",
+      "name": "Figma",
+      "detect_installed": ["%APPDATA%/Figma"],
+      "targets": [
+        { "id": "figma-cache", "paths": ["%APPDATA%/Figma/Cache", "%APPDATA%/Figma/GPUCache", "%APPDATA%/Figma/Code Cache"], "risk": "cache", "privilege": "normal", "tier": "deep" }
+      ]
+    },
+    {
+      "app": "douyin",
+      "group": "media",
+      "name": "抖音",
+      "detect_installed": ["%LOCALAPPDATA%/Douyin", "%APPDATA%/Douyin", "%LOCALAPPDATA%/Aweme"],
+      "targets": [
+        { "id": "douyin-files", "paths": ["%LOCALAPPDATA%/Douyin", "%APPDATA%/Douyin", "%LOCALAPPDATA%/Aweme"], "risk": "report", "privilege": "normal", "tier": "deep", "previewable": false, "supports_override": true }
+      ]
+    },
+    {
+      "app": "potplayer",
+      "group": "media",
+      "name": "PotPlayer",
+      "detect_installed": ["%APPDATA%/PotPlayerMini64", "%APPDATA%/PotPlayer64", "%APPDATA%/PotPlayerMini"],
+      "targets": [
+        { "id": "potplayer-cache", "paths": ["%APPDATA%/PotPlayerMini64", "%APPDATA%/PotPlayer64", "%APPDATA%/PotPlayerMini"], "risk": "report", "privilege": "normal", "tier": "deep", "previewable": false, "supports_override": true }
+      ]
+    },
+    {
+      "app": "vlc",
+      "group": "media",
+      "name": "VLC",
+      "detect_installed": ["%APPDATA%/vlc"],
+      "targets": [
+        { "id": "vlc-cache", "paths": ["%APPDATA%/vlc"], "risk": "report", "privilege": "normal", "tier": "deep", "previewable": false, "supports_override": true }
+      ]
+    },
+    {
+      "app": "qqmusic",
+      "group": "media",
+      "name": "QQ 音乐",
+      "detect_installed": ["%APPDATA%/Tencent/QQMusic", "%LOCALAPPDATA%/Tencent/QQMusic"],
+      "targets": [
+        { "id": "qqmusic-cache", "paths": ["%APPDATA%/Tencent/QQMusic", "%LOCALAPPDATA%/Tencent/QQMusic"], "risk": "report", "privilege": "normal", "tier": "deep", "previewable": false, "supports_override": true }
+      ]
+    },
+    {
+      "app": "netease-music",
+      "group": "media",
+      "name": "网易云音乐",
+      "detect_installed": ["%LOCALAPPDATA%/Netease/CloudMusic", "%APPDATA%/Netease/CloudMusic"],
+      "targets": [
+        { "id": "netease-music-cache", "paths": ["%LOCALAPPDATA%/Netease/CloudMusic", "%APPDATA%/Netease/CloudMusic"], "risk": "report", "privilege": "normal", "tier": "deep", "previewable": false, "supports_override": true }
+      ]
+    },
+    {
+      "app": "docker",
+      "group": "dev",
+      "name": "Docker Desktop",
+      "detect_installed": ["%LOCALAPPDATA%/Docker", "%APPDATA%/Docker"],
+      "targets": [
+        { "id": "docker-data", "paths": ["%LOCALAPPDATA%/Docker/wsl"], "risk": "report", "privilege": "normal", "tier": "deep", "previewable": false }
+      ]
+    },
+    {
+      "app": "zoom",
+      "group": "comm",
+      "name": "Zoom",
+      "detect_installed": ["%APPDATA%/Zoom"],
+      "targets": [
+        { "id": "zoom-recordings", "paths": ["%USERPROFILE%/Documents/Zoom"], "risk": "report", "privilege": "normal", "tier": "deep", "previewable": false }
+      ]
+    },
+    {
+      "app": "teams",
+      "group": "comm",
+      "name": "Microsoft Teams",
+      "detect_installed": ["%APPDATA%/Microsoft/Teams"],
+      "targets": [
+        { "id": "teams-cache", "paths": ["%APPDATA%/Microsoft/Teams/Cache", "%APPDATA%/Microsoft/Teams/Code Cache", "%APPDATA%/Microsoft/Teams/GPUCache", "%APPDATA%/Microsoft/Teams/blob_storage"], "risk": "cache", "privilege": "normal", "tier": "deep" }
+      ]
+    },
+    {
+      "app": "slack",
+      "group": "comm",
+      "name": "Slack",
+      "detect_installed": ["%APPDATA%/Slack"],
+      "targets": [
+        { "id": "slack-cache", "paths": ["%APPDATA%/Slack/Cache", "%APPDATA%/Slack/Code Cache", "%APPDATA%/Slack/GPUCache", "%APPDATA%/Slack/Service Worker/CacheStorage"], "risk": "cache", "privilege": "normal", "tier": "deep" }
+      ]
+    },
+    {
+      "app": "discord",
+      "group": "comm",
+      "name": "Discord",
+      "detect_installed": ["%APPDATA%/discord"],
+      "targets": [
+        { "id": "discord-cache", "paths": ["%APPDATA%/discord/Cache", "%APPDATA%/discord/Code Cache", "%APPDATA%/discord/GPUCache"], "risk": "cache", "privilege": "normal", "tier": "deep" }
+      ]
+    },
+    {
+      "app": "wechat",
+      "group": "comm",
+      "name": "WeChat 微信",
+      "detect_installed": ["%USERPROFILE%/Documents/WeChat Files", "%APPDATA%/Tencent/WeChat"],
+      "targets": [
+        { "id": "wechat-files", "paths": ["%USERPROFILE%/Documents/WeChat Files"], "risk": "report", "privilege": "normal", "tier": "deep", "previewable": false }
+      ]
+    },
+    {
+      "app": "qq",
+      "group": "comm",
+      "name": "QQ / Tencent",
+      "detect_installed": ["%USERPROFILE%/Documents/Tencent Files"],
+      "targets": [
+        { "id": "qq-files", "paths": ["%USERPROFILE%/Documents/Tencent Files"], "risk": "report", "privilege": "normal", "tier": "deep", "previewable": false }
+      ]
+    },
+    {
+      "app": "epic",
+      "group": "game",
+      "name": "Epic Games Launcher",
+      "detect_installed": ["%LOCALAPPDATA%/EpicGamesLauncher"],
+      "targets": [
+        { "id": "epic-webcache", "paths": ["%LOCALAPPDATA%/EpicGamesLauncher/Saved/webcache", "%LOCALAPPDATA%/EpicGamesLauncher/Saved/webcache_4147", "%LOCALAPPDATA%/EpicGamesLauncher/Saved/webcache_4430"], "risk": "cache", "privilege": "normal", "tier": "deep" }
+      ]
+    },
+    {
+      "app": "battlenet",
+      "group": "game",
+      "name": "Battle.net",
+      "detect_installed": ["%LOCALAPPDATA%/Battle.net"],
+      "targets": [
+        { "id": "battlenet-cache", "paths": ["%LOCALAPPDATA%/Battle.net/Cache"], "risk": "cache", "privilege": "normal", "tier": "deep" }
+      ]
+    },
+    {
+      "app": "steam",
+      "group": "game",
+      "name": "Steam",
+      "detect_installed": ["%PROGRAMFILES(X86)%/Steam", "%LOCALAPPDATA%/Steam"],
+      "targets": [
+        { "id": "steam-download-cache", "paths": [], "risk": "cache", "privilege": "normal", "tier": "deep", "detect": "steam", "previewable": false, "supports_override": true }
+      ]
+    },
+    {
+      "app": "ubisoft",
+      "group": "game",
+      "name": "Ubisoft Connect",
+      "detect_installed": ["%LOCALAPPDATA%/Ubisoft Game Launcher"],
+      "targets": [
+        { "id": "ubisoft-cache", "paths": ["%LOCALAPPDATA%/Ubisoft Game Launcher/cache", "%LOCALAPPDATA%/Ubisoft Game Launcher/spool"], "risk": "cache", "privilege": "normal", "tier": "deep" }
+      ]
+    },
+    {
+      "app": "wps",
+      "group": "office",
+      "name": "WPS Office",
+      "detect_installed": ["%APPDATA%/kingsoft", "%LOCALAPPDATA%/Kingsoft"],
+      "targets": [
+        { "id": "wps-cache", "paths": ["%APPDATA%/kingsoft/office6/cache", "%LOCALAPPDATA%/Kingsoft/office6/cache"], "risk": "cache", "privilege": "normal", "tier": "deep", "supports_override": true }
+      ]
+    },
+    {
+      "app": "notion",
+      "group": "office",
+      "name": "Notion",
+      "detect_installed": ["%APPDATA%/Notion"],
+      "targets": [
+        { "id": "notion-cache", "paths": ["%APPDATA%/Notion/Cache", "%APPDATA%/Notion/GPUCache", "%APPDATA%/Notion/Code Cache"], "risk": "cache", "privilege": "normal", "tier": "deep" }
+      ]
+    },
+    {
+      "app": "obsidian",
+      "group": "office",
+      "name": "Obsidian",
+      "detect_installed": ["%APPDATA%/obsidian"],
+      "targets": [
+        { "id": "obsidian-cache", "paths": ["%APPDATA%/obsidian/Cache", "%APPDATA%/obsidian/GPUCache", "%APPDATA%/obsidian/Code Cache"], "risk": "cache", "privilege": "normal", "tier": "deep" }
+      ]
+    },
+    {
+      "app": "sogou",
+      "group": "tools",
+      "name": "搜狗输入法",
+      "detect_installed": ["%APPDATA%/SogouInput", "%APPDATA%/SogouPY", "%LOCALAPPDATA%/Sogou"],
+      "targets": [
+        { "id": "sogou-input-cache", "paths": ["%APPDATA%/SogouInput", "%APPDATA%/SogouPY", "%LOCALAPPDATA%/Sogou"], "risk": "report", "privilege": "normal", "tier": "deep", "previewable": false, "supports_override": true }
+      ]
+    },
+    {
+      "app": "baidudisk",
+      "group": "tools",
+      "name": "百度网盘",
+      "detect_installed": ["%APPDATA%/baidu/BaiduNetdisk", "%LOCALAPPDATA%/baidu"],
+      "targets": [
+        { "id": "baidu-disk-cache", "paths": ["%APPDATA%/baidu/BaiduNetdisk", "%LOCALAPPDATA%/baidu"], "risk": "report", "privilege": "normal", "tier": "deep", "previewable": false, "supports_override": true }
+      ]
+    },
+    {
+      "app": "xunlei",
+      "group": "tools",
+      "name": "迅雷",
+      "detect_installed": ["%APPDATA%/Thunder Network", "%LOCALAPPDATA%/Thunder Network"],
+      "targets": [
+        { "id": "xunlei-cache", "paths": ["%APPDATA%/Thunder Network", "%LOCALAPPDATA%/Thunder Network"], "risk": "report", "privilege": "normal", "tier": "deep", "previewable": false, "supports_override": true }
+      ]
+    },
+    {
+      "app": "idm",
+      "group": "tools",
+      "name": "IDM 下载器",
+      "detect_installed": ["%APPDATA%/IDM"],
+      "targets": [
+        { "id": "idm-cache", "paths": ["%APPDATA%/IDM"], "risk": "report", "privilege": "normal", "tier": "deep", "previewable": false, "supports_override": true }
+      ]
+    }
+  ]
+}

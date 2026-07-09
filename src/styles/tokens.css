@@ -1,0 +1,123 @@
+/* Cache Insight — Material Design 3 Expressive 令牌系统
+   种子色 #378ADD;深色主题为主,亦支持浅色(跟随 data-theme)。
+   MD3 色彩角色:primary / secondary / tertiary + container 系列。
+   注:此处为手工调制的色调阶(非算法生成),覆盖应用所需角色。 */
+
+:root {
+  /* ---------- 弹簧动效(Expressive 招牌) ---------- */
+  --spring-fast: 260ms cubic-bezier(0.34, 1.56, 0.64, 1);
+  --spring: 380ms cubic-bezier(0.34, 1.4, 0.5, 1);
+  --ease-standard: 220ms cubic-bezier(0.2, 0, 0, 1);
+
+  /* ---------- 形状(大圆角) ---------- */
+  --shape-xs: 8px;
+  --shape-sm: 12px;
+  --shape-md: 16px;
+  --shape-lg: 24px;
+  --shape-xl: 32px;
+  --shape-full: 999px;
+
+  /* ---------- 字体 ---------- */
+  --font-sans: "Roboto Flex", "Noto Sans SC", system-ui, "Microsoft YaHei", sans-serif;
+
+  /* ---------- 间距 ---------- */
+  --gap-xs: 4px;
+  --gap-sm: 8px;
+  --gap-md: 12px;
+  --gap-lg: 16px;
+  --gap-xl: 24px;
+}
+
+/* 深色主题(默认) */
+:root,
+[data-theme="dark"] {
+  --primary: #9fcaff;
+  --on-primary: #003259;
+  --primary-container: #1c4b7d;
+  --on-primary-container: #d3e4ff;
+
+  --secondary: #b9c8da;
+  --on-secondary: #243240;
+  --secondary-container: #3a4857;
+  --on-secondary-container: #d5e4f7;
+
+  --tertiary: #f0b6c8; /* 用于 expensive 警示的柔性强调 */
+  --on-tertiary: #481d2d;
+
+  --surface: #101418;
+  --surface-dim: #101418;
+  --surface-bright: #363a3e;
+  --surface-container-lowest: #0b0f12;
+  --surface-container-low: #181c20;
+  --surface-container: #1c2024;
+  --surface-container-high: #262a2e;
+  --surface-container-highest: #313539;
+
+  --on-surface: #e2e2e6;
+  --on-surface-variant: #c2c7ce;
+  --outline: #8c9199;
+  --outline-variant: #42474e;
+
+  /* 语义(风险标识) */
+  --risk-cache: #9fcaff;         /* 蓝:无风险 */
+  --risk-cache-container: #16324f;
+  --risk-expensive: #ffb951;     /* 琥珀:重建耗时 */
+  --risk-expensive-container: #40300f;
+  --risk-report: #c2c7ce;        /* 中性:仅报告 */
+  --risk-report-container: #24282c;
+
+  --success: #7fd88f;
+  --error: #ffb4ab;
+
+  --scrim: rgba(0, 0, 0, 0.55);
+}
+
+/* 浅色主题 */
+[data-theme="light"] {
+  --primary: #378add;
+  --on-primary: #ffffff;
+  --primary-container: #d3e4ff;
+  --on-primary-container: #001d36;
+
+  --secondary: #535f70;
+  --on-secondary: #ffffff;
+  --secondary-container: #d7e3f7;
+  --on-secondary-container: #101c2b;
+
+  --tertiary: #8b4a5f;
+  --on-tertiary: #ffffff;
+
+  --surface: #f8f9fc;
+  --surface-dim: #d8dae0;
+  --surface-bright: #f8f9fc;
+  --surface-container-lowest: #ffffff;
+  --surface-container-low: #f2f3f7;
+  --surface-container: #eceef2;
+  --surface-container-high: #e6e8ec;
+  --surface-container-highest: #e1e3e7;
+
+  --on-surface: #191c20;
+  --on-surface-variant: #42474e;
+  --outline: #72777f;
+  --outline-variant: #c2c7ce;
+
+  --risk-cache: #185fa5;
+  --risk-cache-container: #d3e4ff;
+  --risk-expensive: #855300;
+  --risk-expensive-container: #ffddb3;
+  --risk-report: #42474e;
+  --risk-report-container: #e1e3e7;
+
+  --success: #2e6b3a;
+  --error: #ba1a1a;
+
+  --scrim: rgba(0, 0, 0, 0.32);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --spring-fast: 1ms linear;
+    --spring: 1ms linear;
+    --ease-standard: 1ms linear;
+  }
+}

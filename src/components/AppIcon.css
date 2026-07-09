@@ -1,0 +1,24 @@
+.app-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  overflow: hidden;
+  line-height: 1;
+}
+
+.app-icon-glyph {
+  display: block;
+  -webkit-mask-repeat: no-repeat;
+  mask-repeat: no-repeat;
+  -webkit-mask-position: center;
+  mask-position: center;
+  -webkit-mask-size: contain;
+  mask-size: contain;
+}
+
+.app-icon-letter {
+  font-weight: 600;
+  line-height: 1;
+  user-select: none;
+}

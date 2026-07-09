@@ -1,0 +1,142 @@
+.apps-page {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  max-width: 860px;
+}
+
+.apps-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+}
+.apps-head h1 {
+  font-size: 22px;
+  font-weight: 500;
+}
+.apps-sub {
+  font-size: 12.5px;
+  color: var(--on-surface-variant);
+  margin-top: 4px;
+  line-height: 1.5;
+  max-width: 520px;
+}
+.apps-toggle {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12.5px;
+  color: var(--on-surface-variant);
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.apps-empty {
+  color: var(--on-surface-variant);
+  font-size: 13px;
+  padding: 40px 0;
+  text-align: center;
+}
+
+.apps-group {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.apps-group-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--on-surface-variant);
+}
+
+.apps-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(380px, 1fr));
+  gap: 12px;
+}
+
+.app-card {
+  background: var(--surface-container);
+  border: 1px solid var(--outline-variant);
+  border-radius: var(--shape-md);
+  padding: 14px 16px;
+  transition: border-color var(--ease-standard);
+}
+.app-card:hover {
+  border-color: var(--outline);
+}
+.app-card.not-installed {
+  opacity: 0.55;
+}
+
+.app-card-head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+.app-name {
+  font-size: 14.5px;
+  font-weight: 500;
+}
+.app-badge {
+  font-size: 10.5px;
+  color: var(--on-surface-variant);
+  background: var(--surface-container-highest);
+  padding: 1.5px 8px;
+  border-radius: var(--shape-full);
+  margin-left: auto;
+}
+
+.app-targets {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.app-target {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.target-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: var(--shape-full);
+  flex-shrink: 0;
+}
+.target-info {
+  flex: 1;
+  min-width: 0;
+}
+.target-name {
+  font-size: 13px;
+  font-weight: 500;
+}
+.target-path {
+  font-size: 11px;
+  color: var(--on-surface-variant);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  margin-top: 1px;
+  font-variant-numeric: tabular-nums;
+}
+.target-ov {
+  color: var(--primary);
+  margin-left: 6px;
+}
+
+.target-actions {
+  display: flex;
+  gap: 2px;
+  flex-shrink: 0;
+}
+.target-btn {
+  padding: 6px !important;
+  display: flex;
+}

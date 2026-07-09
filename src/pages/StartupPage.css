@@ -1,0 +1,138 @@
+.startup-page {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  max-width: 860px;
+}
+
+.startup-head h1 {
+  font-size: 22px;
+  font-weight: 500;
+}
+.startup-sub {
+  font-size: 12.5px;
+  color: var(--on-surface-variant);
+  margin-top: 4px;
+  line-height: 1.5;
+}
+
+.startup-error {
+  font-size: 12.5px;
+  color: var(--risk-expensive);
+  background: var(--risk-expensive-container);
+  padding: 10px 14px;
+  border-radius: var(--shape-sm);
+  line-height: 1.5;
+}
+
+.startup-summary {
+  font-size: 13px;
+  color: var(--on-surface-variant);
+}
+.startup-empty {
+  color: var(--on-surface-variant);
+  font-size: 13px;
+  text-align: center;
+  padding: 40px 0;
+}
+
+.startup-list {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.startup-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 14px;
+  border-radius: var(--shape-sm);
+  transition: background var(--ease-standard), opacity var(--ease-standard);
+}
+.startup-row:hover {
+  background: var(--surface-container);
+}
+.startup-row.disabled {
+  opacity: 0.5;
+}
+
+.startup-icon {
+  color: var(--on-surface-variant);
+  display: flex;
+  flex-shrink: 0;
+}
+.startup-info {
+  flex: 1;
+  min-width: 0;
+}
+.startup-name {
+  font-size: 13.5px;
+  font-weight: 500;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.startup-cmd {
+  font-size: 11px;
+  color: var(--on-surface-variant);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  margin-top: 1px;
+}
+.startup-meta {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 2px;
+  flex-shrink: 0;
+}
+.startup-source {
+  font-size: 11px;
+  color: var(--on-surface-variant);
+}
+.startup-scope {
+  font-size: 10px;
+  color: var(--risk-expensive);
+  background: var(--risk-expensive-container);
+  padding: 1px 6px;
+  border-radius: var(--shape-full);
+}
+
+/* MD3 风格开关 */
+.toggle {
+  width: 44px;
+  height: 24px;
+  border-radius: var(--shape-full);
+  background: var(--surface-container-highest);
+  border: 2px solid var(--outline);
+  position: relative;
+  flex-shrink: 0;
+  transition: background var(--spring-fast), border-color var(--spring-fast);
+}
+.toggle.on {
+  background: var(--primary);
+  border-color: var(--primary);
+}
+.toggle:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+.toggle-knob {
+  position: absolute;
+  top: 50%;
+  left: 3px;
+  width: 14px;
+  height: 14px;
+  border-radius: var(--shape-full);
+  background: var(--outline);
+  transform: translateY(-50%);
+  transition: transform var(--spring-fast), background var(--spring-fast), width var(--spring-fast), height var(--spring-fast);
+}
+.toggle.on .toggle-knob {
+  transform: translate(20px, -50%);
+  width: 18px;
+  height: 18px;
+  left: 1px;
+  background: var(--on-primary);
+}
