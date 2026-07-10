@@ -1,10 +1,8 @@
 .cat-row {
   background: var(--surface-container);
-  border: 1px solid var(--outline-variant);
   border-radius: var(--shape-md);
   overflow: hidden;
-  transition: border-color var(--ease-standard), box-shadow var(--ease-standard),
-    transform var(--spring-fast);
+  transition: background var(--ease-standard);
   /* 左侧风险色条,便于一眼区分类型 */
   border-left: 3px solid var(--risk-cache);
 }
@@ -14,9 +12,8 @@
 .cat-row.row-report {
   border-left-color: var(--risk-report);
 }
-/* hover 不做位移(父级 overflow 会切边),只做边框/底色的轻变化 */
+/* hover 不做位移(父级 overflow 会切边),只做底色的轻变化 */
 .cat-row:hover {
-  border-color: var(--outline);
   background: var(--surface-container-high);
 }
 .cat-row.open {

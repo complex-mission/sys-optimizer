@@ -23,7 +23,6 @@
 }
 .drive-card {
   background: var(--surface-container);
-  border: 1px solid var(--outline-variant);
   border-radius: var(--shape-lg);
   padding: 20px;
   display: flex;
@@ -34,7 +33,6 @@
 }
 .drive-card:hover {
   background: var(--surface-container-high);
-  border-color: var(--primary);
 }
 .drive-name {
   font-size: 15px;
@@ -267,7 +265,6 @@
   gap: 12px;
   padding: 10px 12px;
   background: var(--surface-container);
-  border: 1px solid var(--outline-variant);
   border-radius: var(--shape-sm);
 }
 .notable-info {

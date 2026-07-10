@@ -83,7 +83,6 @@
 
 .system-card {
   background: var(--surface-container);
-  border: 1px solid var(--outline-variant);
   border-radius: var(--shape-md);
   padding: 16px;
   display: flex;

@@ -103,7 +103,6 @@
 
 .app-card {
   background: var(--surface-container);
-  border: 1px solid var(--outline-variant);
   border-radius: var(--shape-md);
   padding: 14px 16px;
   transition: border-color var(--ease-standard);

@@ -32,7 +32,6 @@
 }
 .tier-card:hover:not(:disabled) {
   background: var(--surface-container-high);
-  border-color: var(--outline);
 }
 .tier-card.selected {
   border-color: var(--primary);
@@ -69,7 +68,6 @@
 /* 自定义扫描范围面板 */
 .custom-panel {
   background: var(--surface-container);
-  border: 1px solid var(--outline-variant);
   border-radius: var(--shape-md);
   padding: 14px 16px;
   display: flex;
@@ -105,17 +103,16 @@
   gap: 8px;
   padding: 7px 10px;
   border-radius: var(--shape-sm);
-  border: 1px solid var(--outline-variant);
+  background: var(--surface-container-high);
   font-size: 12.5px;
   cursor: pointer;
-  transition: background var(--ease-standard), border-color var(--ease-standard);
+  transition: background var(--ease-standard);
 }
 .custom-item:hover {
-  background: var(--surface-container-high);
+  background: var(--surface-container-highest);
 }
 .custom-item.on {
   background: var(--primary-container);
-  border-color: transparent;
   color: var(--on-primary-container);
 }
 .custom-item input {
