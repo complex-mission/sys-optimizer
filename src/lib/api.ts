@@ -87,6 +87,7 @@ export interface TargetView {
   supports_override: boolean;
   resolved: string[];
   has_override: boolean;
+  exists: boolean;
 }
 
 export interface AppView {

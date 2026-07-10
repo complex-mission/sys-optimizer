@@ -172,6 +172,10 @@
   color: var(--primary);
   margin-left: 6px;
 }
+.target-missing {
+  color: var(--risk-expensive);
+  margin-left: 6px;
+}
 
 .target-actions {
   display: flex;

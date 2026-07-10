@@ -164,10 +164,15 @@ export function AppsPage() {
                                   {zh ? "已手动指定" : "custom"}
                                 </span>
                               )}
+                              {path && !tg.exists && (
+                                <span className="target-missing">
+                                  {zh ? "目录不存在" : "missing"}
+                                </span>
+                              )}
                             </div>
                           </div>
                           <div className="target-actions">
-                            {path && (
+                            {path && tg.exists && (
                               <button
                                 className="btn-text target-btn"
                                 onClick={() => openInExplorer(path)}

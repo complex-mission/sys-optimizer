@@ -142,6 +142,9 @@ pub struct TargetView {
     pub resolved: Vec<String>,
     /// 是否存在手动覆盖
     pub has_override: bool,
+    /// 首个解析路径在磁盘上是否真实存在(默认路径可能只是猜测,
+    /// 软件没装到默认位置或从未产生缓存时目录不存在)
+    pub exists: bool,
 }
 
 /// 构建专项页视图。overrides 来自配置。
@@ -171,12 +174,17 @@ pub fn app_views(overrides: &std::collections::HashMap<String, Vec<String>>) -> 
                         .collect::<Vec<_>>()
                 })
                 .unwrap_or_default();
+            let exists = resolved
+                .first()
+                .map(|p| std::path::Path::new(p).exists())
+                .unwrap_or(false);
             targets.push(TargetView {
                 id: t.id.clone(),
                 risk: t.risk,
                 supports_override: t.supports_override,
                 resolved,
                 has_override: overrides.contains_key(&t.id),
+                exists,
             });
         }
 
