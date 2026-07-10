@@ -20,13 +20,21 @@ interface Props {
   onToggleKeep: (path: string, keep: boolean) => void;
   onOpen: (path: string) => void;
   onSpecifyPath?: () => void;
+  /// 体积占本次结果最大项的比例(0~1),用于行内占比条
+  share?: number;
 }
 
 const PAGE = 100;
 
 function iconFor(id: string): IconName {
-  if (id.startsWith("davinci")) return "movie";
-  if (id.includes("recycle")) return "package";
+  if (/davinci|premiere|ae-disk|capcut|jianying|blender|camera-raw/.test(id)) return "movie";
+  if (/chrome|edge|firefox|figma|notion|obsidian|discord/.test(id)) return "apps";
+  if (/npm|pip|cargo|gradle|maven|nuget|go-mod|node-gyp|pnpm|composer|conda|docker|electron|jetbrains|androidstudio|android-emulator/.test(id)) return "package";
+  if (/music|potplayer|douyin|media|video/.test(id)) return "video";
+  if (/battlenet|epic|steam|game/.test(id)) return "play";
+  if (/temp|prefetch|memory|dump|thumb|font|log|update|installer|delivery/.test(id)) return "settings";
+  if (/disk|idm/.test(id)) return "drive";
+  if (/recycle/.test(id)) return "package";
   return "file-zip";
 }
 
@@ -40,6 +48,7 @@ export function CategoryRow({
   onToggleKeep,
   onOpen,
   onSpecifyPath,
+  share = 0,
 }: Props) {
   const { t } = useI18n();
   const [expanded, setExpanded] = useState(false);
@@ -134,6 +143,14 @@ export function CategoryRow({
               ? t("result.report.note")
               : `${t(meta.desc_key)}`}
           </div>
+          {bytes > 0 && (
+            <div className="cat-share">
+              <div
+                className="cat-share-fill"
+                style={{ width: `${Math.max(2, Math.round(share * 100))}%` }}
+              />
+            </div>
+          )}
         </div>
 
         <div className="cat-metrics">

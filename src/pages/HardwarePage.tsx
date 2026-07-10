@@ -228,7 +228,7 @@ export function HardwarePage() {
         <section className="hw-section">
           <div className="hw-section-title">
             <Icon name="apps" size={16} />
-            <span>{zh ? "显示" : "Display"}</span>
+            <span>{zh ? "显示设备" : "Displays"}</span>
           </div>
           <div className="hw-rows">
             {hw.displays.map((d, i) => (

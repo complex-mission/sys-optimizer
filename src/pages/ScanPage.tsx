@@ -27,6 +27,9 @@ export function ScanPage() {
   const [cats, setCats] = useState<CategoryMeta[]>([]);
   const [tier, setTier] = useState<Tier>("standard");
   const [phase, setPhase] = useState<Phase>("idle");
+  // 自定义扫描范围:null = 跟随挡位;非 null = 用户自选的类别集合
+  const [customOpen, setCustomOpen] = useState(false);
+  const [customIds, setCustomIds] = useState<Set<string> | null>(null);
 
   // 扫描结果:id -> {bytes, files}
   const [sizes, setSizes] = useState<Record<string, CategoryScanResult>>({});
@@ -65,8 +68,41 @@ export function ScanPage() {
     [cats]
   );
 
+  // 展开自定义面板时,以当前挡位的类别作为初始勾选
+  const toggleCustom = async () => {
+    if (!customOpen && customIds === null) {
+      const ids = await api.idsForTier(tier).catch(() => [] as string[]);
+      setCustomIds(new Set(ids));
+    }
+    setCustomOpen((v) => !v);
+  };
+
+  // 切挡位:若已进入自定义模式,重置勾选为新挡位默认
+  const pickTier = async (id: Tier) => {
+    setTier(id);
+    if (customIds !== null) {
+      const ids = await api.idsForTier(id).catch(() => [] as string[]);
+      setCustomIds(new Set(ids));
+    }
+  };
+
+  const resetCustom = async () => {
+    const ids = await api.idsForTier(tier).catch(() => [] as string[]);
+    setCustomIds(new Set(ids));
+  };
+
+  const toggleCustomId = (id: string, on: boolean) => {
+    setCustomIds((prev) => {
+      const next = new Set(prev ?? []);
+      on ? next.add(id) : next.delete(id);
+      return next;
+    });
+  };
+
   const startScan = async () => {
-    const ids = await api.idsForTier(tier);
+    const ids =
+      customIds !== null ? [...customIds] : await api.idsForTier(tier);
+    if (ids.length === 0) return;
     setSizes({});
     setKept({});
     setChecked(defaultChecked(ids));
@@ -119,6 +155,12 @@ export function ScanPage() {
 
   const totalFound = useMemo(
     () => Object.values(sizes).reduce((s, r) => s + r.bytes, 0),
+    [sizes]
+  );
+
+  // 结果中最大项体积,作为各行占比条的分母
+  const maxBytes = useMemo(
+    () => Math.max(1, ...Object.values(sizes).map((r) => r.bytes)),
     [sizes]
   );
 
@@ -238,7 +280,7 @@ export function ScanPage() {
             <button
               key={tr.id}
               className={`tier-card ${tier === tr.id ? "selected" : ""}`}
-              onClick={() => setTier(tr.id)}
+              onClick={() => pickTier(tr.id)}
             >
               {tr.recommended && (
                 <span className="tier-badge">{t("scan.recommended")}</span>
@@ -250,13 +292,69 @@ export function ScanPage() {
           ))}
         </div>
 
+        {customOpen && customIds && (
+          <div className="custom-panel">
+            <div className="custom-head">
+              <span className="custom-hint">{t("scan.custom.hint")}</span>
+              <span className="custom-count">
+                {customIds.size} {t("scan.custom.selected")}
+              </span>
+              <button className="btn-text custom-reset" onClick={resetCustom}>
+                {t("scan.custom.reset")}
+              </button>
+            </div>
+            <div className="custom-grid">
+              {cats.map((c) => (
+                <label
+                  key={c.id}
+                  className={`custom-item ${customIds.has(c.id) ? "on" : ""}`}
+                >
+                  <input
+                    type="checkbox"
+                    checked={customIds.has(c.id)}
+                    onChange={(e) => toggleCustomId(c.id, e.target.checked)}
+                  />
+                  <span
+                    className="custom-dot"
+                    style={{
+                      background:
+                        c.risk === "expensive"
+                          ? "var(--risk-expensive)"
+                          : c.risk === "report"
+                          ? "var(--risk-report)"
+                          : "var(--risk-cache)",
+                    }}
+                  />
+                  <span className="custom-name">{t(c.name_key)}</span>
+                </label>
+              ))}
+            </div>
+          </div>
+        )}
+
         <div className="scan-actions">
-          <button className="btn-text">
+          <button
+            className={`btn-text custom-toggle ${customOpen ? "open" : ""}`}
+            onClick={toggleCustom}
+          >
             {t("scan.custom")}
-            <Icon name="chevron-down" size={14} style={{ marginLeft: 2 }} />
+            <Icon
+              name="chevron-down"
+              size={14}
+              style={{
+                marginLeft: 2,
+                transform: customOpen ? "rotate(180deg)" : undefined,
+                transition: "transform 0.2s",
+              }}
+            />
           </button>
-          <button className="btn-filled" onClick={startScan}>
+          <button
+            className="btn-filled"
+            onClick={startScan}
+            disabled={customIds !== null && customIds.size === 0}
+          >
             {t("scan.start")}
+            {customIds !== null ? ` (${customIds.size})` : ""}
           </button>
         </div>
       </div>
@@ -311,6 +409,7 @@ export function ScanPage() {
             onToggleKeep={(path, keep) => toggleKeep(c.id, path, keep)}
             onOpen={(path) => api.openPath(path).catch(() => {})}
             onSpecifyPath={() => rescanOne(c.id)}
+            share={(sizes[c.id]?.bytes ?? 0) / maxBytes}
           />
         ))}
       </div>

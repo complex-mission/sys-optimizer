@@ -37,6 +37,9 @@ winreg = "0.56"
 #   cargo update -p windows-core --precise 0.61.2
 # (待 tauri 升级到 windows-core 0.62 后可移除该约束)
 wmi = "0.18"
+# 显示器枚举(EnumDisplayDevices/EnumDisplaySettings:各屏分辨率与刷新率)
+# 版本须与 tauri 所用 windows-core 0.61 对齐
+windows = { version = "0.61", features = ["Win32_Graphics_Gdi", "Win32_Foundation"] }
 
 [profile.release]
 panic = "abort"     # 更小的体积;崩溃由 panic hook 先落日志

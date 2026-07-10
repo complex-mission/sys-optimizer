@@ -40,6 +40,9 @@ const dict: Record<Lang, Record<string, string>> = {
     "scan.stop": "停止扫描",
     "scan.rescan": "重新扫描",
     "scan.custom": "自定义扫描范围",
+    "scan.custom.hint": "勾选本次要扫描的类别(已按当前挡位预选)",
+    "scan.custom.selected": "已选",
+    "scan.custom.reset": "恢复挡位默认",
 
     "result.done": "扫描完成",
     "result.found": "发现",
@@ -262,6 +265,9 @@ const dict: Record<Lang, Record<string, string>> = {
     "scan.stop": "Stop scan",
     "scan.rescan": "Rescan",
     "scan.custom": "Customize scan scope",
+    "scan.custom.hint": "Pick the categories to scan (preselected by the current tier)",
+    "scan.custom.selected": "selected",
+    "scan.custom.reset": "Reset to tier default",
 
     "result.done": "Scan complete",
     "result.found": "Found",

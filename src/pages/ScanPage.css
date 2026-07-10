@@ -66,6 +66,74 @@
   line-height: 1.5;
 }
 
+/* 自定义扫描范围面板 */
+.custom-panel {
+  background: var(--surface-container);
+  border: 1px solid var(--outline-variant);
+  border-radius: var(--shape-md);
+  padding: 14px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.custom-head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 12px;
+  color: var(--on-surface-variant);
+}
+.custom-hint {
+  flex: 1;
+}
+.custom-count {
+  font-variant-numeric: tabular-nums;
+  flex-shrink: 0;
+}
+.custom-reset {
+  font-size: 12px !important;
+  flex-shrink: 0;
+}
+.custom-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  gap: 6px;
+}
+.custom-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 7px 10px;
+  border-radius: var(--shape-sm);
+  border: 1px solid var(--outline-variant);
+  font-size: 12.5px;
+  cursor: pointer;
+  transition: background var(--ease-standard), border-color var(--ease-standard);
+}
+.custom-item:hover {
+  background: var(--surface-container-high);
+}
+.custom-item.on {
+  background: var(--primary-container);
+  border-color: transparent;
+  color: var(--on-primary-container);
+}
+.custom-item input {
+  accent-color: var(--primary);
+  flex-shrink: 0;
+}
+.custom-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: var(--shape-full);
+  flex-shrink: 0;
+}
+.custom-name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
 .scan-actions {
   display: flex;
   align-items: center;

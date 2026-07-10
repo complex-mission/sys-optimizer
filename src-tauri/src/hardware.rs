@@ -259,20 +259,24 @@ mod win {
             report.volumes.sort_by(|a, b| a.letter.cmp(&b.letter));
         }
 
-        // 显示器(分辨率/刷新率用 Win32_VideoController 的当前模式作近似)
-        if let Ok(rows) = wmi.raw_query::<Row>(
-            "SELECT Name, CurrentHorizontalResolution, CurrentVerticalResolution, CurrentRefreshRate FROM Win32_VideoController",
-        ) {
-            for r in &rows {
-                let w = v_u32(r, "CurrentHorizontalResolution");
-                let h = v_u32(r, "CurrentVerticalResolution");
-                if w > 0 && h > 0 {
-                    report.displays.push(DisplayInfo {
-                        name: v_str(r, "Name"),
-                        width: w,
-                        height: h,
-                        refresh_hz: v_u32(r, "CurrentRefreshRate"),
-                    });
+        // 显示设备:逐台枚举活动显示器(多屏各自的分辨率/刷新率)
+        collect_displays(report);
+        // 回退:枚举失败时用 Win32_VideoController 当前模式(只反映主输出)
+        if report.displays.is_empty() {
+            if let Ok(rows) = wmi.raw_query::<Row>(
+                "SELECT Name, CurrentHorizontalResolution, CurrentVerticalResolution, CurrentRefreshRate FROM Win32_VideoController",
+            ) {
+                for r in &rows {
+                    let w = v_u32(r, "CurrentHorizontalResolution");
+                    let h = v_u32(r, "CurrentVerticalResolution");
+                    if w > 0 && h > 0 {
+                        report.displays.push(DisplayInfo {
+                            name: v_str(r, "Name"),
+                            width: w,
+                            height: h,
+                            refresh_hz: v_u32(r, "CurrentRefreshRate"),
+                        });
+                    }
                 }
             }
         }
@@ -392,6 +396,98 @@ mod win {
                 });
             }
         }
+    }
+
+    /// 枚举活动显示器:GDI 取各输出的当前分辨率/刷新率,
+    /// 名称优先用 root\wmi WmiMonitorID 的 EDID 友好名(如 "DELL U2723QE")。
+    /// 两个来源的顺序在实践中一致(均按连接枚举),对不上时回退编号名。
+    fn collect_displays(report: &mut HardwareReport) {
+        use windows::core::PCWSTR;
+        use windows::Win32::Graphics::Gdi::{
+            EnumDisplayDevicesW, EnumDisplaySettingsW, DEVMODEW, DISPLAY_DEVICEW,
+            ENUM_CURRENT_SETTINGS,
+        };
+
+        let names = monitor_names();
+
+        const ATTACHED_TO_DESKTOP: u32 = 0x1;
+        const MIRRORING_DRIVER: u32 = 0x8;
+        let mut idx = 0u32;
+        let mut mon_i = 0usize;
+        loop {
+            let mut dd = DISPLAY_DEVICEW {
+                cb: std::mem::size_of::<DISPLAY_DEVICEW>() as u32,
+                ..Default::default()
+            };
+            let ok = unsafe { EnumDisplayDevicesW(PCWSTR::null(), idx, &mut dd, 0) };
+            if !ok.as_bool() {
+                break;
+            }
+            idx += 1;
+            let flags = dd.StateFlags.0;
+            if flags & ATTACHED_TO_DESKTOP == 0 || flags & MIRRORING_DRIVER != 0 {
+                continue;
+            }
+            let mut dm = DEVMODEW {
+                dmSize: std::mem::size_of::<DEVMODEW>() as u16,
+                ..Default::default()
+            };
+            let got = unsafe {
+                EnumDisplaySettingsW(
+                    PCWSTR(dd.DeviceName.as_ptr()),
+                    ENUM_CURRENT_SETTINGS,
+                    &mut dm,
+                )
+            };
+            if !got.as_bool() || dm.dmPelsWidth == 0 {
+                continue;
+            }
+            let name = names.get(mon_i).cloned().unwrap_or_default();
+            mon_i += 1;
+            report.displays.push(DisplayInfo {
+                name: if name.is_empty() { format!("Display {mon_i}") } else { name },
+                width: dm.dmPelsWidth,
+                height: dm.dmPelsHeight,
+                refresh_hz: dm.dmDisplayFrequency,
+            });
+        }
+    }
+
+    /// 各活动显示器的 EDID 友好名(root\wmi WmiMonitorID)。失败返回空列表。
+    fn monitor_names() -> Vec<String> {
+        let Ok(conn) = WMIConnection::with_namespace_path(r"root\wmi") else {
+            return vec![];
+        };
+        let Ok(rows) = conn.raw_query::<Row>(
+            "SELECT UserFriendlyName FROM WmiMonitorID WHERE Active = TRUE",
+        ) else {
+            return vec![];
+        };
+        rows.iter()
+            .map(|r| decode_u16_name(r.get("UserFriendlyName")))
+            .collect()
+    }
+
+    /// WmiMonitorID 的名字段是 uint16 数组(UTF-16 码点,0 结尾),解码为字符串。
+    fn decode_u16_name(v: Option<&Variant>) -> String {
+        let Some(Variant::Array(items)) = v else {
+            return String::new();
+        };
+        let mut buf: Vec<u16> = Vec::with_capacity(items.len());
+        for it in items {
+            let c = match it {
+                Variant::UI2(n) => *n,
+                Variant::UI4(n) => *n as u16,
+                Variant::I4(n) if *n >= 0 => *n as u16,
+                Variant::UI1(n) => *n as u16,
+                _ => 0,
+            };
+            if c == 0 {
+                break;
+            }
+            buf.push(c);
+        }
+        clean_str(&String::from_utf16_lossy(&buf))
     }
 
     /// 从显示适配器注册表键读取精确显存(qwMemorySize,64 位)。取各适配器最大值。

@@ -66,33 +66,54 @@ mod win {
     /* ---------------- 系统还原点 ---------------- */
 
     fn restore_points() -> SystemSpaceItem {
-        // vssadmin list shadowstorage 给出卷影存储已用空间
-        let (ok, out) = run("vssadmin.exe", &["list", "shadowstorage"]);
+        // vssadmin 输出随系统语言本地化,文本解析不可靠;改查 WMI:
+        // Win32_ShadowCopy 行数 = 还原点(卷影副本)个数,
+        // Win32_ShadowStorage.UsedSpace = 实际占用空间。
+        use std::collections::HashMap;
+        use wmi::{Variant, WMIConnection};
+
         let mut bytes = 0u64;
-        if ok {
-            // 解析形如 "Used Shadow Copy Storage space: 3.50 GB (2%)"
-            bytes = parse_used_storage(&out);
+        let mut count = 0usize;
+        if let Ok(wmi) = WMIConnection::new() {
+            if let Ok(rows) =
+                wmi.raw_query::<HashMap<String, Variant>>("SELECT ID FROM Win32_ShadowCopy")
+            {
+                count = rows.len();
+            }
+            if let Ok(rows) = wmi
+                .raw_query::<HashMap<String, Variant>>("SELECT UsedSpace FROM Win32_ShadowStorage")
+            {
+                bytes = rows.iter().map(|r| variant_u64(r.get("UsedSpace"))).sum();
+            }
         }
+        // 没有任何还原点时显示"当前无需处理",不再总是可执行
+        let available = count > 0;
         SystemSpaceItem {
             id: "restore-points".into(),
             bytes,
-            available: true, // 总是可执行"收缩到最小"操作
-            status: if bytes > 0 { "has-data".into() } else { "empty".into() },
+            available,
+            status: if available { "has-data".into() } else { "empty".into() },
         }
     }
 
-    fn parse_used_storage(text: &str) -> u64 {
-        for line in text.lines() {
-            let l = line.to_ascii_lowercase();
-            if l.contains("used shadow copy storage") {
-                // 取 "数字 单位"
-                if let Some(colon) = line.find(':') {
-                    let rest = line[colon + 1..].trim();
-                    return parse_size(rest);
-                }
-            }
+    fn variant_u64(v: Option<&wmi::Variant>) -> u64 {
+        use wmi::Variant as V;
+        match v {
+            Some(V::UI8(n)) => *n,
+            Some(V::UI4(n)) => *n as u64,
+            Some(V::I8(n)) if *n >= 0 => *n as u64,
+            Some(V::I4(n)) if *n >= 0 => *n as u64,
+            Some(V::String(s)) => s.parse().unwrap_or(0),
+            _ => 0,
         }
-        0
+    }
+
+    /// 取冒号(半角/全角)之后的文本;没有冒号返回 None。
+    fn after_colon(line: &str) -> Option<&str> {
+        line.rfind(':')
+            .map(|i| i + 1)
+            .or_else(|| line.rfind(':').map(|i| i + ':'.len_utf8()))
+            .map(|i| line[i..].trim())
     }
 
     fn parse_size(s: &str) -> u64 {
@@ -202,12 +223,20 @@ mod win {
         );
         let mut bytes = 0u64;
         if ok {
-            // 找 "Actual Size of Component Store" 附近的可回收行
+            // StartComponentCleanup 能回收的大致是"备份和已禁用的功能"+"缓存和临时数据"。
+            // 不能匹配所有含 "reclaimable" 的行:"Number of Reclaimable Packages : 2"
+            // 会被误当 2 字节(用户实测显示 2B 的根因)。兼容中英文输出。
+            const KEYS: [&str; 4] = [
+                "backups and disabled features",
+                "cache and temporary data",
+                "备份和已禁用的功能",
+                "缓存和临时数据",
+            ];
             for line in out.lines() {
                 let l = line.to_ascii_lowercase();
-                if l.contains("reclaimable") {
-                    if let Some(colon) = line.rfind(':') {
-                        bytes = parse_size(line[colon + 1..].trim());
+                if KEYS.iter().any(|k| l.contains(k)) {
+                    if let Some(v) = after_colon(line) {
+                        bytes += parse_size(v);
                     }
                 }
             }

@@ -212,6 +212,7 @@ dependencies = [
  "tauri-plugin-dialog",
  "trash",
  "walkdir",
+ "windows 0.61.3",
  "winreg 0.56.0",
  "wmi",
 ]

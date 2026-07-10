@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { confirm } from "@tauri-apps/plugin-dialog";
 import { useI18n } from "../i18n";
 import { api, SystemSpaceItem, formatBytes } from "../lib/api";
@@ -65,8 +65,11 @@ export function SystemPage() {
 
   const [items, setItems] = useState<SystemSpaceItem[] | null>(null);
   const [loading, setLoading] = useState(false);
-  const [busy, setBusy] = useState<string | null>(null);
+  // 每张卡独立 busy;非 DISM 项可并行,DISM 项(windows-old/winsxs)彼此互斥
+  const [busy, setBusy] = useState<Set<string>>(new Set());
   const [results, setResults] = useState<Record<string, { ok: boolean; msg: string }>>({});
+  // 有任务成功后待全部任务结束再统一刷新(避免 DISM 分析与清理抢锁)
+  const needReload = useRef(false);
 
   const load = async () => {
     setLoading(true);
@@ -84,17 +87,31 @@ export function SystemPage() {
     load();
   }, []);
 
+  // 全部任务结束后统一刷新(执行中刷新会让 DISM 分析与清理抢锁)
+  useEffect(() => {
+    if (busy.size === 0 && needReload.current) {
+      needReload.current = false;
+      load();
+    }
+  }, [busy]);
+
   const byId = (id: string) => items?.find((i) => i.id === id);
 
+  // windows-old 与 winsxs 都走 DISM,DISM 同一时刻只允许一个操作
+  const DISM_IDS = ["windows-old", "winsxs"];
+  const dismBusy = DISM_IDS.some((id) => busy.has(id));
+  const blocked = (id: string) =>
+    busy.has(id) || (DISM_IDS.includes(id) && dismBusy);
+
   const run = async (meta: ItemMeta) => {
-    if (busy) return; // 已有任务在执行,禁止并发(DISM 等不可并行)
+    if (blocked(meta.id)) return;
     const ok = await confirm(zh ? meta.costZh : meta.costEn, {
       title: (zh ? meta.actionZh : meta.actionEn) + "?",
       kind: "warning",
     }).catch(() => false);
     if (!ok) return;
 
-    setBusy(meta.id);
+    setBusy((prev) => new Set(prev).add(meta.id));
     setResults((prev) => {
       const next = { ...prev };
       delete next[meta.id];
@@ -103,14 +120,18 @@ export function SystemPage() {
     try {
       const res = await api.executeSystemSpace(meta.id);
       setResults((prev) => ({ ...prev, [meta.id]: { ok: res.success, msg: res.message } }));
-      if (res.success) await load(); // 刷新体积/状态
+      if (res.success) needReload.current = true;
     } catch (e) {
       setResults((prev) => ({
         ...prev,
         [meta.id]: { ok: false, msg: String(e) },
       }));
     } finally {
-      setBusy(null);
+      setBusy((prev) => {
+        const next = new Set(prev);
+        next.delete(meta.id);
+        return next;
+      });
     }
   };
 
@@ -128,7 +149,7 @@ export function SystemPage() {
         <button
           className="btn-text system-refresh"
           onClick={load}
-          disabled={loading || busy !== null}
+          disabled={loading || busy.size > 0}
           title={zh ? "重新检测" : "Rescan"}
         >
           <Icon name="refresh" size={16} />
@@ -180,15 +201,19 @@ export function SystemPage() {
                   </div>
                 </div>
                 <p className="system-cost">{zh ? meta.costZh : meta.costEn}</p>
-                {busy === meta.id && (
+                {busy.has(meta.id) && (
                   <div className="system-running">
                     <span className="system-spinner" />
-                    {zh
-                      ? "正在执行,可能需要几分钟到几十分钟,过程无法中断,请勿关闭软件。"
-                      : "Running — this can take minutes to tens of minutes and can't be interrupted. Don't close the app."}
+                    {DISM_IDS.includes(meta.id)
+                      ? zh
+                        ? "正在执行,可能需要几分钟到几十分钟,过程无法中断,请勿关闭软件。"
+                        : "Running — this can take minutes to tens of minutes and can't be interrupted. Don't close the app."
+                      : zh
+                      ? "正在执行…"
+                      : "Running…"}
                   </div>
                 )}
-                {result && busy !== meta.id && (
+                {result && !busy.has(meta.id) && (
                   <div className={`system-result ${result.ok ? "ok" : "err"}`}>
                     {result.msg}
                   </div>
@@ -196,9 +221,16 @@ export function SystemPage() {
                 <button
                   className="btn-outline system-action"
                   onClick={() => run(meta)}
-                  disabled={!available || busy !== null}
+                  disabled={!available || blocked(meta.id)}
+                  title={
+                    !busy.has(meta.id) && DISM_IDS.includes(meta.id) && dismBusy
+                      ? zh
+                        ? "需等待另一项 DISM 操作完成"
+                        : "Waiting for the other DISM operation to finish"
+                      : undefined
+                  }
                 >
-                  {busy === meta.id
+                  {busy.has(meta.id)
                     ? zh ? "处理中…" : "Working…"
                     : zh ? meta.actionZh : meta.actionEn}
                 </button>

@@ -17,6 +17,7 @@
 .cat-row:hover {
   border-color: var(--outline);
   box-shadow: 0 2px 10px rgba(0, 0, 0, 0.16);
+  transform: translateY(-1px);
 }
 .cat-row.open {
   background: var(--surface-container-high);
@@ -52,6 +53,19 @@
   background: var(--surface-container-highest);
   border-radius: var(--shape-sm);
 }
+/* 图标容器按风险着色,让列表更有层次 */
+.cat-row.row-cache .cat-icon {
+  background: var(--risk-cache-container);
+  color: var(--risk-cache);
+}
+.cat-row.row-expensive .cat-icon {
+  background: var(--risk-expensive-container);
+  color: var(--risk-expensive);
+}
+.cat-row.row-report .cat-icon {
+  background: var(--risk-report-container);
+  color: var(--risk-report);
+}
 
 .cat-info {
   flex: 1;
@@ -86,6 +100,28 @@
 }
 .cat-desc.hint-misplaced {
   color: var(--risk-expensive);
+}
+
+/* 体积占比条(相对本次结果最大项) */
+.cat-share {
+  height: 3px;
+  margin-top: 7px;
+  max-width: 260px;
+  background: var(--surface-container-highest);
+  border-radius: var(--shape-full);
+  overflow: hidden;
+}
+.cat-share-fill {
+  height: 100%;
+  border-radius: var(--shape-full);
+  background: var(--risk-cache);
+  transition: width var(--spring);
+}
+.cat-row.row-expensive .cat-share-fill {
+  background: var(--risk-expensive);
+}
+.cat-row.row-report .cat-share-fill {
+  background: var(--risk-report);
 }
 
 .tag {
