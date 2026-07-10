@@ -74,7 +74,7 @@
   height: 100%;
   background: linear-gradient(90deg, var(--primary), var(--risk-cache));
   border-radius: var(--shape-full);
-  transition: width var(--spring);
+  transition: width var(--ease-standard);
 }
 .vol-fill.hot {
   background: linear-gradient(90deg, var(--risk-expensive), var(--error));
@@ -272,7 +272,7 @@
 .battery-fill {
   height: 100%;
   border-radius: var(--shape-full);
-  transition: width var(--spring);
+  transition: width var(--ease-standard);
 }
 .battery-pct {
   font-size: 12.5px;

@@ -266,7 +266,8 @@
   height: 100%;
   background: linear-gradient(90deg, var(--primary), var(--risk-cache));
   border-radius: var(--shape-full);
-  transition: width var(--spring);
+  /* 进度条要单调前进,不能用带回弹的 spring 曲线(会冲过头再抽回) */
+  transition: width var(--ease-standard);
 }
 .scan-running-meta {
   font-size: 12.5px;

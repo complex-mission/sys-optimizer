@@ -131,7 +131,7 @@
   width: 0;
   background: linear-gradient(90deg, var(--primary), var(--risk-cache));
   border-radius: var(--shape-full);
-  transition: width var(--spring);
+  transition: width var(--ease-standard);
 }
 /* 不定态(体积未知):滑动动画 */
 .space-progress-bar.indeterminate .space-progress-fill {
