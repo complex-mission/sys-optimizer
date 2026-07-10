@@ -9,6 +9,10 @@
   background: var(--surface-container-highest);
   color: var(--on-surface);
 }
+/* 浅色主题:卡片本身是灰的,图标底用纯白更透气 */
+[data-theme="light"] .app-icon {
+  background: #fff;
+}
 
 .app-icon-glyph {
   display: block;
