@@ -47,6 +47,8 @@ pub fn run() {
             commands::list_categories,
             commands::ids_for_tier,
             commands::run_scan,
+            commands::cancel_scan,
+            commands::disk_usage,
             commands::preview_category,
             commands::run_clean,
             commands::open_path,

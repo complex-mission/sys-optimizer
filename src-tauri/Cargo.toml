@@ -29,9 +29,14 @@ rayon = "1"
 
 [target.'cfg(windows)'.dependencies]
 # 注册表读写(启动项管理:Run 键 + StartupApproved)
-winreg = "0.52"
+winreg = "0.56"
 # WMI 查询(硬件检测:CPU/主板/内存插槽/GPU 等)
-wmi = "0.14"
+# 注意:wmi 0.18 默认拉取 windows-core 0.62,而 tauri 2.11 固定 windows-core 0.61,
+# 二者的 COM 接口不能跨版本统一。Cargo.lock 已将 windows-core 锁定到 0.61.2 以对齐 tauri。
+# 若 `cargo update` 把 windows-core 顶到 0.62 导致 wmi 编译失败,请重新执行:
+#   cargo update -p windows-core --precise 0.61.2
+# (待 tauri 升级到 windows-core 0.62 后可移除该约束)
+wmi = "0.18"
 
 [profile.release]
 panic = "abort"     # 更小的体积;崩溃由 panic hook 先落日志

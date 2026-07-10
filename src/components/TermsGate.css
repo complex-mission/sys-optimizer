@@ -22,6 +22,29 @@
   overflow: hidden;
 }
 
+.terms-lang-seg {
+  display: flex;
+  gap: 4px;
+  align-self: flex-end;
+  background: var(--surface-container-high);
+  border-radius: var(--shape-full);
+  padding: 3px;
+}
+.terms-lang-btn {
+  border: none;
+  background: transparent;
+  color: var(--on-surface-variant);
+  font-size: 12.5px;
+  padding: 5px 14px;
+  border-radius: var(--shape-full);
+  cursor: pointer;
+  transition: background var(--ease-standard), color var(--ease-standard);
+}
+.terms-lang-btn.active {
+  background: var(--primary);
+  color: var(--on-primary);
+}
+
 .terms-title {
   font-size: 24px;
   font-weight: 500;

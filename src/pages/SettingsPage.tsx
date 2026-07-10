@@ -3,6 +3,7 @@ import { confirm } from "@tauri-apps/plugin-dialog";
 import { useI18n, Lang } from "../i18n";
 import { api, AppConfig, formatBytes } from "../lib/api";
 import { Icon } from "../components/Icon";
+import { getTheme, setTheme, Theme } from "../lib/theme";
 import "./SettingsPage.css";
 
 type LangChoice = "system" | Lang;
@@ -13,6 +14,12 @@ export function SettingsPage() {
 
   const [cfg, setCfg] = useState<AppConfig | null>(null);
   const [logPath, setLogPath] = useState("");
+  const [theme, setThemeState] = useState<Theme>(getTheme());
+
+  const chooseTheme = (th: Theme) => {
+    setTheme(th);
+    setThemeState(th);
+  };
 
   const load = async () => {
     try {
@@ -97,6 +104,33 @@ export function SettingsPage() {
               key={val}
               className={`seg-btn ${langChoice === val ? "active" : ""}`}
               onClick={() => chooseLang(val)}
+            >
+              {label}
+            </button>
+          ))}
+        </div>
+      </section>
+
+      {/* 主题 */}
+      <section className="settings-row">
+        <div className="settings-label">
+          <div className="settings-name">{zh ? "主题" : "Theme"}</div>
+          <div className="settings-desc">
+            {zh ? "浅色 / 深色 / 跟随系统" : "Light / dark / follow system"}
+          </div>
+        </div>
+        <div className="seg">
+          {(
+            [
+              ["system", zh ? "跟随系统" : "System"],
+              ["light", zh ? "浅色" : "Light"],
+              ["dark", zh ? "深色" : "Dark"],
+            ] as [Theme, string][]
+          ).map(([val, label]) => (
+            <button
+              key={val}
+              className={`seg-btn ${theme === val ? "active" : ""}`}
+              onClick={() => chooseTheme(val)}
             >
               {label}
             </button>

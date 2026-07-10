@@ -88,6 +88,8 @@ export function CategoryRow({
   };
 
   const riskClass = isReport ? "row-report" : isExpensive ? "row-expensive" : "row-cache";
+  const sizeClass = bytes > 0 ? (isReport ? "size-report" : isExpensive ? "size-expensive" : "size-cache") : "size-zero";
+  const canExpand = meta.previewable && !isReport && !maybeMisplaced;
 
   return (
     <div className={`cat-row ${riskClass} ${expanded ? "open" : ""}`}>
@@ -96,6 +98,7 @@ export function CategoryRow({
           <span className="cat-check-spacer" />
         ) : (
           <input
+            className="cat-check"
             type="checkbox"
             checked={checked}
             disabled={disabled}
@@ -108,9 +111,13 @@ export function CategoryRow({
           <Icon name={iconFor(meta.id)} size={18} />
         </span>
 
-        <div className="cat-info" onClick={toggleOpen} role="button">
+        <div
+          className="cat-info"
+          onClick={canExpand ? toggleOpen : undefined}
+          role={canExpand ? "button" : undefined}
+        >
           <div className="cat-name">
-            {t(meta.name_key)}
+            <span className="cat-name-text">{t(meta.name_key)}</span>
             {isExpensive && (
               <span className="tag tag-expensive">{t("result.risk.expensive")}</span>
             )}
@@ -129,25 +136,35 @@ export function CategoryRow({
           </div>
         </div>
 
-        <span className={`cat-size ${bytes > 0 && !isReport ? "has" : ""}`}>
-          {formatBytes(bytes)}
-        </span>
+        <div className="cat-metrics">
+          <span className={`cat-size ${sizeClass}`}>{formatBytes(bytes)}</span>
+          {!isReport && files > 0 && (
+            <span className="cat-count">
+              {files.toLocaleString()} {t("result.files")}
+            </span>
+          )}
+        </div>
 
         {isReport ? (
           <button
-            className="btn-outline"
+            className="btn-outline cat-action"
             onClick={() => onOpen(previewFirstPath(entries))}
           >
             {t("result.open")}
           </button>
         ) : maybeMisplaced ? (
-          <button className="btn-outline" onClick={handleSpecify}>
+          <button className="btn-outline cat-action" onClick={handleSpecify}>
             <Icon name="folder-open" size={14} style={{ marginRight: 4 }} />
             {t("result.specify")}
           </button>
-        ) : meta.previewable ? (
-          <button className="cat-expand" onClick={toggleOpen} disabled={disabled}>
-            <Icon name={expanded ? "chevron-up" : "chevron-down"} size={16} />
+        ) : canExpand ? (
+          <button
+            className={`cat-expand ${expanded ? "open" : ""}`}
+            onClick={toggleOpen}
+            disabled={disabled}
+            aria-label={t("result.preview")}
+          >
+            <Icon name="chevron-down" size={16} />
           </button>
         ) : (
           <span className="cat-check-spacer" />
@@ -157,28 +174,41 @@ export function CategoryRow({
       {expanded && (
         <div className="cat-preview">
           {loading ? (
-            <div className="preview-hint">…</div>
+            <div className="preview-loading">
+              <span className="preview-spinner" />
+              {t("result.preview")}…
+            </div>
+          ) : entries.length === 0 ? (
+            <div className="preview-hint">{t("result.empty")}</div>
           ) : (
             <>
-              {entries.map((f) => {
-                const keep = keptPaths.has(f.path);
-                return (
-                  <div key={f.path} className={`file-row ${keep ? "kept" : ""}`}>
-                    <input
-                      type="checkbox"
-                      checked={!keep}
-                      onChange={(e) => onToggleKeep(f.path, !e.target.checked)}
-                      aria-label={f.name}
-                    />
-                    <span className="file-name" title={f.path}>
-                      {f.name}
-                    </span>
-                    <span className="file-size">{formatBytes(f.bytes)}</span>
-                  </div>
-                );
-              })}
+              <div className="file-head">
+                <span className="file-head-name">{t("result.preview")}</span>
+                <span className="file-head-size">{t("result.found")}</span>
+              </div>
+              <div className="file-list">
+                {entries.map((f) => {
+                  const keep = keptPaths.has(f.path);
+                  return (
+                    <label key={f.path} className={`file-row ${keep ? "kept" : ""}`}>
+                      <input
+                        className="cat-check"
+                        type="checkbox"
+                        checked={!keep}
+                        onChange={(e) => onToggleKeep(f.path, !e.target.checked)}
+                        aria-label={f.name}
+                      />
+                      <Icon name="file-zip" size={13} style={{ color: "var(--outline)", flexShrink: 0 }} />
+                      <span className="file-name" title={f.path}>
+                        {f.name}
+                      </span>
+                      <span className="file-size">{formatBytes(f.bytes)}</span>
+                    </label>
+                  );
+                })}
+              </div>
               <div className="preview-hint">
-                {Math.min(entries.length, total)} / {files.toLocaleString()}
+                {t("result.showing")} {Math.min(entries.length, total).toLocaleString()} / {files.toLocaleString()}
               </div>
             </>
           )}

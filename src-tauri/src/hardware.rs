@@ -25,6 +25,16 @@ pub struct StorageDisk {
     pub bus_type: String,   // NVMe / SATA / USB / 未知
 }
 
+/// 逻辑卷(盘符)容量与占用,用于系统信息里的使用率条与空间分析进度条。
+#[derive(Debug, Clone, Serialize, Default)]
+pub struct Volume {
+    pub letter: String, // "C:"
+    pub label: String,
+    pub fs: String,     // NTFS / exFAT ...
+    pub total_bytes: u64,
+    pub free_bytes: u64,
+}
+
 #[derive(Debug, Clone, Serialize, Default)]
 pub struct DisplayInfo {
     pub name: String,
@@ -58,6 +68,7 @@ pub struct HardwareReport {
     pub memory_total_bytes: u64,
     pub memory_slots: Vec<MemorySlot>,
     pub disks: Vec<StorageDisk>,
+    pub volumes: Vec<Volume>,
     pub displays: Vec<DisplayInfo>,
     pub battery: BatteryInfo,
     pub generated_at: i64,
@@ -91,7 +102,7 @@ fn clean_str(s: &str) -> String {
 #[cfg(windows)]
 mod win {
     use super::*;
-    use wmi::{COMLibrary, Variant, WMIConnection};
+    use wmi::{Variant, WMIConnection};
 
     /// 内存类型码(SMBIOSMemoryType)映射到可读名。
     fn mem_type(code: u16) -> String {
@@ -127,11 +138,8 @@ mod win {
     type Row = std::collections::HashMap<String, Variant>;
 
     pub fn collect(report: &mut HardwareReport) -> bool {
-        let com = match COMLibrary::new() {
-            Ok(c) => c,
-            Err(_) => return false,
-        };
-        let wmi = match WMIConnection::new(com) {
+        // wmi 0.18 起 WMIConnection::new() 内部完成 COM 初始化,不再显式传入 COMLibrary
+        let wmi = match WMIConnection::new() {
             Ok(w) => w,
             Err(_) => return false,
         };
@@ -167,7 +175,7 @@ mod win {
             }
         }
 
-        // GPU(显存不用 AdapterRAM,它是 32 位、>4GB 会溢出;此处取型号,显存后续可从注册表补)
+        // GPU(显存不用 AdapterRAM,它是 32 位、>4GB 会溢出;此处取型号,显存优先从注册表读)
         if let Ok(rows) = wmi
             .raw_query::<Row>("SELECT Name, AdapterRAM FROM Win32_VideoController")
         {
@@ -176,6 +184,12 @@ mod win {
                 report.gpu_model = v_str(r, "Name");
                 // AdapterRAM 仅作下限参考(可能因 32 位截断而偏小)
                 report.gpu_vram_bytes = v_u64(r, "AdapterRAM");
+            }
+        }
+        // 显存精确值:注册表 qwMemorySize(64 位,不受 4GB 截断),取各适配器最大值
+        if let Some(vram) = gpu_vram_from_registry() {
+            if vram > report.gpu_vram_bytes {
+                report.gpu_vram_bytes = vram;
             }
         }
 
@@ -213,6 +227,26 @@ mod win {
 
         // 存储(优先 MSFT_PhysicalDisk 拿 SSD/HDD 与总线;失败退 Win32_DiskDrive)
         collect_storage(&wmi, report);
+
+        // 逻辑卷占用(DriveType=3 本地磁盘),用于使用率显示
+        if let Ok(rows) = wmi.raw_query::<Row>(
+            "SELECT DeviceID, VolumeName, FileSystem, Size, FreeSpace FROM Win32_LogicalDisk WHERE DriveType = 3",
+        ) {
+            for r in &rows {
+                let total = v_u64(r, "Size");
+                if total == 0 {
+                    continue;
+                }
+                report.volumes.push(Volume {
+                    letter: v_str(r, "DeviceID"),
+                    label: v_str(r, "VolumeName"),
+                    fs: v_str(r, "FileSystem"),
+                    total_bytes: total,
+                    free_bytes: v_u64(r, "FreeSpace"),
+                });
+            }
+            report.volumes.sort_by(|a, b| a.letter.cmp(&b.letter));
+        }
 
         // 显示器(分辨率用 Win32_VideoController 的当前模式作近似)
         if let Ok(rows) = wmi.raw_query::<Row>(
@@ -289,6 +323,98 @@ mod win {
                 });
             }
         }
+    }
+
+    /// 从显示适配器注册表键读取精确显存(qwMemorySize,64 位)。取各适配器最大值。
+    fn gpu_vram_from_registry() -> Option<u64> {
+        use winreg::enums::HKEY_LOCAL_MACHINE;
+        use winreg::RegKey;
+        let hklm = RegKey::predef(HKEY_LOCAL_MACHINE);
+        let class = hklm
+            .open_subkey(
+                r"SYSTEM\CurrentControlSet\Control\Class\{4d36e968-e325-11ce-bfc1-08002be10318}",
+            )
+            .ok()?;
+        let mut best = 0u64;
+        // 适配器子键形如 0000 / 0001 …
+        for name in class.enum_keys().flatten() {
+            if let Ok(sub) = class.open_subkey(&name) {
+                // 先按 REG_QWORD 读;失败再按原始字节(REG_BINARY 8 字节小端)解析
+                let v = sub
+                    .get_value::<u64, _>("HardwareInformation.qwMemorySize")
+                    .ok()
+                    .or_else(|| {
+                        sub.get_raw_value("HardwareInformation.qwMemorySize")
+                            .ok()
+                            .filter(|rv| rv.bytes.len() >= 8)
+                            .map(|rv| {
+                                let mut b = [0u8; 8];
+                                b.copy_from_slice(&rv.bytes[..8]);
+                                u64::from_le_bytes(b)
+                            })
+                    })
+                    .unwrap_or(0);
+                if v > best {
+                    best = v;
+                }
+            }
+        }
+        if best > 0 {
+            Some(best)
+        } else {
+            None
+        }
+    }
+
+    /// 取路径所在卷的容量/可用空间。path 可为 "C:\\..." 或 "C:\\"。
+    pub fn disk_usage(path: &str) -> crate::types::DiskUsage {
+        use crate::types::DiskUsage;
+        let letter = drive_letter(path);
+        if letter.is_empty() {
+            return DiskUsage::default();
+        }
+        let wmi = match WMIConnection::new() {
+            Ok(w) => w,
+            Err(_) => return DiskUsage::default(),
+        };
+        let q = format!(
+            "SELECT Size, FreeSpace FROM Win32_LogicalDisk WHERE DeviceID = '{letter}'"
+        );
+        if let Ok(rows) = wmi.raw_query::<Row>(&q) {
+            if let Some(r) = rows.first() {
+                let total = v_u64(r, "Size");
+                let free = v_u64(r, "FreeSpace");
+                return DiskUsage {
+                    total,
+                    free,
+                    used: total.saturating_sub(free),
+                };
+            }
+        }
+        DiskUsage::default()
+    }
+
+    /// 从路径提取盘符,如 "C:\\Windows" -> "C:"。
+    fn drive_letter(path: &str) -> String {
+        let b = path.as_bytes();
+        if b.len() >= 2 && b[1] == b':' && b[0].is_ascii_alphabetic() {
+            format!("{}:", (b[0] as char).to_ascii_uppercase())
+        } else {
+            String::new()
+        }
+    }
+}
+
+/// 取某路径所在卷的容量/占用(跨平台入口;非 Windows 返回空)。
+pub fn disk_usage(path: &str) -> crate::types::DiskUsage {
+    #[cfg(windows)]
+    {
+        win::disk_usage(path)
+    }
+    #[cfg(not(windows))]
+    {
+        let _ = path;
+        crate::types::DiskUsage::default()
     }
 }
 

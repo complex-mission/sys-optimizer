@@ -35,7 +35,10 @@ const dict: Record<Lang, Record<string, string>> = {
     "scan.tier.deep.desc": "数分钟 · 标准 + 大文件 · 重复",
     "scan.recommended": "推荐",
     "scan.start": "开始扫描",
-    "scan.scanning": "扫描中",
+    "scan.scanning": "正在扫描",
+    "scan.stopping": "正在停止…",
+    "scan.stop": "停止扫描",
+    "scan.rescan": "重新扫描",
     "scan.custom": "自定义扫描范围",
 
     "result.done": "扫描完成",
@@ -54,6 +57,8 @@ const dict: Record<Lang, Record<string, string>> = {
     "result.cleaning": "清理中",
     "result.cleaned": "已清理",
     "result.freed": "已释放",
+    "result.files": "个文件",
+    "result.showing": "显示",
     "result.skipped": "个文件正在使用被跳过",
     "result.footer": "清理前将再次确认 · 被占用文件自动跳过 · 操作写入本地日志",
 
@@ -253,6 +258,9 @@ const dict: Record<Lang, Record<string, string>> = {
     "scan.recommended": "Recommended",
     "scan.start": "Start scan",
     "scan.scanning": "Scanning",
+    "scan.stopping": "Stopping…",
+    "scan.stop": "Stop scan",
+    "scan.rescan": "Rescan",
     "scan.custom": "Customize scan scope",
 
     "result.done": "Scan complete",
@@ -271,6 +279,8 @@ const dict: Record<Lang, Record<string, string>> = {
     "result.cleaning": "Cleaning",
     "result.cleaned": "Cleaned",
     "result.freed": "Freed",
+    "result.files": "files",
+    "result.showing": "Showing",
     "result.skipped": "files skipped (in use)",
     "result.footer": "You’ll confirm before cleaning · in-use files skip automatically · actions are logged locally",
 

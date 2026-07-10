@@ -89,7 +89,18 @@ pub struct CleanResult {
 pub struct ScanProgress {
     pub done: usize,
     pub total: usize,
+    /// 当前正在扫描的类别 id(用于界面显示"正在扫描 X")
+    pub current: String,
+    /// 该类别的结果(开始事件时为占位空结果)
     pub result: CategoryScanResult,
+}
+
+/// 磁盘占用(供空间分析进度条与系统信息使用)。
+#[derive(Debug, Clone, Serialize, Default)]
+pub struct DiskUsage {
+    pub total: u64,
+    pub free: u64,
+    pub used: u64,
 }
 
 /// 清理进度事件。
@@ -248,6 +259,7 @@ pub struct LeftoverItem {
 }
 
 /// 卸载残留扫描进度。
+#[allow(dead_code)] // 预留:卸载残留流式扫描进度事件,尚未接线
 #[derive(Debug, Clone, Serialize)]
 pub struct LeftoverProgress {
     pub scanned: u64,

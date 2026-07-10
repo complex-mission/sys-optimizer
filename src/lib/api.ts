@@ -48,7 +48,14 @@ export interface CleanResult {
 export interface ScanProgress {
   done: number;
   total: number;
+  current: string;
   result: CategoryScanResult;
+}
+
+export interface DiskUsage {
+  total: number;
+  free: number;
+  used: number;
 }
 
 export interface CleanProgress {
@@ -202,6 +209,14 @@ export interface StorageDisk {
   bus_type: string;
 }
 
+export interface Volume {
+  letter: string;
+  label: string;
+  fs: string;
+  total_bytes: number;
+  free_bytes: number;
+}
+
 export interface DisplayInfo {
   name: string;
   width: number;
@@ -230,6 +245,7 @@ export interface HardwareReport {
   memory_total_bytes: number;
   memory_slots: MemorySlot[];
   disks: StorageDisk[];
+  volumes: Volume[];
   displays: DisplayInfo[];
   battery: BatteryInfo;
   generated_at: number;
@@ -242,6 +258,8 @@ export const api = {
   listCategories: () => invoke<CategoryMeta[]>("list_categories"),
   idsForTier: (tier: Tier) => invoke<string[]>("ids_for_tier", { tier }),
   runScan: (ids: string[]) => invoke<CategoryScanResult[]>("run_scan", { ids }),
+  cancelScan: () => invoke<void>("cancel_scan"),
+  diskUsage: (path: string) => invoke<DiskUsage>("disk_usage", { path }),
   previewCategory: (id: string, offset: number, limit: number) =>
     invoke<PreviewPage>("preview_category", { id, offset, limit }),
   runClean: (ids: string[], keepPaths: string[]) =>

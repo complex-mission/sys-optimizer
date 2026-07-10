@@ -111,12 +111,22 @@ export function SystemPage() {
   return (
     <div className="system-page">
       <div className="system-head">
-        <h1>{t("nav.system")}</h1>
-        <p className="system-sub">
-          {zh
-            ? "回收系统占用的大块空间。每项都有代价,请阅读说明后再操作。"
-            : "Reclaim large chunks of system space. Each has a cost — read before acting."}
-        </p>
+        <div className="system-head-text">
+          <h1>{t("nav.system")}</h1>
+          <p className="system-sub">
+            {zh
+              ? "回收系统占用的大块空间。每项都有代价,请阅读说明后再操作。"
+              : "Reclaim large chunks of system space. Each has a cost — read before acting."}
+          </p>
+        </div>
+        <button
+          className="btn-text system-refresh"
+          onClick={load}
+          disabled={loading}
+          title={zh ? "重新检测" : "Rescan"}
+        >
+          <Icon name="refresh" size={16} />
+        </button>
       </div>
 
       <div className="system-notice">
@@ -129,7 +139,16 @@ export function SystemPage() {
       </div>
 
       {loading && !items ? (
-        <div className="system-empty">{zh ? "正在检测…" : "Checking…"}</div>
+        <div className="system-grid">
+          {META.map((meta) => (
+            <div key={meta.id} className="system-card system-skeleton">
+              <div className="sk-line sk-title" />
+              <div className="sk-line sk-sub" />
+              <div className="sk-line sk-text" />
+              <div className="sk-line sk-btn" />
+            </div>
+          ))}
+        </div>
       ) : (
         <div className="system-grid">
           {META.map((meta) => {

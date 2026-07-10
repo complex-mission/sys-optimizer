@@ -7,7 +7,17 @@ use crate::logbook;
 use crate::scan;
 use crate::types::*;
 use std::collections::HashSet;
+use std::sync::atomic::{AtomicBool, Ordering};
 use tauri::{Emitter, Window};
+
+/// 扫描取消标记:前端点“停止”时置位,run_scan 每轮检查后提前退出。
+static SCAN_CANCEL: AtomicBool = AtomicBool::new(false);
+
+/// 请求停止当前扫描。
+#[tauri::command]
+pub fn cancel_scan() {
+    SCAN_CANCEL.store(true, Ordering::Relaxed);
+}
 
 /// 列出全部类别元信息。
 #[tauri::command]
@@ -29,14 +39,25 @@ pub fn ids_for_tier(tier: String) -> Vec<String> {
 /// 扫描一组类别,逐个完成后 emit `scan://progress`,最终返回全部结果。
 #[tauri::command]
 pub async fn run_scan(window: Window, ids: Vec<String>) -> Vec<CategoryScanResult> {
+    SCAN_CANCEL.store(false, Ordering::Relaxed);
     tauri::async_runtime::spawn_blocking(move || {
         let total = ids.len();
         let mut results = Vec::with_capacity(total);
+        let empty = |id: &str| CategoryScanResult { id: id.into(), bytes: 0, files: 0 };
         for (i, id) in ids.iter().enumerate() {
-            let r = scan::scan_one(id);
+            if SCAN_CANCEL.load(Ordering::Relaxed) {
+                break;
+            }
+            // 开始事件:告诉前端“正在扫描 id”(done 尚未 +1)
             let _ = window.emit(
                 "scan://progress",
-                ScanProgress { done: i + 1, total, result: r.clone() },
+                ScanProgress { done: i, total, current: id.clone(), result: empty(id) },
+            );
+            let r = scan::scan_one(id);
+            // 完成事件:done +1,带回结果
+            let _ = window.emit(
+                "scan://progress",
+                ScanProgress { done: i + 1, total, current: id.clone(), result: r.clone() },
             );
             results.push(r);
         }
@@ -44,6 +65,14 @@ pub async fn run_scan(window: Window, ids: Vec<String>) -> Vec<CategoryScanResul
     })
     .await
     .unwrap_or_default()
+}
+
+/// 查询某盘符/路径所在卷的容量与可用空间(供空间分析进度条)。
+#[tauri::command]
+pub async fn disk_usage(path: String) -> DiskUsage {
+    tauri::async_runtime::spawn_blocking(move || hardware::disk_usage(&path))
+        .await
+        .unwrap_or_default()
 }
 
 /// 取某类别的文件预览页。

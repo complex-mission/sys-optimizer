@@ -261,7 +261,7 @@ mod win {
             .map_err(|e| format!("打开 StartupApproved 失败: {e}"))?;
         let bytes = if enable { APPROVED_ENABLED } else { APPROVED_DISABLED };
         let val = winreg::RegValue {
-            bytes: bytes.to_vec(),
+            bytes: bytes.to_vec().into(),
             vtype: REG_BINARY,
         };
         key.set_raw_value(name, &val)

@@ -76,6 +76,22 @@
   background: var(--surface-container-high);
 }
 
+.space-toolbar-right {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+}
+.space-refresh {
+  padding: 7px !important;
+  display: flex;
+  border-radius: var(--shape-full) !important;
+  color: var(--on-surface-variant);
+}
+.space-refresh:hover:not(:disabled) {
+  background: var(--surface-container-high);
+  color: var(--on-surface);
+}
 .space-view-toggle {
   display: flex;
   gap: 2px;
@@ -104,16 +120,23 @@
   padding: 40px 0;
 }
 .space-progress-bar {
-  height: 4px;
+  height: 8px;
   background: var(--surface-container-high);
   border-radius: var(--shape-full);
   overflow: hidden;
 }
+/* 确定态:宽度由已扫描/总量驱动 */
 .space-progress-fill {
   height: 100%;
-  width: 40%;
-  background: var(--primary);
+  width: 0;
+  background: linear-gradient(90deg, var(--primary), var(--risk-cache));
   border-radius: var(--shape-full);
+  transition: width var(--spring);
+}
+/* 不定态(体积未知):滑动动画 */
+.space-progress-bar.indeterminate .space-progress-fill {
+  width: 40%;
+  transition: none;
   animation: indeterminate 1.2s ease-in-out infinite;
 }
 @keyframes indeterminate {

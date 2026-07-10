@@ -26,8 +26,11 @@ export function SpacePage() {
   const [crumbs, setCrumbs] = useState<string[]>([]); // 路径栈
   const [scanning, setScanning] = useState(false);
   const [progress, setProgress] = useState<SpaceProgress | null>(null);
+  const [expectedTotal, setExpectedTotal] = useState(0); // 进度条分母(已知的目录/磁盘体积)
   const [view, setView] = useState<View>("treemap");
 
+  // 每个路径的分析结果缓存:回到已看过的目录直接显示上次结果,不重复扫描
+  const cache = useRef<Record<string, SpaceLevel>>({});
   const unlisten = useRef<UnlistenFn | null>(null);
 
   useEffect(() => {
@@ -38,36 +41,66 @@ export function SpacePage() {
     };
   }, []);
 
-  // 纯分析:只负责扫描与渲染,不碰面包屑(由调用方管理)
+  // 实际扫描一个目录并写入缓存
   const analyze = async (path: string) => {
+    setLevel(null);
     setScanning(true);
     setProgress(null);
     unlisten.current?.();
     unlisten.current = await onSpaceProgress((p) => setProgress(p));
 
     const result = await api.analyzeSpace(path, 14);
+    cache.current[path] = result;
     setLevel(result);
     setScanning(false);
     unlisten.current?.();
     unlisten.current = null;
   };
 
-  // 从盘符或初始目录进入:重置面包屑
-  const enter = (path: string) => {
-    setCrumbs([path]);
+  // 显示某路径:优先用缓存(除非强制刷新);denom 为进度条分母
+  const show = (path: string, denom: number, force = false) => {
+    setExpectedTotal(denom);
+    if (!force && cache.current[path]) {
+      setLevel(cache.current[path]);
+      setScanning(false);
+      return;
+    }
     analyze(path);
+  };
+
+  // 从盘符进入:先取磁盘已用空间作进度条分母,重置面包屑
+  const enterDrive = async (drive: string) => {
+    setCrumbs([drive]);
+    let used = 0;
+    try {
+      used = (await api.diskUsage(drive)).used;
+    } catch {
+      /* 忽略 */
+    }
+    show(drive, used);
+  };
+
+  // 从"值得关注"位置进入:体积未知,分母置 0(进度条走不定态)
+  const enterPath = (path: string) => {
+    setCrumbs([path]);
+    show(path, 0);
   };
 
   const drill = (node: SpaceNode) => {
     if (!node.is_dir || !node.path) return;
     setCrumbs((prev) => [...prev, node.path]);
-    analyze(node.path);
+    show(node.path, node.bytes); // 分母 = 该目录已知体积
   };
 
   const goCrumb = (idx: number) => {
     const target = crumbs[idx];
     setCrumbs(crumbs.slice(0, idx + 1));
-    analyze(target);
+    show(target, 0); // 面包屑回退命中缓存,不会真的扫描
+  };
+
+  const refresh = () => {
+    const cur = crumbs[crumbs.length - 1];
+    if (cur) show(cur, expectedTotal, true);
   };
 
   const openInExplorer = (path: string) => api.openPath(path).catch(() => {});
@@ -86,8 +119,8 @@ export function SpacePage() {
         </div>
         <div className="drive-grid">
           {drives.map((d) => (
-            <button key={d} className="drive-card" onClick={() => enter(d)}>
-              <Icon name="file-zip" size={22} style={{ color: "var(--primary)" }} />
+            <button key={d} className="drive-card" onClick={() => enterDrive(d)}>
+              <Icon name="drive" size={24} style={{ color: "var(--primary)" }} />
               <span className="drive-name">{d}</span>
             </button>
           ))}
@@ -114,7 +147,7 @@ export function SpacePage() {
                     {n.path}
                   </div>
                 </div>
-                <button className="btn-outline notable-btn" onClick={() => enter(n.path)}>
+                <button className="btn-outline notable-btn" onClick={() => enterPath(n.path)}>
                   {zh ? "分析" : "Analyze"}
                 </button>
                 <button
@@ -132,43 +165,70 @@ export function SpacePage() {
     );
   }
 
+  const pct =
+    expectedTotal > 0 && progress
+      ? Math.min(100, Math.round((progress.scanned_bytes / expectedTotal) * 100))
+      : 0;
+
   return (
     <div className="space-page">
       <div className="space-toolbar">
         <div className="crumbs">
           {crumbs.map((c, i) => (
             <span key={i} className="crumb-item">
-              {i > 0 && <Icon name="chevron-down" size={12} style={{ transform: "rotate(-90deg)", opacity: 0.5 }} />}
+              {i === 0 ? (
+                <Icon name="drive" size={14} style={{ color: "var(--primary)", flexShrink: 0 }} />
+              ) : (
+                <Icon
+                  name="chevron-down"
+                  size={12}
+                  style={{ transform: "rotate(-90deg)", opacity: 0.5 }}
+                />
+              )}
               <button className="crumb-btn" onClick={() => goCrumb(i)}>
                 {crumbDisplay(c, i)}
               </button>
             </span>
           ))}
         </div>
-        <div className="space-view-toggle">
+        <div className="space-toolbar-right">
           <button
-            className={`view-btn ${view === "treemap" ? "active" : ""}`}
-            onClick={() => setView("treemap")}
+            className="btn-text space-refresh"
+            onClick={refresh}
+            disabled={scanning}
+            title={zh ? "重新扫描" : "Rescan"}
           >
-            <Icon name="chart-donut" size={16} />
+            <Icon name="refresh" size={16} />
           </button>
-          <button
-            className={`view-btn ${view === "list" ? "active" : ""}`}
-            onClick={() => setView("list")}
-          >
-            <Icon name="tune" size={16} />
-          </button>
+          <div className="space-view-toggle">
+            <button
+              className={`view-btn ${view === "treemap" ? "active" : ""}`}
+              onClick={() => setView("treemap")}
+            >
+              <Icon name="chart-donut" size={16} />
+            </button>
+            <button
+              className={`view-btn ${view === "list" ? "active" : ""}`}
+              onClick={() => setView("list")}
+            >
+              <Icon name="tune" size={16} />
+            </button>
+          </div>
         </div>
       </div>
 
       {scanning && (
         <div className="space-progress">
-          <div className="space-progress-bar">
-            <div className="space-progress-fill" />
+          <div className={`space-progress-bar ${expectedTotal > 0 ? "" : "indeterminate"}`}>
+            <div
+              className="space-progress-fill"
+              style={expectedTotal > 0 ? { width: `${pct}%` } : undefined}
+            />
           </div>
           <div className="space-progress-text">
             {zh ? "正在扫描" : "Scanning"} ·{" "}
-            {progress ? formatBytes(progress.scanned_bytes) : "0 B"} ·{" "}
+            {progress ? formatBytes(progress.scanned_bytes) : "0 B"}
+            {expectedTotal > 0 && ` / ${formatBytes(expectedTotal)} · ${pct}%`} ·{" "}
             {progress ? progress.scanned_items.toLocaleString() : 0} {zh ? "项" : "items"}
           </div>
         </div>
@@ -194,7 +254,7 @@ export function SpacePage() {
             <div className="space-list">
               {level.nodes.map((n, i) => {
                 const isOther = n.name === "__other__";
-                const pct = level.total > 0 ? Math.round((n.bytes / level.total) * 100) : 0;
+                const pctRow = level.total > 0 ? Math.round((n.bytes / level.total) * 100) : 0;
                 return (
                   <div
                     key={i}
@@ -202,7 +262,7 @@ export function SpacePage() {
                     onClick={() => !isOther && n.is_dir && drill(n)}
                   >
                     <Icon
-                      name={n.is_dir ? "file-zip" : "info"}
+                      name={n.is_dir ? "folder-open" : "file-zip"}
                       size={16}
                       style={{ color: "var(--on-surface-variant)", flexShrink: 0 }}
                     />
@@ -211,11 +271,14 @@ export function SpacePage() {
                         {isOther ? (zh ? "其他较小项" : "Other smaller items") : n.name}
                       </div>
                       <div className="space-row-bar">
-                        <div className="space-row-bar-fill" style={{ width: `${pct}%` }} />
+                        <div
+                          className="space-row-bar-fill"
+                          style={{ width: `${pctRow}%`, background: barColor(i, isOther) }}
+                        />
                       </div>
                     </div>
                     <span className="space-row-size">{formatBytes(n.bytes)}</span>
-                    <span className="space-row-pct">{pct}%</span>
+                    <span className="space-row-pct">{pctRow}%</span>
                     {n.is_dir && !isOther && (
                       <button
                         className="btn-text space-row-open"
@@ -236,6 +299,16 @@ export function SpacePage() {
       )}
     </div>
   );
+}
+
+// 与 Treemap 一致的分类色板(列表视图的进度条着色,让各项彼此区分)
+const BAR_COLORS = [
+  "#4c8dff", "#22c3a6", "#f4b740", "#ef6f6c", "#a78bfa",
+  "#34d399", "#f472b6", "#60a5fa", "#fbbf24", "#38bdf8",
+  "#c084fc", "#2dd4bf", "#fb923c", "#f87171",
+];
+function barColor(idx: number, isOther: boolean): string {
+  return isOther ? "var(--outline)" : BAR_COLORS[idx % BAR_COLORS.length];
 }
 
 function crumbDisplay(path: string, idx: number): string {

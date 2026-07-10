@@ -12,12 +12,18 @@ export function HardwarePage() {
   const [loading, setLoading] = useState(true);
   const [copied, setCopied] = useState(false);
 
-  useEffect(() => {
+  const reload = () => {
+    setLoading(true);
     api
       .hardwareReport()
       .then(setHw)
       .catch(() => setHw(null))
       .finally(() => setLoading(false));
+  };
+
+  // 首次进入自动读取;之后由用户手动“刷新”(keep-alive 保留结果)
+  useEffect(() => {
+    reload();
   }, []);
 
   const na = zh ? "厂商未提供" : "not provided";
@@ -77,16 +83,21 @@ export function HardwarePage() {
     <div className="hw-page">
       <div className="hw-head">
         <h1 className="hw-title">{t("nav.hardware")}</h1>
-        <button className="btn-outline" onClick={copyReport}>
-          <Icon name="copy" size={14} style={{ marginRight: 4 }} />
-          {copied ? (zh ? "已复制" : "Copied") : zh ? "复制报告" : "Copy report"}
-        </button>
+        <div className="hw-head-actions">
+          <button className="btn-text hw-refresh" onClick={reload} disabled={loading} title={zh ? "刷新" : "Refresh"}>
+            <Icon name="refresh" size={15} />
+          </button>
+          <button className="btn-outline" onClick={copyReport}>
+            <Icon name="copy" size={14} style={{ marginRight: 4 }} />
+            {copied ? (zh ? "已复制" : "Copied") : zh ? "复制报告" : "Copy report"}
+          </button>
+        </div>
       </div>
 
       {/* 概览卡片 */}
       <div className="hw-overview">
         <OverviewCard icon="settings" label="CPU" value={show(hw.cpu_model)} sub={`${hw.cpu_cores}${zh ? "核" : "C"} / ${hw.cpu_threads}${zh ? "线程" : "T"} · ${(hw.cpu_mhz / 1000).toFixed(1)} GHz`} />
-        <OverviewCard icon="apps" label="GPU" value={show(hw.gpu_model)} sub={hw.gpu_vram_bytes > 0 ? `≥ ${formatBytes(hw.gpu_vram_bytes)}` : ""} />
+        <OverviewCard icon="apps" label="GPU" value={show(hw.gpu_model)} sub={hw.gpu_vram_bytes > 0 ? `${zh ? "显存" : "VRAM"} ${formatBytes(hw.gpu_vram_bytes)}` : ""} />
         <OverviewCard icon="tune" label={zh ? "主板" : "Board"} value={`${show(hw.board_vendor)} ${show(hw.board_model)}`.trim()} sub={`BIOS ${show(hw.bios_version)}`} />
       </div>
 
@@ -134,24 +145,64 @@ export function HardwarePage() {
         )}
       </section>
 
-      {/* 存储 */}
-      {hw.disks.length > 0 && (
+      {/* 存储:物理磁盘 + 分区使用率 */}
+      {(hw.disks.length > 0 || hw.volumes.length > 0) && (
         <section className="hw-section">
           <div className="hw-section-title">
-            <Icon name="file-zip" size={16} />
+            <Icon name="drive" size={16} />
             <span>{zh ? "存储" : "Storage"}</span>
           </div>
-          <div className="hw-rows">
-            {hw.disks.map((d, i) => (
-              <div key={i} className="hw-row">
-                <div className="hw-row-name">{show(d.model)}</div>
-                <div className="hw-row-meta">
-                  {[d.media_type, d.bus_type].filter(Boolean).join(" · ")}
+
+          {hw.disks.length > 0 && (
+            <div className="hw-rows">
+              {hw.disks.map((d, i) => (
+                <div key={i} className="hw-row">
+                  <div className="hw-row-name">{show(d.model)}</div>
+                  <div className="hw-row-meta">
+                    {[d.media_type, d.bus_type].filter(Boolean).join(" · ") ||
+                      (zh ? "磁盘" : "disk")}
+                  </div>
+                  <div className="hw-row-value">{formatBytes(d.bytes)}</div>
                 </div>
-                <div className="hw-row-value">{formatBytes(d.bytes)}</div>
-              </div>
-            ))}
-          </div>
+              ))}
+            </div>
+          )}
+
+          {/* 分区使用率 */}
+          {hw.volumes.length > 0 && (
+            <div className="vol-grid">
+              {hw.volumes.map((v, i) => {
+                const used = v.total_bytes - v.free_bytes;
+                const pct = v.total_bytes > 0 ? Math.round((used / v.total_bytes) * 100) : 0;
+                const hot = pct >= 90;
+                return (
+                  <div key={i} className="vol-card">
+                    <div className="vol-head">
+                      <span className="vol-letter">
+                        {v.letter}
+                        {v.label ? ` ${v.label}` : ""}
+                      </span>
+                      <span className="vol-fs">{v.fs}</span>
+                    </div>
+                    <div className="vol-bar">
+                      <div
+                        className={`vol-fill ${hot ? "hot" : ""}`}
+                        style={{ width: `${pct}%` }}
+                      />
+                    </div>
+                    <div className="vol-meta">
+                      <span>
+                        {formatBytes(used)} / {formatBytes(v.total_bytes)} · {pct}%
+                      </span>
+                      <span className="vol-free">
+                        {formatBytes(v.free_bytes)} {zh ? "可用" : "free"}
+                      </span>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          )}
         </section>
       )}
 

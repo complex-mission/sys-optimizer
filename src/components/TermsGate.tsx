@@ -8,12 +8,26 @@ interface Props {
 }
 
 export function TermsGate({ onAccept }: Props) {
-  const { lang } = useI18n();
+  const { lang, setLang } = useI18n();
   const zh = lang === "zh-CN";
 
   return (
     <div className="terms-scrim">
       <div className="terms-card">
+        <div className="terms-lang-seg">
+          <button
+            className={`terms-lang-btn ${zh ? "active" : ""}`}
+            onClick={() => setLang("zh-CN")}
+          >
+            中文
+          </button>
+          <button
+            className={`terms-lang-btn ${!zh ? "active" : ""}`}
+            onClick={() => setLang("en-US")}
+          >
+            English
+          </button>
+        </div>
         <h1 className="terms-title">
           {zh ? "使用条款" : "Terms of Use"}
         </h1>

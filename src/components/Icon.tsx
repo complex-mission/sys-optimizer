@@ -30,6 +30,8 @@ export type IconName =
   | "movie"
   | "video"
   | "sparkles"
+  | "drive"
+  | "refresh"
   | "check";
 
 const paths: Record<IconName, string> = {
@@ -55,6 +57,8 @@ const paths: Record<IconName, string> = {
   movie: "M4 4h16v16H4zM4 9h16M9 4v5M15 4v5M4 15h16M9 15v5M15 15v5",
   video: "M15 10l5-3v10l-5-3M3 6h12a1 1 0 0 1 1 1v10a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1Z",
   sparkles: "M12 3l1.9 5.1L19 10l-5.1 1.9L12 17l-1.9-5.1L5 10l5.1-1.9L12 3ZM19 15l.9 2.1L22 18l-2.1.9L19 21l-.9-2.1L16 18l2.1-.9L19 15Z",
+  drive: "M4 6h16a1 1 0 0 1 1 1v10a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1ZM7 15h.01M11 15h6",
+  refresh: "M21 12a9 9 0 1 1-2.64-6.36M21 4v5h-5",
   check: "M20 6 9 17l-5-5",
 };
 

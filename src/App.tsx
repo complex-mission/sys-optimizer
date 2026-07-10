@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, type ReactElement } from "react";
 import { useI18n } from "./i18n";
 import { api } from "./lib/api";
 import { Icon, IconName } from "./components/Icon";
@@ -63,12 +63,34 @@ const NAV_GROUPS: { titleKey: string; items: NavItem[] }[] = [
   },
 ];
 
+const PAGES: Record<Route, () => ReactElement> = {
+  scan: () => <ScanPage />,
+  apps: () => <AppsPage />,
+  system: () => <SystemPage />,
+  space: () => <SpacePage />,
+  large: () => <LargePage />,
+  dup: () => <DupPage />,
+  hardware: () => <HardwarePage />,
+  startup: () => <StartupPage />,
+  uninstall: () => <LeftoverPage />,
+  settings: () => <SettingsPage />,
+  about: () => <AboutPage />,
+};
+
 export function App() {
   const { t, setLang } = useI18n();
   const [ready, setReady] = useState(false);
   const [accepted, setAccepted] = useState(false);
   const [showBanner, setShowBanner] = useState(false);
   const [route, setRoute] = useState<Route>("scan");
+  // 已访问过的页面:一旦挂载就保持存活(仅切换显隐),
+  // 这样离开再回来时状态(扫描进度、检测结果)不丢失,也不会重复触发自动检测。
+  const [mounted, setMounted] = useState<Set<Route>>(new Set(["scan"]));
+
+  const go = (r: Route) => {
+    setMounted((prev) => (prev.has(r) ? prev : new Set(prev).add(r)));
+    setRoute(r);
+  };
 
   useEffect(() => {
     (async () => {
@@ -131,7 +153,7 @@ export function App() {
               <button
                 key={item.id}
                 className={`nav-item ${route === item.id ? "active" : ""}`}
-                onClick={() => setRoute(item.id)}
+                onClick={() => go(item.id)}
               >
                 <Icon name={item.icon} size={18} />
                 <span>{t(item.labelKey)}</span>
@@ -144,14 +166,14 @@ export function App() {
         <div className="nav-group">
           <button
             className={`nav-item ${route === "settings" ? "active" : ""}`}
-            onClick={() => setRoute("settings")}
+            onClick={() => go("settings")}
           >
             <Icon name="settings" size={18} />
             <span>{t("nav.settings")}</span>
           </button>
           <button
             className={`nav-item ${route === "about" ? "active" : ""}`}
-            onClick={() => setRoute("about")}
+            onClick={() => go("about")}
           >
             <Icon name="info" size={18} />
             <span>{t("nav.about")}</span>
@@ -161,19 +183,18 @@ export function App() {
 
       <main className="content">
         {showBanner && <Banner onDismiss={handleDismissBanner} />}
-        <div className="page">
-          {route === "scan" && <ScanPage />}
-          {route === "apps" && <AppsPage />}
-          {route === "system" && <SystemPage />}
-          {route === "space" && <SpacePage />}
-          {route === "large" && <LargePage />}
-          {route === "dup" && <DupPage />}
-          {route === "startup" && <StartupPage />}
-          {route === "uninstall" && <LeftoverPage />}
-          {route === "hardware" && <HardwarePage />}
-          {route === "settings" && <SettingsPage />}
-          {route === "about" && <AboutPage />}
-        </div>
+        {/* 已访问的页面保持挂载,仅用 display 切换显隐,离开再回来状态不丢失 */}
+        {(Object.keys(PAGES) as Route[])
+          .filter((r) => mounted.has(r))
+          .map((r) => (
+            <div
+              key={r}
+              className="page"
+              style={r === route ? undefined : { display: "none" }}
+            >
+              {PAGES[r]()}
+            </div>
+          ))}
       </main>
     </div>
   );

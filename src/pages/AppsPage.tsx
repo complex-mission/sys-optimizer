@@ -64,6 +64,8 @@ export function AppsPage() {
     load();
   };
 
+  const openInExplorer = (path: string) => api.openPath(path).catch(() => {});
+
   const visibleApps = showAll ? apps : apps.filter((a) => a.installed);
 
   const grouped = GROUP_ORDER.map((g) => ({
@@ -142,25 +144,35 @@ export function AppsPage() {
                               )}
                             </div>
                           </div>
-                          {tg.supports_override && (
-                            <div className="target-actions">
+                          <div className="target-actions">
+                            {path && (
                               <button
                                 className="btn-text target-btn"
-                                onClick={() => specify(tg.id)}
+                                onClick={() => openInExplorer(path)}
+                                title={zh ? "打开文件夹" : "Open folder"}
                               >
                                 <Icon name="folder-open" size={14} />
                               </button>
-                              {tg.has_override && (
-                                <button
-                                  className="btn-text target-btn"
-                                  onClick={() => clearOverride(tg.id)}
-                                  title={zh ? "清除" : "clear"}
-                                >
-                                  <Icon name="close" size={14} />
-                                </button>
-                              )}
-                            </div>
-                          )}
+                            )}
+                            {tg.supports_override && (
+                              <button
+                                className="btn-text target-btn"
+                                onClick={() => specify(tg.id)}
+                                title={zh ? "指定实际路径" : "Set actual path"}
+                              >
+                                <Icon name="tune" size={14} />
+                              </button>
+                            )}
+                            {tg.has_override && (
+                              <button
+                                className="btn-text target-btn"
+                                onClick={() => clearOverride(tg.id)}
+                                title={zh ? "清除自定义路径" : "Clear custom path"}
+                              >
+                                <Icon name="close" size={14} />
+                              </button>
+                            )}
+                          </div>
                         </div>
                       );
                     })}

@@ -36,6 +36,8 @@ export function ScanPage() {
   const [kept, setKept] = useState<Record<string, Set<string>>>({});
   // 进度
   const [progress, setProgress] = useState({ done: 0, total: 0 });
+  const [current, setCurrent] = useState<string>("");
+  const [stopping, setStopping] = useState(false);
   const [freed, setFreed] = useState(0);
   const [skipped, setSkipped] = useState(0);
 
@@ -69,19 +71,32 @@ export function ScanPage() {
     setKept({});
     setChecked(defaultChecked(ids));
     setProgress({ done: 0, total: ids.length });
+    setCurrent(ids[0] ?? "");
+    setStopping(false);
     setPhase("scanning");
 
     scanUnlisten.current?.();
     scanUnlisten.current = await onScanProgress((p) => {
-      setSizes((prev) => ({ ...prev, [p.result.id]: p.result }));
+      // 完成事件才写入体积(开始事件的 result 为占位 0)
+      if (p.result && (p.result.bytes > 0 || p.result.files > 0)) {
+        setSizes((prev) => ({ ...prev, [p.result.id]: p.result }));
+      }
       setProgress({ done: p.done, total: p.total });
+      if (p.current) setCurrent(p.current);
     });
 
     const results = await api.runScan(ids);
     const map: Record<string, CategoryScanResult> = {};
     for (const r of results) map[r.id] = r;
     setSizes(map);
-    setPhase("results");
+    setCurrent("");
+    // 全部被停止且无结果时回到挡位选择,否则展示(可能是部分)结果
+    setPhase(results.length === 0 ? "idle" : "results");
+  };
+
+  const stopScan = async () => {
+    setStopping(true);
+    await api.cancelScan().catch(() => {});
   };
 
   // 当前挡位涉及的类别(按结果展示顺序:有内容的在前)
@@ -175,9 +190,43 @@ export function ScanPage() {
     setPhase("done");
   };
 
+  const catName = (id: string) => {
+    const c = cats.find((x) => x.id === id);
+    return c ? t(c.name_key) : id;
+  };
+
   /* ---------------- 渲染 ---------------- */
 
-  if (phase === "idle" || phase === "scanning") {
+  if (phase === "scanning") {
+    const pct = progress.total > 0 ? Math.round((progress.done / progress.total) * 100) : 0;
+    return (
+      <div className="scan-running">
+        <div className="scan-running-card">
+          <div className="scan-running-icon">
+            <Icon name="scan" size={26} />
+          </div>
+          <div className="scan-running-title">
+            {stopping ? t("scan.stopping") : t("scan.scanning")}
+          </div>
+          <div className="scan-running-current" title={current}>
+            {current ? catName(current) : "…"}
+          </div>
+          <div className="scan-progress-track">
+            <div className="scan-progress-fill" style={{ width: `${pct}%` }} />
+          </div>
+          <div className="scan-running-meta">
+            {progress.done}/{progress.total} · {formatBytes(totalFound)}
+          </div>
+          <button className="btn-outline scan-stop" onClick={stopScan} disabled={stopping}>
+            <Icon name="close" size={14} style={{ marginRight: 4 }} />
+            {t("scan.stop")}
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  if (phase === "idle") {
     return (
       <div className="scan-home">
         <div className="scan-head">
@@ -190,7 +239,6 @@ export function ScanPage() {
               key={tr.id}
               className={`tier-card ${tier === tr.id ? "selected" : ""}`}
               onClick={() => setTier(tr.id)}
-              disabled={phase === "scanning"}
             >
               {tr.recommended && (
                 <span className="tier-badge">{t("scan.recommended")}</span>
@@ -207,14 +255,8 @@ export function ScanPage() {
             {t("scan.custom")}
             <Icon name="chevron-down" size={14} style={{ marginLeft: 2 }} />
           </button>
-          <button
-            className="btn-filled"
-            onClick={startScan}
-            disabled={phase === "scanning"}
-          >
-            {phase === "scanning"
-              ? `${t("scan.scanning")} ${progress.done}/${progress.total}`
-              : t("scan.start")}
+          <button className="btn-filled" onClick={startScan}>
+            {t("scan.start")}
           </button>
         </div>
       </div>
@@ -244,6 +286,14 @@ export function ScanPage() {
         {phase !== "done" && (
           <div className="results-sub">
             {t("result.selected")} {formatBytes(selectedBytes)}
+            <button
+              className="btn-text results-rescan"
+              onClick={() => setPhase("idle")}
+              disabled={phase === "cleaning"}
+            >
+              <Icon name="scan" size={13} style={{ marginRight: 4 }} />
+              {t("scan.rescan")}
+            </button>
           </div>
         )}
       </div>

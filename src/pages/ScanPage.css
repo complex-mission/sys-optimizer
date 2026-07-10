@@ -125,3 +125,86 @@
   color: var(--on-surface-variant);
   max-width: 60%;
 }
+
+.results-sub {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.results-rescan {
+  display: inline-flex;
+  align-items: center;
+}
+
+/* ---------- 扫描进行中 ---------- */
+.scan-running {
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.scan-running-card {
+  width: 100%;
+  max-width: 440px;
+  background: var(--surface-container);
+  border-radius: var(--shape-xl);
+  padding: 40px 32px 32px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 10px;
+}
+.scan-running-icon {
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  background: var(--primary-container);
+  color: var(--on-primary-container);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 6px;
+  animation: pulse 1.6s ease-in-out infinite;
+}
+@keyframes pulse {
+  0%, 100% { transform: scale(1); opacity: 1; }
+  50% { transform: scale(1.06); opacity: 0.85; }
+}
+.scan-running-title {
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--on-surface);
+}
+.scan-running-current {
+  font-size: 13px;
+  color: var(--primary);
+  font-weight: 500;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  min-height: 18px;
+}
+.scan-progress-track {
+  width: 100%;
+  height: 8px;
+  background: var(--surface-container-highest);
+  border-radius: var(--shape-full);
+  overflow: hidden;
+  margin-top: 8px;
+}
+.scan-progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--primary), var(--risk-cache));
+  border-radius: var(--shape-full);
+  transition: width var(--spring);
+}
+.scan-running-meta {
+  font-size: 12.5px;
+  color: var(--on-surface-variant);
+  font-variant-numeric: tabular-nums;
+}
+.scan-stop {
+  margin-top: 16px;
+}

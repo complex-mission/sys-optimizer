@@ -16,7 +16,7 @@ export default defineConfig({
   // Tauri 使用 Chromium(Windows 上为 WebView2/Edge),可用较新的构建目标
   build: {
     target: "chrome105",
-    minify: "esbuild",
+    minify: "oxc",
     sourcemap: false,
   },
 });

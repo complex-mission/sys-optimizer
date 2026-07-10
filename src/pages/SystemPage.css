@@ -5,6 +5,12 @@
   max-width: 860px;
 }
 
+.system-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
 .system-head h1 {
   font-size: 22px;
   font-weight: 500;
@@ -13,6 +19,42 @@
   font-size: 12.5px;
   color: var(--on-surface-variant);
   margin-top: 4px;
+}
+.system-refresh {
+  padding: 7px !important;
+  display: flex;
+  flex-shrink: 0;
+  border-radius: var(--shape-full) !important;
+  color: var(--on-surface-variant);
+}
+.system-refresh:hover:not(:disabled) {
+  background: var(--surface-container-high);
+  color: var(--on-surface);
+}
+
+/* 加载骨架 */
+.system-skeleton {
+  gap: 10px;
+}
+.sk-line {
+  height: 12px;
+  border-radius: var(--shape-full);
+  background: linear-gradient(
+    90deg,
+    var(--surface-container-high) 25%,
+    var(--surface-container-highest) 50%,
+    var(--surface-container-high) 75%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 1.3s ease-in-out infinite;
+}
+.sk-title { width: 45%; height: 15px; }
+.sk-sub { width: 28%; }
+.sk-text { width: 90%; height: 10px; }
+.sk-btn { width: 120px; height: 32px; border-radius: var(--shape-sm); margin-top: 4px; }
+@keyframes shimmer {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
 }
 
 .system-notice {

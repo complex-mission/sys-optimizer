@@ -35,7 +35,7 @@ pub fn scan_one(id: &str) -> CategoryScanResult {
         return CategoryScanResult { id: id.into(), bytes: 0, files: 0 };
     };
 
-    if def.special == Some("recycle-bin") {
+    if def.special.as_deref() == Some("recycle-bin") {
         let (bytes, files) = recycle::recycle_bin_size();
         return CategoryScanResult { id: id.into(), bytes, files };
     }
@@ -80,7 +80,7 @@ pub fn clean_one(id: &str, keep: &HashSet<String>) -> CleanResult {
         return CleanResult { id: id.into(), freed_bytes: 0, deleted_files: 0, skipped: 0 };
     };
 
-    if def.special == Some("recycle-bin") {
+    if def.special.as_deref() == Some("recycle-bin") {
         let (freed_bytes, deleted_files) = recycle::clear_recycle_bin();
         return CleanResult { id: id.into(), freed_bytes, deleted_files, skipped: 0 };
     }

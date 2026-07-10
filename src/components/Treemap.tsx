@@ -63,17 +63,23 @@ function layout(nodes: SpaceNode[], width: number, height: number): Rect[] {
   return rects;
 }
 
-// 种子色 #378ADD 派生的一组明暗色阶(深→浅),按排名循环使用。
-// 越大的块颜色越深,视觉权重与体积一致。
-const RAMP = [
-  "#0c447c",
-  "#155a9e",
-  "#1f6fbf",
-  "#3288d6",
-  "#5aa0e0",
-  "#85b8ea",
-  "#aecdf1",
+// 分类色板:相邻块用不同色相区分,不再是清一色蓝。
+// 选用中高饱和、明度接近的一组颜色,深浅背景下都清晰;文字色按亮度自动取黑/白。
+const PALETTE = [
+  "#4c8dff", "#22c3a6", "#f4b740", "#ef6f6c", "#a78bfa",
+  "#34d399", "#f472b6", "#60a5fa", "#fbbf24", "#38bdf8",
+  "#c084fc", "#2dd4bf", "#fb923c", "#f87171",
 ];
+
+// 依据背景色感知亮度,选对比更高的文字颜色。
+function textOn(hex: string): string {
+  const h = hex.replace("#", "");
+  const r = parseInt(h.slice(0, 2), 16);
+  const g = parseInt(h.slice(2, 4), 16);
+  const b = parseInt(h.slice(4, 6), 16);
+  const lum = (0.299 * r + 0.587 * g + 0.114 * b) / 255;
+  return lum > 0.62 ? "#1a1c1e" : "#ffffff";
+}
 
 // squarified treemap 布局
 export function Treemap({ nodes, width, height, onDrill, otherLabel }: Props) {
@@ -91,7 +97,8 @@ export function Treemap({ nodes, width, height, onDrill, otherLabel }: Props) {
     >
       {rects.map((r, idx) => {
         const isOther = r.node.name === "__other__";
-        const color = isOther ? "var(--surface-container-highest)" : RAMP[Math.min(idx, RAMP.length - 1)];
+        const color = isOther ? "var(--surface-container-highest)" : PALETTE[idx % PALETTE.length];
+        const fg = isOther ? "var(--on-surface-variant)" : textOn(PALETTE[idx % PALETTE.length]);
         const pct = total > 0 ? Math.round((r.node.bytes / total) * 100) : 0;
         const label = isOther ? otherLabel : r.node.name;
         const showText = r.w > 54 && r.h > 26;
@@ -117,7 +124,7 @@ export function Treemap({ nodes, width, height, onDrill, otherLabel }: Props) {
                 <text
                   x={r.x + 10}
                   y={r.y + 20}
-                  fill={isOther ? "var(--on-surface-variant)" : "#ffffff"}
+                  fill={fg}
                   fontSize={12.5}
                   fontWeight={500}
                   style={{ pointerEvents: "none" }}
@@ -128,8 +135,9 @@ export function Treemap({ nodes, width, height, onDrill, otherLabel }: Props) {
                   <text
                     x={r.x + 10}
                     y={r.y + 37}
-                    fill={isOther ? "var(--on-surface-variant)" : "rgba(255,255,255,0.82)"}
+                    fill={fg}
                     fontSize={11}
+                    opacity={0.82}
                     style={{ pointerEvents: "none" }}
                   >
                     {formatBytes(r.node.bytes)} · {pct}%
