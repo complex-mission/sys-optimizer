@@ -9,6 +9,7 @@ import {
   formatBytes,
 } from "../lib/api";
 import { Icon, IconName } from "./Icon";
+import "./CategoryRow.css";
 
 interface Props {
   meta: CategoryMeta;

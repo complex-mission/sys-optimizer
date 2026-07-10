@@ -37,11 +37,43 @@ input:focus-visible {
   outline-offset: 2px;
 }
 
+/* 自绘 checkbox:原生控件未选中时是亮白方块,在深色界面里比选中态还显眼。
+   未选中 = 透明底 + 细描边;选中 = 主色底 + 对勾。 */
 input[type="checkbox"] {
-  accent-color: var(--primary);
+  appearance: none;
+  -webkit-appearance: none;
   width: 16px;
   height: 16px;
+  flex-shrink: 0;
   cursor: pointer;
+  border: 1.5px solid var(--outline);
+  border-radius: 4px;
+  background: transparent;
+  position: relative;
+  transition: background var(--ease-standard), border-color var(--ease-standard);
+}
+input[type="checkbox"]:hover:not(:disabled) {
+  border-color: var(--on-surface-variant);
+  background: var(--surface-container-high);
+}
+input[type="checkbox"]:checked {
+  background: var(--primary);
+  border-color: var(--primary);
+}
+input[type="checkbox"]:checked::after {
+  content: "";
+  position: absolute;
+  left: 4px;
+  top: 1px;
+  width: 4px;
+  height: 8px;
+  border: solid var(--on-primary);
+  border-width: 0 2px 2px 0;
+  transform: rotate(45deg);
+}
+input[type="checkbox"]:disabled {
+  opacity: 0.38;
+  cursor: not-allowed;
 }
 
 input[type="text"] {

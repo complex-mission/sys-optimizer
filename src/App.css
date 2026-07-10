@@ -7,7 +7,8 @@
 /* ---------- 侧边导航 ---------- */
 .sidebar {
   background: var(--surface-container-low);
-  border-right: 1px solid var(--outline-variant);
+  /* 分隔线压暗一半,避免右侧边线过亮抢视觉 */
+  border-right: 1px solid color-mix(in srgb, var(--outline-variant) 50%, transparent);
   display: flex;
   flex-direction: column;
   padding: 16px 12px;

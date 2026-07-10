@@ -178,9 +178,12 @@
   gap: 3px;
 }
 .slot.occupied {
-  background: var(--primary-container);
-  color: var(--on-primary-container);
-  border: 1px solid var(--primary);
+  background: var(--surface-container);
+  color: var(--on-surface);
+  border: 1px solid var(--outline-variant);
+}
+.slot.occupied .slot-cap {
+  color: var(--primary);
 }
 .slot.empty {
   background: var(--surface-container);
