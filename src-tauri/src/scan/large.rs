@@ -9,8 +9,11 @@
 use crate::types::LargeFile;
 use std::collections::HashSet;
 use std::path::Path;
-use std::sync::atomic::{AtomicU64, Ordering};
+use std::sync::atomic::{AtomicBool, AtomicU64, Ordering};
 use std::sync::Arc;
+
+/// 取消标记:前端点"停止"时置位,遍历循环检查后提前返回(已找到的照常返回)。
+pub static CANCEL: AtomicBool = AtomicBool::new(false);
 
 /// 进度累计器。
 pub struct LargeCounter {
@@ -83,6 +86,9 @@ pub fn scan_large(
     let mut visited: HashSet<String> = HashSet::new();
 
     while let Some(dir) = stack.pop() {
+        if CANCEL.load(Ordering::Relaxed) {
+            break;
+        }
         if is_excluded(&dir) {
             continue;
         }

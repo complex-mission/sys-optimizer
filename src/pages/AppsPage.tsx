@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { open } from "@tauri-apps/plugin-dialog";
+import { open, message } from "@tauri-apps/plugin-dialog";
 import { useI18n } from "../i18n";
 import { api, AppView, Risk } from "../lib/api";
 import { Icon, IconName } from "../components/Icon";
@@ -47,15 +47,23 @@ export function AppsPage() {
     load();
   }, []);
 
-  const specify = async (id: string) => {
+  const specify = async (id: string, currentPath?: string) => {
     try {
-      const picked = await open({ directory: true, multiple: false });
+      const picked = await open({
+        directory: true,
+        multiple: false,
+        // 从当前解析路径打开选择器,方便就近调整
+        defaultPath: currentPath || undefined,
+      });
       if (typeof picked === "string") {
         await api.setPathOverride(id, [picked]);
         load();
       }
-    } catch {
-      /* 取消 */
+    } catch (e) {
+      // setPathOverride 拒绝危险目录时把原因告诉用户;取消选择则静默
+      if (e) {
+        await message(String(e), { title: zh ? "无法设置路径" : "Can't set path", kind: "error" }).catch(() => {});
+      }
     }
   };
 
@@ -64,7 +72,10 @@ export function AppsPage() {
     load();
   };
 
-  const openInExplorer = (path: string) => api.openPath(path).catch(() => {});
+  const openInExplorer = (path: string) =>
+    api.openPath(path).catch((e) =>
+      message(String(e), { title: zh ? "无法打开位置" : "Can't open location", kind: "warning" }).catch(() => {})
+    );
 
   const visibleApps = showAll ? apps : apps.filter((a) => a.installed);
 
@@ -97,7 +108,18 @@ export function AppsPage() {
       </div>
 
       {loading ? (
-        <div className="apps-empty">…</div>
+        <div className="apps-grid">
+          {Array.from({ length: 4 }).map((_, i) => (
+            <div key={i} className="app-card apps-skeleton">
+              <div className="apps-sk-head">
+                <span className="apps-sk-block apps-sk-icon" />
+                <span className="apps-sk-block apps-sk-name" />
+              </div>
+              <div className="apps-sk-block apps-sk-line" />
+              <div className="apps-sk-block apps-sk-line short" />
+            </div>
+          ))}
+        </div>
       ) : grouped.length === 0 ? (
         <div className="apps-empty">
           {zh ? "未检测到已安装的相关软件" : "No matching apps detected"}
@@ -157,7 +179,7 @@ export function AppsPage() {
                             {tg.supports_override && (
                               <button
                                 className="btn-text target-btn"
-                                onClick={() => specify(tg.id)}
+                                onClick={() => specify(tg.id, path)}
                                 title={zh ? "指定实际路径" : "Set actual path"}
                               >
                                 <Icon name="tune" size={14} />

@@ -39,6 +39,48 @@
   text-align: center;
 }
 
+/* 加载骨架(结构与 app-card 对齐) */
+.apps-skeleton {
+  gap: 12px;
+}
+.apps-sk-head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.apps-sk-block {
+  border-radius: var(--shape-full);
+  background: linear-gradient(
+    90deg,
+    var(--surface-container-high) 25%,
+    var(--surface-container-highest) 50%,
+    var(--surface-container-high) 75%
+  );
+  background-size: 200% 100%;
+  animation: apps-shimmer 1.3s ease-in-out infinite;
+}
+.apps-sk-icon {
+  width: 34px;
+  height: 34px;
+  border-radius: var(--shape-sm);
+  flex-shrink: 0;
+}
+.apps-sk-name {
+  width: 40%;
+  height: 14px;
+}
+.apps-sk-line {
+  width: 90%;
+  height: 11px;
+}
+.apps-sk-line.short {
+  width: 60%;
+}
+@keyframes apps-shimmer {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
 .apps-group {
   display: flex;
   flex-direction: column;

@@ -82,7 +82,18 @@ export function StartupPage() {
       {error && <div className="startup-error">{error}</div>}
 
       {loading ? (
-        <div className="startup-empty">…</div>
+        <div className="startup-list">
+          {Array.from({ length: 6 }).map((_, i) => (
+            <div key={i} className="startup-row startup-skeleton">
+              <span className="startup-sk-icon" />
+              <div className="startup-info">
+                <div className="startup-sk-line startup-sk-name" />
+                <div className="startup-sk-line startup-sk-cmd" />
+              </div>
+              <span className="startup-sk-toggle" />
+            </div>
+          ))}
+        </div>
       ) : items.length === 0 ? (
         <div className="startup-empty">
           {zh ? "没有检测到启动项" : "No startup items found"}

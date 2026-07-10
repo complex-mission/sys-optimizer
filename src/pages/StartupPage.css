@@ -99,6 +99,47 @@
   border-radius: var(--shape-full);
 }
 
+/* 加载骨架(结构与 startup-row 对齐) */
+.startup-skeleton:hover {
+  background: transparent;
+}
+.startup-sk-line,
+.startup-sk-icon,
+.startup-sk-toggle {
+  border-radius: var(--shape-full);
+  background: linear-gradient(
+    90deg,
+    var(--surface-container-high) 25%,
+    var(--surface-container-highest) 50%,
+    var(--surface-container-high) 75%
+  );
+  background-size: 200% 100%;
+  animation: startup-shimmer 1.3s ease-in-out infinite;
+}
+.startup-sk-icon {
+  width: 18px;
+  height: 18px;
+  flex-shrink: 0;
+}
+.startup-sk-name {
+  width: 30%;
+  height: 13px;
+}
+.startup-sk-cmd {
+  width: 65%;
+  height: 10px;
+  margin-top: 6px;
+}
+.startup-sk-toggle {
+  width: 44px;
+  height: 24px;
+  flex-shrink: 0;
+}
+@keyframes startup-shimmer {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
 /* MD3 风格开关 */
 .toggle {
   width: 44px;

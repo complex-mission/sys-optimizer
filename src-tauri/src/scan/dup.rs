@@ -14,8 +14,15 @@ use std::collections::HashMap;
 use std::fs::File;
 use std::io::{Read, Seek, SeekFrom};
 use std::path::{Path, PathBuf};
-use std::sync::atomic::{AtomicU64, Ordering};
+use std::sync::atomic::{AtomicBool, AtomicU64, Ordering};
 use std::sync::Arc;
+
+/// 取消标记:前端点"停止"时置位,遍历/哈希各阶段检查后提前返回(已确认的组照常返回)。
+pub static CANCEL: AtomicBool = AtomicBool::new(false);
+
+fn cancelled() -> bool {
+    CANCEL.load(Ordering::Relaxed)
+}
 
 const SAMPLE: usize = 64 * 1024; // 首尾采样各 64KB
 const MIN_SIZE: u64 = 4 * 1024; // 忽略 4KB 以下的小文件(重复价值低,数量却极多)
@@ -73,6 +80,9 @@ fn collect_files(root: &Path, counter: &DupCounter) -> Vec<Candidate> {
     }
     let mut stack = vec![root.to_path_buf()];
     while let Some(dir) = stack.pop() {
+        if cancelled() {
+            break;
+        }
         if is_excluded(&dir) {
             continue;
         }
@@ -163,6 +173,9 @@ pub fn find_duplicates(root: &Path, counter: &DupCounter) -> Vec<DuplicateGroup>
     // 对每个大小组内的文件算采样哈希,再按 (size, sample) 二次分组
     let mut sample_groups: Vec<Vec<Candidate>> = Vec::new();
     for group in size_groups {
+        if cancelled() {
+            break;
+        }
         let size = group[0].size;
         let hashed: Vec<(Option<u64>, Candidate)> = group
             .into_par_iter()
@@ -189,6 +202,9 @@ pub fn find_duplicates(root: &Path, counter: &DupCounter) -> Vec<DuplicateGroup>
     // ---- 3. 全文件哈希确认(并行) ----
     let mut result: Vec<DuplicateGroup> = Vec::new();
     for group in sample_groups {
+        if cancelled() {
+            break;
+        }
         let size = group[0].size;
         let hashed: Vec<(Option<u64>, Candidate)> = group
             .into_par_iter()

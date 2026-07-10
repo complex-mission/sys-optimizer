@@ -10,8 +10,15 @@
 
 use crate::types::{NotableLocation, SpaceLevel, SpaceNode};
 use std::path::Path;
-use std::sync::atomic::{AtomicU64, Ordering};
+use std::sync::atomic::{AtomicBool, AtomicU64, Ordering};
 use std::sync::Arc;
+
+/// 取消标记:前端点"停止"时置位,遍历循环检查后提前返回(结果视为不完整)。
+pub static CANCEL: AtomicBool = AtomicBool::new(false);
+
+fn cancelled() -> bool {
+    CANCEL.load(Ordering::Relaxed)
+}
 
 /// 进度累计器(跨线程共享)。
 pub struct SpaceCounter {
@@ -41,6 +48,9 @@ fn dir_size(path: &Path, counter: Option<&SpaceCounter>) -> u64 {
     let mut total = 0u64;
     let mut stack = vec![path.to_path_buf()];
     while let Some(d) = stack.pop() {
+        if cancelled() {
+            return total;
+        }
         let rd = match std::fs::read_dir(&d) {
             Ok(rd) => rd,
             Err(_) => continue,
@@ -73,6 +83,9 @@ pub fn analyze_level(dir: &Path, top_n: usize, counter: Option<&SpaceCounter>) -
 
     if let Ok(rd) = std::fs::read_dir(dir) {
         for entry in rd.flatten() {
+            if cancelled() {
+                break;
+            }
             let p = entry.path();
             if is_symlink(&p) {
                 continue;

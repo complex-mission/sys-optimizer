@@ -221,6 +221,7 @@ export interface DisplayInfo {
   name: string;
   width: number;
   height: number;
+  refresh_hz: number;
 }
 
 export interface BatteryInfo {
@@ -240,6 +241,8 @@ export interface HardwareReport {
   bios_version: string;
   gpu_model: string;
   gpu_vram_bytes: number;
+  gpu_driver_version: string;
+  gpu_driver_date: string;
   memory_slots_total: number;
   memory_slots_used: number;
   memory_total_bytes: number;
@@ -259,6 +262,8 @@ export const api = {
   idsForTier: (tier: Tier) => invoke<string[]>("ids_for_tier", { tier }),
   runScan: (ids: string[]) => invoke<CategoryScanResult[]>("run_scan", { ids }),
   cancelScan: () => invoke<void>("cancel_scan"),
+  cancelTask: (kind: "space" | "large" | "dup") =>
+    invoke<void>("cancel_task", { kind }),
   diskUsage: (path: string) => invoke<DiskUsage>("disk_usage", { path }),
   previewCategory: (id: string, offset: number, limit: number) =>
     invoke<PreviewPage>("preview_category", { id, offset, limit }),

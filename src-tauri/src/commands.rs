@@ -19,6 +19,17 @@ pub fn cancel_scan() {
     SCAN_CANCEL.store(true, Ordering::Relaxed);
 }
 
+/// 请求停止指定类型的长任务(空间分析/大文件/重复文件)。
+#[tauri::command]
+pub fn cancel_task(kind: String) {
+    match kind.as_str() {
+        "space" => scan::space::CANCEL.store(true, Ordering::Relaxed),
+        "large" => scan::large::CANCEL.store(true, Ordering::Relaxed),
+        "dup" => scan::dup::CANCEL.store(true, Ordering::Relaxed),
+        _ => {}
+    }
+}
+
 /// 列出全部类别元信息。
 #[tauri::command]
 pub fn list_categories() -> Vec<CategoryMeta> {
@@ -119,13 +130,30 @@ pub async fn run_clean(
 }
 
 /// 在资源管理器中打开路径(供"打开位置")。
+/// explorer.exe 收到不存在/畸形的路径时会静默回落到"文档"文件夹,
+/// 因此先规范化并校验存在性,不存在直接报错让前端提示。
 #[tauri::command]
 pub fn open_path(path: String) -> Result<(), String> {
     #[cfg(windows)]
     {
         use std::os::windows::process::CommandExt;
+        // 统一反斜杠、去掉尾部分隔符(盘符根 "C:\" 除外)
+        let mut p = path.replace('/', "\\");
+        while p.len() > 3 && p.ends_with('\\') {
+            p.pop();
+        }
+        let pb = std::path::PathBuf::from(&p);
+        if !pb.exists() {
+            return Err(format!("路径不存在:{p}"));
+        }
+        // 文件用 /select 定位到所在目录;目录直接打开
+        let arg = if pb.is_file() {
+            format!("/select,\"{p}\"")
+        } else {
+            format!("\"{p}\"")
+        };
         std::process::Command::new("explorer.exe")
-            .raw_arg(format!("\"{path}\""))
+            .raw_arg(arg)
             .creation_flags(0x0800_0000)
             .spawn()
             .map_err(|e| e.to_string())?;
@@ -257,6 +285,7 @@ pub async fn scan_large_files(
     use scan::large::LargeCounter;
     use std::sync::atomic::Ordering;
 
+    scan::large::CANCEL.store(false, Ordering::Relaxed);
     let counter = LargeCounter::new();
     let counter_bg = counter.clone();
     let win = window.clone();
@@ -320,6 +349,7 @@ pub async fn scan_duplicates(window: Window, path: String) -> Vec<DuplicateGroup
     use scan::dup::DupCounter;
     use std::sync::atomic::Ordering;
 
+    scan::dup::CANCEL.store(false, Ordering::Relaxed);
     let counter = DupCounter::new();
     let counter_bg = counter.clone();
     let win = window.clone();
@@ -455,6 +485,7 @@ pub async fn analyze_space(window: Window, path: String, top_n: usize) -> SpaceL
     use scan::space::SpaceCounter;
     use std::sync::atomic::Ordering;
 
+    scan::space::CANCEL.store(false, Ordering::Relaxed);
     let counter = SpaceCounter::new();
     let counter_bg = counter.clone();
     let win = window.clone();

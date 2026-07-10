@@ -87,6 +87,7 @@ export function SystemPage() {
   const byId = (id: string) => items?.find((i) => i.id === id);
 
   const run = async (meta: ItemMeta) => {
+    if (busy) return; // 已有任务在执行,禁止并发(DISM 等不可并行)
     const ok = await confirm(zh ? meta.costZh : meta.costEn, {
       title: (zh ? meta.actionZh : meta.actionEn) + "?",
       kind: "warning",
@@ -94,6 +95,11 @@ export function SystemPage() {
     if (!ok) return;
 
     setBusy(meta.id);
+    setResults((prev) => {
+      const next = { ...prev };
+      delete next[meta.id];
+      return next;
+    });
     try {
       const res = await api.executeSystemSpace(meta.id);
       setResults((prev) => ({ ...prev, [meta.id]: { ok: res.success, msg: res.message } }));
@@ -122,7 +128,7 @@ export function SystemPage() {
         <button
           className="btn-text system-refresh"
           onClick={load}
-          disabled={loading}
+          disabled={loading || busy !== null}
           title={zh ? "重新检测" : "Rescan"}
         >
           <Icon name="refresh" size={16} />
@@ -174,7 +180,15 @@ export function SystemPage() {
                   </div>
                 </div>
                 <p className="system-cost">{zh ? meta.costZh : meta.costEn}</p>
-                {result && (
+                {busy === meta.id && (
+                  <div className="system-running">
+                    <span className="system-spinner" />
+                    {zh
+                      ? "正在执行,可能需要几分钟到几十分钟,过程无法中断,请勿关闭软件。"
+                      : "Running — this can take minutes to tens of minutes and can't be interrupted. Don't close the app."}
+                  </div>
+                )}
+                {result && busy !== meta.id && (
                   <div className={`system-result ${result.ok ? "ok" : "err"}`}>
                     {result.msg}
                   </div>
@@ -182,7 +196,7 @@ export function SystemPage() {
                 <button
                   className="btn-outline system-action"
                   onClick={() => run(meta)}
-                  disabled={!available || busy === meta.id}
+                  disabled={!available || busy !== null}
                 >
                   {busy === meta.id
                     ? zh ? "处理中…" : "Working…"

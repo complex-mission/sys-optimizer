@@ -63,6 +63,9 @@ export function LargePage() {
     unlisten.current = null;
   };
 
+  // 停止扫描:后端提前返回已找到的部分结果
+  const stopScan = () => api.cancelTask("large").catch(() => {});
+
   const toggle = (path: string, on: boolean) => {
     setChecked((prev) => {
       const next = new Set(prev);
@@ -133,8 +136,12 @@ export function LargePage() {
           </div>
         </div>
 
-        <button className="btn-filled large-scan-btn" onClick={startScan} disabled={scanning || !dir}>
-          {scanning ? (zh ? "扫描中" : "Scanning") : zh ? "开始扫描" : "Scan"}
+        <button
+          className={`${scanning ? "btn-outline" : "btn-filled"} large-scan-btn`}
+          onClick={scanning ? stopScan : startScan}
+          disabled={!scanning && !dir}
+        >
+          {scanning ? (zh ? "停止" : "Stop") : zh ? "开始扫描" : "Scan"}
         </button>
       </div>
 

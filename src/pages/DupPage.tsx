@@ -66,6 +66,9 @@ export function DupPage() {
     unlisten.current = null;
   };
 
+  // 停止扫描:后端提前返回已确认的部分结果
+  const stopScan = () => api.cancelTask("dup").catch(() => {});
+
   // 切换某文件的删除状态。约束:每组至少保留一个(不能把一组全标删除)。
   const toggleDelete = (group: DuplicateGroup, path: string, wantDelete: boolean) => {
     setToDelete((prev) => {
@@ -155,8 +158,12 @@ export function DupPage() {
             {zh ? "更改" : "Change"}
           </button>
         </div>
-        <button className="btn-filled" onClick={startScan} disabled={scanning || !dir}>
-          {scanning ? (zh ? "扫描中" : "Scanning") : zh ? "开始扫描" : "Scan"}
+        <button
+          className={scanning ? "btn-outline" : "btn-filled"}
+          onClick={scanning ? stopScan : startScan}
+          disabled={!scanning && !dir}
+        >
+          {scanning ? (zh ? "停止" : "Stop") : zh ? "开始扫描" : "Scan"}
         </button>
       </div>
 

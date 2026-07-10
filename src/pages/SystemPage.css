@@ -146,3 +146,29 @@
 .system-action {
   align-self: flex-start;
 }
+
+/* 执行中提示:转圈 + 说明(DISM 等长任务不可中断) */
+.system-running {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  font-size: 11.5px;
+  padding: 8px 10px;
+  border-radius: var(--shape-xs);
+  background: var(--surface-container-high);
+  color: var(--on-surface-variant);
+  line-height: 1.5;
+}
+.system-spinner {
+  width: 12px;
+  height: 12px;
+  flex-shrink: 0;
+  margin-top: 2px;
+  border: 2px solid var(--outline-variant);
+  border-top-color: var(--primary);
+  border-radius: 50%;
+  animation: system-spin 0.8s linear infinite;
+}
+@keyframes system-spin {
+  to { transform: rotate(360deg); }
+}

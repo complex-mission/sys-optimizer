@@ -40,6 +40,8 @@ pub struct DisplayInfo {
     pub name: String,
     pub width: u32,
     pub height: u32,
+    /// 当前刷新率(Hz),0 表示未知
+    pub refresh_hz: u32,
 }
 
 #[derive(Debug, Clone, Serialize, Default)]
@@ -62,6 +64,9 @@ pub struct HardwareReport {
     pub bios_version: String,
     pub gpu_model: String,
     pub gpu_vram_bytes: u64,
+    pub gpu_driver_version: String,
+    /// 驱动日期,"YYYY-MM-DD",空表示未知
+    pub gpu_driver_date: String,
     /// 内存插槽总数与明细(需求核心示例)
     pub memory_slots_total: u32,
     pub memory_slots_used: u32,
@@ -126,7 +131,11 @@ mod win {
         match m.get(key) {
             Some(Variant::UI8(n)) => *n,
             Some(Variant::UI4(n)) => *n as u64,
+            Some(Variant::UI2(n)) => *n as u64,
+            Some(Variant::UI1(n)) => *n as u64,
+            Some(Variant::I8(n)) if *n >= 0 => *n as u64,
             Some(Variant::I4(n)) if *n >= 0 => *n as u64,
+            Some(Variant::I2(n)) if *n >= 0 => *n as u64,
             Some(Variant::String(s)) => s.parse().unwrap_or(0),
             _ => 0,
         }
@@ -176,14 +185,16 @@ mod win {
         }
 
         // GPU(显存不用 AdapterRAM,它是 32 位、>4GB 会溢出;此处取型号,显存优先从注册表读)
-        if let Ok(rows) = wmi
-            .raw_query::<Row>("SELECT Name, AdapterRAM FROM Win32_VideoController")
-        {
+        if let Ok(rows) = wmi.raw_query::<Row>(
+            "SELECT Name, AdapterRAM, DriverVersion, DriverDate FROM Win32_VideoController",
+        ) {
             // 选第一个有名字的
             if let Some(r) = rows.iter().find(|r| !v_str(r, "Name").is_empty()) {
                 report.gpu_model = v_str(r, "Name");
                 // AdapterRAM 仅作下限参考(可能因 32 位截断而偏小)
                 report.gpu_vram_bytes = v_u64(r, "AdapterRAM");
+                report.gpu_driver_version = v_str(r, "DriverVersion");
+                report.gpu_driver_date = wmi_date(&v_str(r, "DriverDate"));
             }
         }
         // 显存精确值:注册表 qwMemorySize(64 位,不受 4GB 截断),取各适配器最大值
@@ -248,9 +259,9 @@ mod win {
             report.volumes.sort_by(|a, b| a.letter.cmp(&b.letter));
         }
 
-        // 显示器(分辨率用 Win32_VideoController 的当前模式作近似)
+        // 显示器(分辨率/刷新率用 Win32_VideoController 的当前模式作近似)
         if let Ok(rows) = wmi.raw_query::<Row>(
-            "SELECT Name, CurrentHorizontalResolution, CurrentVerticalResolution FROM Win32_VideoController",
+            "SELECT Name, CurrentHorizontalResolution, CurrentVerticalResolution, CurrentRefreshRate FROM Win32_VideoController",
         ) {
             for r in &rows {
                 let w = v_u32(r, "CurrentHorizontalResolution");
@@ -260,6 +271,7 @@ mod win {
                         name: v_str(r, "Name"),
                         width: w,
                         height: h,
+                        refresh_hz: v_u32(r, "CurrentRefreshRate"),
                     });
                 }
             }
@@ -289,9 +301,66 @@ mod win {
         true
     }
 
+    /// CIM_DATETIME("yyyymmddHHMMSS.mmmmmm±UUU")→ "yyyy-mm-dd";解析不了返回空。
+    fn wmi_date(s: &str) -> String {
+        let d = s.trim();
+        if d.len() >= 8 && d.as_bytes()[..8].iter().all(|b| b.is_ascii_digit()) {
+            format!("{}-{}-{}", &d[..4], &d[4..6], &d[6..8])
+        } else {
+            String::new()
+        }
+    }
+
     fn collect_storage(wmi: &WMIConnection, report: &mut HardwareReport) {
-        // MSFT_PhysicalDisk 在 root\Microsoft\Windows\Storage 命名空间,这里用默认空间的
-        // Win32_DiskDrive 作稳妥来源(MediaType 字段可粗判)。
+        // 首选 MSFT_PhysicalDisk(root\Microsoft\Windows\Storage):
+        // MediaType 能可靠区分 SSD/HDD,BusType 能识别 NVMe。
+        if let Ok(storage) = WMIConnection::with_namespace_path(r"root\Microsoft\Windows\Storage")
+        {
+            if let Ok(rows) = storage.raw_query::<Row>(
+                "SELECT FriendlyName, Size, MediaType, BusType FROM MSFT_PhysicalDisk",
+            ) {
+                for r in &rows {
+                    let size = v_u64(r, "Size");
+                    if size == 0 {
+                        continue;
+                    }
+                    // MSFT_PhysicalDisk.MediaType: 3=HDD 4=SSD 5=SCM,0=未指定
+                    let media_type = match v_u32(r, "MediaType") {
+                        3 => "HDD".to_string(),
+                        4 => "SSD".to_string(),
+                        5 => "SCM".to_string(),
+                        _ => String::new(),
+                    };
+                    // MSFT_PhysicalDisk.BusType(常见值)
+                    let bus_type = match v_u32(r, "BusType") {
+                        1 => "SCSI",
+                        3 => "ATA",
+                        7 => "USB",
+                        8 => "RAID",
+                        9 => "iSCSI",
+                        10 => "SAS",
+                        11 => "SATA",
+                        12 => "SD",
+                        13 => "MMC",
+                        17 => "NVMe",
+                        _ => "",
+                    }
+                    .to_string();
+                    report.disks.push(StorageDisk {
+                        model: v_str(r, "FriendlyName"),
+                        bytes: size,
+                        media_type,
+                        bus_type,
+                    });
+                }
+                if !report.disks.is_empty() {
+                    report.disks.sort_by(|a, b| b.bytes.cmp(&a.bytes));
+                    return;
+                }
+            }
+        }
+
+        // 回退:默认命名空间的 Win32_DiskDrive(MediaType 分不清 SSD/HDD)。
         if let Ok(rows) = wmi.raw_query::<Row>(
             "SELECT Model, Size, InterfaceType, MediaType FROM Win32_DiskDrive",
         ) {

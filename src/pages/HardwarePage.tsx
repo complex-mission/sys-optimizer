@@ -37,6 +37,11 @@ export function HardwarePage() {
     lines.push(`${zh ? "主板" : "Board"}: ${show(hw.board_vendor)} ${show(hw.board_model)}`);
     lines.push(`BIOS: ${show(hw.bios_version)}`);
     lines.push(`GPU: ${show(hw.gpu_model)}`);
+    if (hw.gpu_driver_version) {
+      lines.push(
+        `${zh ? "显卡驱动" : "GPU driver"}: ${hw.gpu_driver_version}${hw.gpu_driver_date ? ` (${hw.gpu_driver_date})` : ""}`
+      );
+    }
     lines.push(
       `${zh ? "内存" : "Memory"}: ${formatBytes(hw.memory_total_bytes)} (${hw.memory_slots_used}/${hw.memory_slots_total} ${zh ? "槽" : "slots"})`
     );
@@ -97,7 +102,19 @@ export function HardwarePage() {
       {/* 概览卡片 */}
       <div className="hw-overview">
         <OverviewCard icon="settings" label="CPU" value={show(hw.cpu_model)} sub={`${hw.cpu_cores}${zh ? "核" : "C"} / ${hw.cpu_threads}${zh ? "线程" : "T"} · ${(hw.cpu_mhz / 1000).toFixed(1)} GHz`} />
-        <OverviewCard icon="apps" label="GPU" value={show(hw.gpu_model)} sub={hw.gpu_vram_bytes > 0 ? `${zh ? "显存" : "VRAM"} ${formatBytes(hw.gpu_vram_bytes)}` : ""} />
+        <OverviewCard
+          icon="apps"
+          label="GPU"
+          value={show(hw.gpu_model)}
+          sub={[
+            hw.gpu_vram_bytes > 0 ? `${zh ? "显存" : "VRAM"} ${formatBytes(hw.gpu_vram_bytes)}` : "",
+            hw.gpu_driver_version
+              ? `${zh ? "驱动" : "Driver"} ${hw.gpu_driver_version}${hw.gpu_driver_date ? ` (${hw.gpu_driver_date})` : ""}`
+              : "",
+          ]
+            .filter(Boolean)
+            .join(" · ")}
+        />
         <OverviewCard icon="tune" label={zh ? "主板" : "Board"} value={`${show(hw.board_vendor)} ${show(hw.board_model)}`.trim()} sub={`BIOS ${show(hw.bios_version)}`} />
       </div>
 
@@ -219,6 +236,7 @@ export function HardwarePage() {
                 <div className="hw-row-name">{show(d.name)}</div>
                 <div className="hw-row-value">
                   {d.width} × {d.height}
+                  {d.refresh_hz > 0 ? ` @ ${d.refresh_hz}Hz` : ""}
                 </div>
               </div>
             ))}

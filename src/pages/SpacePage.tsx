@@ -32,6 +32,8 @@ export function SpacePage() {
   // 每个路径的分析结果缓存:回到已看过的目录直接显示上次结果,不重复扫描
   const cache = useRef<Record<string, SpaceLevel>>({});
   const unlisten = useRef<UnlistenFn | null>(null);
+  // 用户点了"停止":丢弃本次(不完整的)结果,不写缓存
+  const cancelRef = useRef(false);
 
   useEffect(() => {
     api.listDrives().then(setDrives).catch(() => setDrives([]));
@@ -43,6 +45,7 @@ export function SpacePage() {
 
   // 实际扫描一个目录并写入缓存
   const analyze = async (path: string) => {
+    cancelRef.current = false;
     setLevel(null);
     setScanning(true);
     setProgress(null);
@@ -50,11 +53,24 @@ export function SpacePage() {
     unlisten.current = await onSpaceProgress((p) => setProgress(p));
 
     const result = await api.analyzeSpace(path, 14);
-    cache.current[path] = result;
-    setLevel(result);
     setScanning(false);
     unlisten.current?.();
     unlisten.current = null;
+    if (cancelRef.current) {
+      // 被停止:结果不完整,不缓存,回到选盘页
+      cancelRef.current = false;
+      setLevel(null);
+      setCrumbs([]);
+      return;
+    }
+    cache.current[path] = result;
+    setLevel(result);
+  };
+
+  // 停止当前分析(后端提前返回,前端丢弃部分结果)
+  const stopAnalyze = () => {
+    cancelRef.current = true;
+    api.cancelTask("space").catch(() => {});
   };
 
   // 显示某路径:优先用缓存(除非强制刷新);denom 为进度条分母
@@ -225,11 +241,16 @@ export function SpacePage() {
               style={expectedTotal > 0 ? { width: `${pct}%` } : undefined}
             />
           </div>
-          <div className="space-progress-text">
-            {zh ? "正在扫描" : "Scanning"} ·{" "}
-            {progress ? formatBytes(progress.scanned_bytes) : "0 B"}
-            {expectedTotal > 0 && ` / ${formatBytes(expectedTotal)} · ${pct}%`} ·{" "}
-            {progress ? progress.scanned_items.toLocaleString() : 0} {zh ? "项" : "items"}
+          <div className="space-progress-row">
+            <div className="space-progress-text">
+              {zh ? "正在扫描" : "Scanning"} ·{" "}
+              {progress ? formatBytes(progress.scanned_bytes) : "0 B"}
+              {expectedTotal > 0 && ` / ${formatBytes(expectedTotal)} · ${pct}%`} ·{" "}
+              {progress ? progress.scanned_items.toLocaleString() : 0} {zh ? "项" : "items"}
+            </div>
+            <button className="btn-outline space-stop-btn" onClick={stopAnalyze}>
+              {zh ? "停止" : "Stop"}
+            </button>
           </div>
         </div>
       )}

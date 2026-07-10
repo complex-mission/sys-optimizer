@@ -48,6 +48,7 @@ pub fn run() {
             commands::ids_for_tier,
             commands::run_scan,
             commands::cancel_scan,
+            commands::cancel_task,
             commands::disk_usage,
             commands::preview_category,
             commands::run_clean,
