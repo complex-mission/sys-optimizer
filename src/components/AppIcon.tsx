@@ -26,8 +26,10 @@ export function AppIcon({ appId, name, size = 34 }: Props) {
             width: size * 0.62,
             height: size * 0.62,
             backgroundColor: fg,
-            WebkitMaskImage: `url(${url})`,
-            maskImage: `url(${url})`,
+            // 引号必须有:小于 4KB 的 SVG 会被 Vite 内联成 data: URL,
+            // 不带引号的 CSS url() 遇到其中的特殊字符会解析失败(mask 整个失效)
+            WebkitMaskImage: `url("${url}")`,
+            maskImage: `url("${url}")`,
           }}
         />
       ) : (
