@@ -9,6 +9,9 @@ type Lang = "zh-CN" | "en-US";
 const dict: Record<Lang, Record<string, string>> = {
   "zh-CN": {
     "app.name": "智缓",
+    "apps.legend.cache": "缓存,可放心清理",
+    "apps.legend.expensive": "删除有代价,请确认后清理",
+    "apps.legend.report": "仅报告体积,不会清理",
     "nav.group.clean": "清理",
     "nav.group.analyze": "分析",
     "nav.group.manage": "管理",
@@ -234,6 +237,9 @@ const dict: Record<Lang, Record<string, string>> = {
   },
   "en-US": {
     "app.name": "Cache Insight",
+    "apps.legend.cache": "Cache — safe to clean",
+    "apps.legend.expensive": "Costly to rebuild — confirm first",
+    "apps.legend.report": "Report only — never cleaned",
     "nav.group.clean": "Clean",
     "nav.group.analyze": "Analyze",
     "nav.group.manage": "Manage",

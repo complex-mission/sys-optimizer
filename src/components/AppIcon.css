@@ -5,10 +5,15 @@
   flex-shrink: 0;
   overflow: hidden;
   line-height: 1;
+  /* 透明底 + 主题前景描边:深色主题近白、浅色主题近黑 */
+  background: transparent;
+  border: 1px solid color-mix(in srgb, var(--on-surface) 55%, transparent);
+  color: var(--on-surface);
 }
 
 .app-icon-glyph {
   display: block;
+  background-color: currentColor;
   -webkit-mask-repeat: no-repeat;
   mask-repeat: no-repeat;
   -webkit-mask-position: center;

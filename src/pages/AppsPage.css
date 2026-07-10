@@ -150,6 +150,20 @@
   border-radius: var(--shape-full);
   flex-shrink: 0;
 }
+
+/* 风险圆点图例 */
+.apps-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 18px;
+  font-size: 12px;
+  color: var(--on-surface-variant);
+}
+.apps-legend-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
 .target-info {
   flex: 1;
   min-width: 0;

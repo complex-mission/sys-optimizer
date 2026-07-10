@@ -107,6 +107,16 @@ export function AppsPage() {
         </label>
       </div>
 
+      {/* 风险圆点图例 */}
+      <div className="apps-legend">
+        {(["cache", "expensive", "report"] as Risk[]).map((r) => (
+          <span key={r} className="apps-legend-item">
+            <span className="target-dot" style={{ background: riskDot(r) }} />
+            {t(`apps.legend.${r}`)}
+          </span>
+        ))}
+      </div>
+
       {loading ? (
         <div className="apps-grid">
           {Array.from({ length: 4 }).map((_, i) => (
