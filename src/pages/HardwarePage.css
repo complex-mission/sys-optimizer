@@ -169,7 +169,6 @@
 .slot {
   flex: 1;
   min-width: 120px;
-  max-width: 200px;
   border-radius: var(--shape-md);
   padding: 14px;
   min-height: 92px;
@@ -180,7 +179,6 @@
 .slot.occupied {
   background: var(--surface-container);
   color: var(--on-surface);
-  border: 1px solid var(--outline-variant);
 }
 .slot.occupied .slot-cap {
   color: var(--primary);

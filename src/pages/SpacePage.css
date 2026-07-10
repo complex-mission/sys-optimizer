@@ -33,7 +33,7 @@
   transition: transform var(--spring-fast), border-color var(--ease-standard);
 }
 .drive-card:hover {
-  transform: translateY(-2px);
+  background: var(--surface-container-high);
   border-color: var(--primary);
 }
 .drive-name {

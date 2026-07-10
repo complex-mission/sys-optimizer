@@ -14,10 +14,10 @@
 .cat-row.row-report {
   border-left-color: var(--risk-report);
 }
+/* hover 不做位移(父级 overflow 会切边),只做边框/底色的轻变化 */
 .cat-row:hover {
   border-color: var(--outline);
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.16);
-  transform: translateY(-1px);
+  background: var(--surface-container-high);
 }
 .cat-row.open {
   background: var(--surface-container-high);

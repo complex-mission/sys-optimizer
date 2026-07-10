@@ -52,7 +52,8 @@ input[type="checkbox"] {
   position: relative;
   transition: background var(--ease-standard), border-color var(--ease-standard);
 }
-input[type="checkbox"]:hover:not(:disabled) {
+/* hover 提亮只针对未选中;选中态悬停保持主色底,否则白色对勾会"消失" */
+input[type="checkbox"]:hover:not(:disabled):not(:checked) {
   border-color: var(--on-surface-variant);
   background: var(--surface-container-high);
 }
@@ -93,7 +94,6 @@ input[type="text"] {
 ::-webkit-scrollbar-thumb {
   background: var(--surface-container-highest);
   border-radius: var(--shape-full);
-  border: 2px solid var(--surface);
 }
 ::-webkit-scrollbar-thumb:hover {
   background: var(--outline-variant);

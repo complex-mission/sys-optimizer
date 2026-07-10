@@ -32,7 +32,7 @@
 }
 .tier-card:hover:not(:disabled) {
   background: var(--surface-container-high);
-  transform: translateY(-2px);
+  border-color: var(--outline);
 }
 .tier-card.selected {
   border-color: var(--primary);
