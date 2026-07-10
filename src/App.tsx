@@ -15,6 +15,8 @@ import { LeftoverPage } from "./pages/LeftoverPage";
 import { HardwarePage } from "./pages/HardwarePage";
 import { SettingsPage } from "./pages/SettingsPage";
 import { AboutPage } from "./pages/AboutPage";
+import logoCn from "./assets/logo-horizontal-cn.svg?raw";
+import logoEn from "./assets/logo-horizontal-en.svg?raw";
 import "./App.css";
 
 type Route =
@@ -78,7 +80,7 @@ const PAGES: Record<Route, () => ReactElement> = {
 };
 
 export function App() {
-  const { t, setLang } = useI18n();
+  const { t, lang, setLang } = useI18n();
   const [ready, setReady] = useState(false);
   const [accepted, setAccepted] = useState(false);
   const [showBanner, setShowBanner] = useState(false);
@@ -139,12 +141,13 @@ export function App() {
   return (
     <div className="shell">
       <nav className="sidebar">
-        <div className="brand">
-          <span className="brand-mark">
-            <Icon name="scan" size={22} />
-          </span>
-          <span className="brand-name">Cache Insight</span>
-        </div>
+        {/* 横版 logo 按语言切换;字标部分是 currentColor,跟随主题深浅 */}
+        <div
+          className="brand"
+          role="img"
+          aria-label={t("app.name")}
+          dangerouslySetInnerHTML={{ __html: lang === "zh-CN" ? logoCn : logoEn }}
+        />
 
         {NAV_GROUPS.map((g) => (
           <div key={g.titleKey} className="nav-group">

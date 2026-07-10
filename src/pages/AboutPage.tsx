@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useI18n } from "../i18n";
 import { api, AboutInfo, AppConfig, formatBytes } from "../lib/api";
-import { Icon } from "../components/Icon";
+import logoUrl from "../assets/cache-insight-logo.svg";
 
 const OSS_LICENSES = [
   { name: "Tauri", license: "MIT / Apache-2.0" },
@@ -25,11 +25,9 @@ export function AboutPage() {
   return (
     <div style={{ maxWidth: 560, display: "flex", flexDirection: "column", gap: 24 }}>
       <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
-        <span style={{ color: "var(--primary)" }}>
-          <Icon name="scan" size={36} />
-        </span>
+        <img src={logoUrl} width={44} height={44} alt="" style={{ borderRadius: 10 }} />
         <div>
-          <h1 style={{ fontSize: 22, fontWeight: 500 }}>Cache Insight 智缓</h1>
+          <h1 style={{ fontSize: 22, fontWeight: 500 }}>{t("app.name")}</h1>
           {about && (
             <p style={{ fontSize: 13, color: "var(--on-surface-variant)" }}>
               v{about.version} / {about.build_date}

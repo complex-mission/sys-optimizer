@@ -19,8 +19,14 @@
 .brand {
   display: flex;
   align-items: center;
-  gap: 10px;
   padding: 8px 10px 16px;
+  /* 横版 logo 的字标用 currentColor,这里给定跟随主题的颜色 */
+  color: var(--on-surface);
+}
+.brand svg {
+  height: 32px;
+  width: auto;
+  display: block;
 }
 .brand-mark {
   color: var(--primary);

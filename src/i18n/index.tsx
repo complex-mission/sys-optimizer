@@ -1,13 +1,14 @@
 // 轻量 i18n:骨架阶段用内置字典 + React context,无需第三方库。
 // 类别 label 的 key 形如 cat.user-temp.name,与后端 CategoryMeta 对应。
 
-import { createContext, useContext, useState, useCallback, ReactNode } from "react";
+import { createContext, useContext, useState, useCallback, useEffect, ReactNode } from "react";
+import { getCurrentWindow } from "@tauri-apps/api/window";
 
 type Lang = "zh-CN" | "en-US";
 
 const dict: Record<Lang, Record<string, string>> = {
   "zh-CN": {
-    "app.name": "Cache Insight 智缓",
+    "app.name": "智缓",
     "nav.group.clean": "清理",
     "nav.group.analyze": "分析",
     "nav.group.manage": "管理",
@@ -482,6 +483,14 @@ export function I18nProvider({ children }: { children: ReactNode }) {
     [lang]
   );
   const setLang = useCallback((l: Lang) => setLangState(l), []);
+
+  // 窗口标题跟随语言(浏览器预览无 tauri 环境时静默忽略)
+  useEffect(() => {
+    getCurrentWindow()
+      .setTitle(dict[lang]["app.name"])
+      .catch(() => {});
+  }, [lang]);
+
   return <Ctx.Provider value={{ lang, t, setLang }}>{children}</Ctx.Provider>;
 }
 
