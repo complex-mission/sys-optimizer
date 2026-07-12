@@ -194,8 +194,56 @@
   display: flex;
   gap: 2px;
   flex-shrink: 0;
+  align-items: center;
 }
 .target-btn {
   padding: 6px !important;
   display: flex;
+}
+/* 槽位占位:压暗不可点(动作不可用) / 隐形同宽(动作不适用) */
+.target-slot-disabled {
+  color: var(--outline-variant);
+  pointer-events: none;
+}
+.target-slot-empty {
+  width: 26px;
+  height: 26px;
+  padding: 0 !important;
+  visibility: hidden;
+}
+
+/* 缓存大小显示 */
+.target-size {
+  font-size: 11px;
+  color: var(--on-surface-variant);
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  margin-right: 4px;
+  white-space: nowrap;
+}
+.target-size-value {
+  font-weight: 500;
+  color: var(--on-surface);
+  font-variant-numeric: tabular-nums;
+}
+.target-size-time {
+  font-size: 10px;
+  opacity: 0.7;
+}
+.target-size-btn {
+  padding: 4px !important;
+  display: flex;
+  opacity: 0.7;
+  transition: opacity var(--ease-standard);
+}
+.target-size-btn:hover {
+  opacity: 1;
+}
+.target-size-btn.scanning {
+  animation: spin 1s linear infinite;
+}
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
 }

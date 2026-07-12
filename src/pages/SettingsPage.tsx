@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { confirm } from "@tauri-apps/plugin-dialog";
+import { confirm, message } from "@tauri-apps/plugin-dialog";
 import { useI18n, Lang } from "../i18n";
 import { api, AppConfig, formatBytes } from "../lib/api";
 import { Icon } from "../components/Icon";
@@ -61,7 +61,47 @@ export function SettingsPage() {
     setCfg((prev) => (prev ? { ...prev, expensive_to_trash: enabled } : prev));
   };
 
-  const openLogs = () => api.openPath(logPath).catch(() => {});
+  const openLogs = () =>
+    api.openPath(logPath).catch((e) =>
+      message(String(e), { title: zh ? "无法打开日志目录" : "Can't open logs folder", kind: "warning" }).catch(() => {})
+    );
+
+  const clearLogs = async () => {
+    const ok = await confirm(
+      zh ? "确定要清理所有日志文件吗？" : "Are you sure you want to clear all log files?",
+      { title: zh ? "清理日志" : "Clear logs", kind: "warning" }
+    ).catch(() => false);
+    if (!ok) return;
+    try {
+      const count = await api.clearLogs();
+      await message(zh ? `已清理 ${count} 个日志文件` : `Cleared ${count} log file(s)`, {
+        title: zh ? "清理日志" : "Clear logs",
+        kind: "info",
+      });
+    } catch (e) {
+      await message(zh ? "清理失败" : "Failed to clear logs", {
+        title: zh ? "清理日志" : "Clear logs",
+        kind: "error",
+      }).catch(() => {});
+    }
+  };
+
+  const resetStats = async () => {
+    const ok = await confirm(
+      zh ? "确定要重置累计统计吗？" : "Are you sure you want to reset statistics?",
+      { title: zh ? "重置统计" : "Reset stats", kind: "warning" }
+    ).catch(() => false);
+    if (!ok) return;
+    try {
+      await api.resetStats();
+      load();
+    } catch (e) {
+      await message(zh ? "重置失败" : "Failed to reset stats", {
+        title: zh ? "重置统计" : "Reset stats",
+        kind: "error",
+      }).catch(() => {});
+    }
+  };
 
   const reset = async () => {
     const ok = await confirm(
@@ -205,10 +245,16 @@ export function SettingsPage() {
             {logPath || "—"}
           </div>
         </div>
-        <button className="btn-outline" onClick={openLogs} disabled={!logPath}>
-          <Icon name="folder-open" size={14} style={{ marginRight: 4 }} />
-          {zh ? "打开" : "Open"}
-        </button>
+        <div className="settings-actions">
+          <button className="btn-outline" onClick={openLogs} disabled={!logPath}>
+            <Icon name="folder-open" size={14} />
+            {zh ? "打开" : "Open"}
+          </button>
+          <button className="btn-outline" onClick={clearLogs}>
+            <Icon name="close" size={14} />
+            {zh ? "清理日志" : "Clear logs"}
+          </button>
+        </div>
       </section>
 
       {/* 累计统计 */}
@@ -224,6 +270,9 @@ export function SettingsPage() {
               {cfg.total_clean_count} {t("unit.times")}
             </div>
           </div>
+          <button className="btn-text stats-reset" onClick={resetStats}>
+            {zh ? "重置统计" : "Reset stats"}
+          </button>
         </section>
       )}
 

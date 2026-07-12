@@ -32,7 +32,9 @@ export type IconName =
   | "sparkles"
   | "drive"
   | "refresh"
-  | "check";
+  | "check"
+  | "sync"
+  | "database";
 
 const paths: Record<IconName, string> = {
   scan: "M4 7V5a1 1 0 0 1 1-1h2M4 17v2a1 1 0 0 0 1 1h2M20 7V5a1 1 0 0 0-1-1h-2M20 17v2a1 1 0 0 1-1 1h-2M3 12h18",
@@ -61,6 +63,8 @@ const paths: Record<IconName, string> = {
     "M22 12H2M5.45 5.11 2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11ZM6 16h.01M10 16h.01",
   refresh: "M21 12a9 9 0 1 1-2.64-6.36M21 4v5h-5",
   check: "M20 6 9 17l-5-5",
+  sync: "M21 12a9 9 0 1 1-2.64-6.36M21 4v5h-5M3 12a9 9 0 0 1 2.64-6.36M3 4v5h5",
+  database: "M12 3C7 3 3 5 3 7v10c0 2 4 4 9 4s9-2 9-4V7c0-2-4-4-9-4ZM3 7c0 2 4 4 9 4s9-2 9-4M3 12c0 2 4 4 9 4s9-2 9-4",
 };
 
 export function Icon({ name, size = 20, style }: IconProps) {

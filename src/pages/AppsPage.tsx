@@ -1,7 +1,7 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { open, message } from "@tauri-apps/plugin-dialog";
 import { useI18n } from "../i18n";
-import { api, AppView, Risk } from "../lib/api";
+import { api, AppView, Risk, TargetSizeCache, formatBytes } from "../lib/api";
 import { Icon, IconName } from "../components/Icon";
 import { AppIcon } from "../components/AppIcon";
 import "./AppsPage.css";
@@ -26,11 +26,24 @@ function riskDot(risk: Risk): string {
     : "var(--risk-cache)";
 }
 
+/** 格式化扫描时间(相对时间) */
+function formatScannedAt(ts: number, zh: boolean): string {
+  if (!ts) return "";
+  const now = Math.floor(Date.now() / 1000);
+  const diff = now - ts;
+  if (diff < 60) return zh ? "刚刚" : "just now";
+  if (diff < 3600) return `${Math.floor(diff / 60)}${zh ? "分钟前" : "min ago"}`;
+  if (diff < 86400) return `${Math.floor(diff / 3600)}${zh ? "小时前" : "h ago"}`;
+  return `${Math.floor(diff / 86400)}${zh ? "天前" : "d ago"}`;
+}
+
 export function AppsPage() {
   const { t, lang } = useI18n();
   const [apps, setApps] = useState<AppView[]>([]);
   const [loading, setLoading] = useState(true);
   const [showAll, setShowAll] = useState(false);
+  const [sizeCache, setSizeCache] = useState<Record<string, TargetSizeCache>>({});
+  const [scanningIds, setScanningIds] = useState<Set<string>>(new Set());
 
   const load = async () => {
     try {
@@ -43,8 +56,34 @@ export function AppsPage() {
     }
   };
 
+  const loadSizeCache = async () => {
+    try {
+      const cache = await api.getAppSizeCache();
+      setSizeCache(cache);
+    } catch {
+      // ignore
+    }
+  };
+
   useEffect(() => {
     load();
+    loadSizeCache();
+  }, []);
+
+  const scanSize = useCallback(async (targetId: string) => {
+    setScanningIds((prev) => new Set(prev).add(targetId));
+    try {
+      const result = await api.scanAppSize(targetId);
+      setSizeCache((prev) => ({ ...prev, [targetId]: result }));
+    } catch (e) {
+      // ignore scan errors
+    } finally {
+      setScanningIds((prev) => {
+        const next = new Set(prev);
+        next.delete(targetId);
+        return next;
+      });
+    }
   }, []);
 
   const specify = async (id: string, currentPath?: string) => {
@@ -158,7 +197,9 @@ export function AppsPage() {
                   </div>
                   <div className="app-targets">
                     {app.targets.map((tg) => {
-                      const path = tg.resolved[0] ?? "";
+                      const path = (tg.resolved[0] ?? "").replace(/\//g, "\\");
+                      const cached = sizeCache[tg.id];
+                      const isScanning = scanningIds.has(tg.id);
                       return (
                         <div key={tg.id} className="app-target">
                           <span
@@ -182,7 +223,34 @@ export function AppsPage() {
                             </div>
                           </div>
                           <div className="target-actions">
-                            {path && tg.exists && (
+                            {cached && (
+                              <div className="target-size" title={`${cached.files} ${zh ? "个文件" : "files"}`}>
+                                <span className="target-size-value">{formatBytes(cached.bytes)}</span>
+                                <span className="target-size-time">
+                                  {formatScannedAt(cached.scanned_at, zh)}
+                                </span>
+                              </div>
+                            )}
+                            {/* 四个动作槽位恒定:不可用的显示压暗图标,不适用的留同宽空位,保证各行列对齐 */}
+                            {path && tg.exists ? (
+                              <button
+                                className={`btn-text target-size-btn ${isScanning ? "scanning" : ""}`}
+                                onClick={() => scanSize(tg.id)}
+                                disabled={isScanning}
+                                title={
+                                  cached
+                                    ? zh ? "重新扫描大小" : "Rescan size"
+                                    : zh ? "扫描大小" : "Scan size"
+                                }
+                              >
+                                <Icon name={isScanning ? "refresh" : "database"} size={14} />
+                              </button>
+                            ) : (
+                              <span className="target-size-btn target-slot-disabled" aria-hidden="true">
+                                <Icon name="database" size={14} />
+                              </span>
+                            )}
+                            {path && tg.exists ? (
                               <button
                                 className="btn-text target-btn"
                                 onClick={() => openInExplorer(path)}
@@ -190,8 +258,12 @@ export function AppsPage() {
                               >
                                 <Icon name="folder-open" size={14} />
                               </button>
+                            ) : (
+                              <span className="target-btn target-slot-disabled" aria-hidden="true">
+                                <Icon name="folder-open" size={14} />
+                              </span>
                             )}
-                            {tg.supports_override && (
+                            {tg.supports_override ? (
                               <button
                                 className="btn-text target-btn"
                                 onClick={() => specify(tg.id, path)}
@@ -199,8 +271,10 @@ export function AppsPage() {
                               >
                                 <Icon name="tune" size={14} />
                               </button>
+                            ) : (
+                              <span className="target-btn target-slot-empty" aria-hidden="true" />
                             )}
-                            {tg.has_override && (
+                            {tg.has_override ? (
                               <button
                                 className="btn-text target-btn"
                                 onClick={() => clearOverride(tg.id)}
@@ -208,6 +282,8 @@ export function AppsPage() {
                               >
                                 <Icon name="close" size={14} />
                               </button>
+                            ) : (
+                              <span className="target-btn target-slot-empty" aria-hidden="true" />
                             )}
                           </div>
                         </div>

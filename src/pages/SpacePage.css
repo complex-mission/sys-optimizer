@@ -39,6 +39,33 @@
   font-weight: 500;
   font-variant-numeric: tabular-nums;
 }
+.drive-label {
+  font-size: 11px;
+  color: var(--on-surface-variant);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 100%;
+}
+.drive-type {
+  font-size: 10px;
+  padding: 1px 6px;
+  border-radius: var(--shape-full);
+  background: var(--surface-container-highest);
+  color: var(--on-surface-variant);
+}
+.drive-type-local {
+  background: var(--risk-cache-container);
+  color: var(--risk-cache);
+}
+.drive-type-network {
+  background: var(--risk-expensive-container);
+  color: var(--risk-expensive);
+}
+.drive-type-removable {
+  background: var(--primary-container);
+  color: var(--primary);
+}
 
 /* 工具栏 + 面包屑 */
 .space-toolbar {
@@ -46,6 +73,19 @@
   align-items: center;
   justify-content: space-between;
   gap: 12px;
+}
+.space-back {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 12.5px !important;
+  padding: 6px 10px !important;
+  margin-right: 8px;
+  /* 浅底衬托,避免文字按钮悬空看着像排版偏移 */
+  background: var(--surface-container-high);
+}
+.space-back:hover {
+  background: var(--surface-container-highest);
 }
 .crumbs {
   display: flex;
@@ -241,6 +281,12 @@
   padding: 6px !important;
   display: flex;
   flex-shrink: 0;
+}
+/* 占位:同宽同高但压暗且不可交互 */
+.space-row-open-disabled {
+  padding: 6px;
+  color: var(--outline-variant);
+  pointer-events: none;
 }
 
 /* 值得关注的位置(不建议自动清理) */

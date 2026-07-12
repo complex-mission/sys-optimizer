@@ -3,6 +3,7 @@ import { useI18n } from "../i18n";
 import {
   api,
   onSpaceProgress,
+  DriveInfo,
   NotableLocation,
   SpaceLevel,
   SpaceNode,
@@ -20,7 +21,7 @@ export function SpacePage() {
   const { t, lang } = useI18n();
   const zh = lang === "zh-CN";
 
-  const [drives, setDrives] = useState<string[]>([]);
+  const [drives, setDrives] = useState<DriveInfo[]>([]);
   const [notable, setNotable] = useState<NotableLocation[]>([]);
   const [level, setLevel] = useState<SpaceLevel | null>(null);
   const [crumbs, setCrumbs] = useState<string[]>([]); // 路径栈
@@ -36,7 +37,7 @@ export function SpacePage() {
   const cancelRef = useRef(false);
 
   useEffect(() => {
-    api.listDrives().then(setDrives).catch(() => setDrives([]));
+    api.listDrivesWithType().then(setDrives).catch(() => setDrives([]));
     api.listNotableLocations().then(setNotable).catch(() => setNotable([]));
     return () => {
       unlisten.current?.();
@@ -102,6 +103,13 @@ export function SpacePage() {
     show(path, 0);
   };
 
+  // 返回选盘页面
+  const goBackToDrives = () => {
+    setLevel(null);
+    setCrumbs([]);
+    setScanning(false);
+  };
+
   const drill = (node: SpaceNode) => {
     if (!node.is_dir || !node.path) return;
     setCrumbs((prev) => [...prev, node.path]);
@@ -135,9 +143,17 @@ export function SpacePage() {
         </div>
         <div className="drive-grid">
           {drives.map((d) => (
-            <button key={d} className="drive-card" onClick={() => enterDrive(d)}>
+            <button key={d.letter} className="drive-card" onClick={() => enterDrive(d.letter)}>
               <Icon name="drive" size={24} style={{ color: "var(--primary)" }} />
-              <span className="drive-name">{d}</span>
+              <span className="drive-name">{d.letter}</span>
+              {d.label && <span className="drive-label">{d.label}</span>}
+              <span className={`drive-type drive-type-${d.drive_type}`}>
+                {d.drive_type === "local" ? (zh ? "本地" : "Local") :
+                 d.drive_type === "network" ? (zh ? "网络" : "Network") :
+                 d.drive_type === "removable" ? (zh ? "可移动" : "Removable") :
+                 d.drive_type === "cdrom" ? (zh ? "光驱" : "CD-ROM") :
+                 d.drive_type}
+              </span>
             </button>
           ))}
         </div>
@@ -190,6 +206,16 @@ export function SpacePage() {
     <div className="space-page">
       <div className="space-toolbar">
         <div className="crumbs">
+          {crumbs.length >= 1 && (
+            <button
+              className="btn-text space-back"
+              onClick={crumbs.length > 1 ? () => goCrumb(crumbs.length - 2) : goBackToDrives}
+              title={zh ? "返回上级" : "Go back"}
+            >
+              <Icon name="chevron-down" size={14} style={{ transform: "rotate(90deg)" }} />
+              {zh ? "返回" : "Back"}
+            </button>
+          )}
           {crumbs.map((c, i) => (
             <span key={i} className="crumb-item">
               {i === 0 ? (
@@ -300,16 +326,22 @@ export function SpacePage() {
                     </div>
                     <span className="space-row-size">{formatBytes(n.bytes)}</span>
                     <span className="space-row-pct">{pctRow}%</span>
-                    {n.is_dir && !isOther && (
+                    {n.is_dir && !isOther ? (
                       <button
                         className="btn-text space-row-open"
                         onClick={(e) => {
                           e.stopPropagation();
                           openInExplorer(n.path);
                         }}
+                        title={zh ? "打开位置" : "Open location"}
                       >
                         <Icon name="folder-open" size={14} />
                       </button>
+                    ) : (
+                      /* 不可打开的行也占同宽末列,保证各行进度条/size/百分比对齐 */
+                      <span className="space-row-open space-row-open-disabled" aria-hidden="true">
+                        <Icon name="folder-open" size={14} />
+                      </span>
                     )}
                   </div>
                 );
@@ -323,13 +355,10 @@ export function SpacePage() {
 }
 
 // 与 Treemap 一致的分类色板(列表视图的进度条着色,让各项彼此区分)
-const BAR_COLORS = [
-  "#4c8dff", "#22c3a6", "#f4b740", "#ef6f6c", "#a78bfa",
-  "#34d399", "#f472b6", "#60a5fa", "#fbbf24", "#38bdf8",
-  "#c084fc", "#2dd4bf", "#fb923c", "#f87171",
-];
+// 色值随主题取自 tokens.css 的 --viz-N(浅/深各一套明度阶)。
+const VIZ_SLOTS = 8;
 function barColor(idx: number, isOther: boolean): string {
-  return isOther ? "var(--outline)" : BAR_COLORS[idx % BAR_COLORS.length];
+  return isOther ? "var(--outline)" : `var(--viz-${(idx % VIZ_SLOTS) + 1})`;
 }
 
 function crumbDisplay(path: string, idx: number): string {

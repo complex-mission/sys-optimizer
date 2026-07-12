@@ -65,7 +65,7 @@
   flex-shrink: 0;
 }
 .vol-bar {
-  height: 8px;
+  height: 6px;
   background: var(--surface-container-highest);
   border-radius: var(--shape-full);
   overflow: hidden;
@@ -207,6 +207,13 @@
   text-overflow: ellipsis;
   white-space: nowrap;
 }
+.slot-part {
+  font-size: 10px;
+  opacity: 0.6;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
 .slot-empty-label {
   font-size: 13px;
   color: var(--on-surface-variant);
@@ -241,6 +248,53 @@
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.hw-row-volumes {
+  font-size: 11px;
+  color: var(--primary);
+  background: var(--surface-container-highest);
+  padding: 1px 6px;
+  border-radius: var(--shape-full);
+  flex-shrink: 0;
+}
+.hw-row-offline {
+  font-size: 10.5px;
+  color: var(--on-surface-variant);
+  background: var(--surface-container-highest);
+  padding: 1px 6px;
+  border-radius: var(--shape-full);
+  flex-shrink: 0;
+}
+.hw-row-online {
+  font-size: 10.5px;
+  color: var(--success);
+  background: color-mix(in srgb, var(--success) 15%, transparent);
+  padding: 1px 6px;
+  border-radius: var(--shape-full);
+  flex-shrink: 0;
+}
+.hw-row-tag {
+  font-size: 10px;
+  padding: 1px 6px;
+  border-radius: var(--shape-full);
+  flex-shrink: 0;
+  font-weight: 500;
+}
+.hw-row-tag.wifi {
+  color: var(--primary);
+  background: var(--primary-container);
+}
+.hw-row-tag.ethernet {
+  color: var(--success);
+  background: var(--surface-container-highest);
+}
+.hw-row-network {
+  font-size: 11px;
+  color: var(--primary);
+  margin-right: 4px;
 }
 .hw-row-meta {
   font-size: 11.5px;

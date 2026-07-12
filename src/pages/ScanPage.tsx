@@ -260,7 +260,7 @@ export function ScanPage() {
             {progress.done}/{progress.total} · {formatBytes(totalFound)}
           </div>
           <button className="btn-outline scan-stop" onClick={stopScan} disabled={stopping}>
-            <Icon name="close" size={14} style={{ marginRight: 4 }} />
+            <Icon name="close" size={14} />
             {t("scan.stop")}
           </button>
         </div>
@@ -342,7 +342,6 @@ export function ScanPage() {
               name="chevron-down"
               size={14}
               style={{
-                marginLeft: 2,
                 transform: customOpen ? "rotate(180deg)" : undefined,
                 transition: "transform 0.2s",
               }}
@@ -365,6 +364,14 @@ export function ScanPage() {
   return (
     <div className="scan-results">
       <div className="results-head">
+        <button
+          className="btn-text results-back"
+          onClick={() => setPhase("idle")}
+          disabled={phase === "cleaning"}
+        >
+          <Icon name="chevron-down" size={14} style={{ transform: "rotate(90deg)" }} />
+          {t("scan.rescan")}
+        </button>
         <div className="results-title">
           {phase === "done" ? (
             <>
@@ -381,19 +388,13 @@ export function ScanPage() {
             </>
           )}
         </div>
-        {phase !== "done" && (
-          <div className="results-sub">
-            {t("result.selected")} {formatBytes(selectedBytes)}
-            <button
-              className="btn-text results-rescan"
-              onClick={() => setPhase("idle")}
-              disabled={phase === "cleaning"}
-            >
-              <Icon name="scan" size={13} style={{ marginRight: 4 }} />
-              {t("scan.rescan")}
-            </button>
-          </div>
-        )}
+        <div className="results-sub">
+          {phase !== "done" && (
+            <>
+              {t("result.selected")} {formatBytes(selectedBytes)}
+            </>
+          )}
+        </div>
       </div>
 
       <div className="results-list">

@@ -172,7 +172,7 @@ export function CategoryRow({
           </button>
         ) : maybeMisplaced ? (
           <button className="btn-outline cat-action" onClick={handleSpecify}>
-            <Icon name="folder-open" size={14} style={{ marginRight: 4 }} />
+            <Icon name="folder-open" size={14} />
             {t("result.specify")}
           </button>
         ) : canExpand ? (

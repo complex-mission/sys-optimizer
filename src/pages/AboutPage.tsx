@@ -13,7 +13,8 @@ const OSS_LICENSES = [
 ];
 
 export function AboutPage() {
-  const { t } = useI18n();
+  const { t, lang } = useI18n();
+  const zh = lang === "zh-CN";
   const [about, setAbout] = useState<AboutInfo | null>(null);
   const [cfg, setCfg] = useState<AppConfig | null>(null);
 
@@ -27,9 +28,9 @@ export function AboutPage() {
       <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
         <img src={logoUrl} width={44} height={44} alt="" style={{ borderRadius: 10 }} />
         <div>
-          <h1 style={{ fontSize: 22, fontWeight: 500 }}>{t("app.name")}</h1>
+          <h1 style={{ fontSize: 20, fontWeight: 500 }}>{t("app.name")}</h1>
           {about && (
-            <p style={{ fontSize: 13, color: "var(--on-surface-variant)" }}>
+            <p style={{ fontSize: 12, color: "var(--on-surface-variant)" }}>
               v{about.version} / {about.build_date}
             </p>
           )}
@@ -65,7 +66,7 @@ export function AboutPage() {
 
       {about && (
         <p style={{ fontSize: 12, color: "var(--on-surface-variant)", lineHeight: 1.6 }}>
-          {about.copyright}
+          {zh ? about.copyright : "© 2026 XS Tech Co, Ltd. All rights reserved. · Support: Complex Mission"}
         </p>
       )}
     </div>

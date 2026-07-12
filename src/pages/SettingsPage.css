@@ -40,6 +40,11 @@
   white-space: nowrap;
   font-variant-numeric: tabular-nums;
 }
+.settings-actions {
+  display: flex;
+  gap: 8px;
+  flex-shrink: 0;
+}
 
 /* 分段控件 */
 .seg {
@@ -70,6 +75,13 @@
   gap: 12px;
   padding: 16px 0;
   border-bottom: 1px solid var(--outline-variant);
+  position: relative;
+}
+.stats-reset {
+  position: absolute;
+  right: 0;
+  bottom: 16px;
+  font-size: 12px !important;
 }
 .stat-item {
   background: var(--surface-container);

@@ -88,8 +88,8 @@ input[type="text"] {
 }
 
 ::-webkit-scrollbar {
-  width: 10px;
-  height: 10px;
+  width: 6px;
+  height: 6px;
 }
 ::-webkit-scrollbar-thumb {
   background: var(--surface-container-highest);
@@ -97,6 +97,19 @@ input[type="text"] {
 }
 ::-webkit-scrollbar-thumb:hover {
   background: var(--outline-variant);
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+/* 通用按钮共性:图标与文字垂直居中(内联 svg 默认基线对齐会偏上) */
+.btn-filled,
+.btn-text,
+.btn-outline {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
 }
 
 /* 通用:MD3 填充按钮(pill) */

@@ -70,48 +70,71 @@
   --error: #ffb4ab;
 
   --scrim: rgba(0, 0, 0, 0.55);
+
+  /* 分类图表色板(Treemap / 列表进度条):8 个固定色相,深底取亮阶。
+     顺序即色觉安全机制(相邻 CVD ΔE 已校验),勿改排列。 */
+  --viz-1: #4c8dff;  --on-viz-1: #ffffff;
+  --viz-2: #22c3a6;  --on-viz-2: #ffffff;
+  --viz-3: #f4b740;  --on-viz-3: #1a1c1e;
+  --viz-4: #34d399;  --on-viz-4: #1a1c1e;
+  --viz-5: #a78bfa;  --on-viz-5: #1a1c1e;
+  --viz-6: #ef6f6c;  --on-viz-6: #ffffff;
+  --viz-7: #f472b6;  --on-viz-7: #1a1c1e;
+  --viz-8: #fb923c;  --on-viz-8: #1a1c1e;
 }
 
-/* 浅色主题 */
+/* 浅色主题:与深色同一色相家族(种子 #378ADD,hue≈212)统一取深阶,
+   彩色只出现一种蓝;琥珀/绿/红与深色主题的语义色一一对应。 */
 [data-theme="light"] {
-  --primary: #378add;
+  --primary: #2a6fc0;
   --on-primary: #ffffff;
   --primary-container: #d3e4ff;
-  --on-primary-container: #001d36;
+  --on-primary-container: #0d3a66;
 
   --secondary: #535f70;
   --on-secondary: #ffffff;
-  --secondary-container: #d7e3f7;
+  --secondary-container: #dbe3ee;
   --on-secondary-container: #101c2b;
 
   --tertiary: #8b4a5f;
   --on-tertiary: #ffffff;
 
-  --surface: #f8f9fc;
+  /* 主面板(body 背景)用纯白;侧栏/卡片用带灰的 container 阶衬出层次 */
+  --surface: #ffffff;
   --surface-dim: #d8dae0;
-  --surface-bright: #f8f9fc;
+  --surface-bright: #ffffff;
   --surface-container-lowest: #ffffff;
-  --surface-container-low: #f2f3f7;
-  --surface-container: #eceef2;
-  --surface-container-high: #e6e8ec;
-  --surface-container-highest: #e1e3e7;
+  --surface-container-low: #f4f6f9;
+  --surface-container: #f1f3f5;
+  --surface-container-high: #ebedef;
+  --surface-container-highest: #e5e7e9;
 
   --on-surface: #191c20;
   --on-surface-variant: #42474e;
   --outline: #72777f;
   --outline-variant: #c2c7ce;
 
-  --risk-cache: #185fa5;
+  --risk-cache: #2a6fc0;
   --risk-cache-container: #d3e4ff;
-  --risk-expensive: #855300;
-  --risk-expensive-container: #ffddb3;
-  --risk-report: #42474e;
-  --risk-report-container: #e1e3e7;
+  --risk-expensive: #a05a00;
+  --risk-expensive-container: #ffe9c4;
+  --risk-report: #5c6470;
+  --risk-report-container: #e4e7ec;
 
-  --success: #2e6b3a;
+  --success: #2e7d43;
   --error: #ba1a1a;
 
   --scrim: rgba(0, 0, 0, 0.32);
+
+  /* 图表色板浅底阶:同 8 色相,明度统一压到中深,白字全部可读 */
+  --viz-1: #2a6fc0;  --on-viz-1: #ffffff;
+  --viz-2: #0e8a76;  --on-viz-2: #ffffff;
+  --viz-3: #a86e00;  --on-viz-3: #ffffff;
+  --viz-4: #35854a;  --on-viz-4: #ffffff;
+  --viz-5: #7461d6;  --on-viz-5: #ffffff;
+  --viz-6: #cc4b47;  --on-viz-6: #ffffff;
+  --viz-7: #c2447e;  --on-viz-7: #ffffff;
+  --viz-8: #d45f1e;  --on-viz-8: #ffffff;
 }
 
 @media (prefers-reduced-motion: reduce) {

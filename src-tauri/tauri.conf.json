@@ -1,6 +1,6 @@
 {
   "$schema": "https://schema.tauri.app/config/2",
-  "productName": "Cache Insight",
+  "productName": "SysOptimizer",
   "version": "1.0.0",
   "identifier": "com.shenyangxinshang.cacheinsight",
   "build": {
@@ -12,15 +12,14 @@
   "app": {
     "windows": [
       {
-        "title": "Cache Insight 智缓",
+        "title": "系统优化助手 SysOptimizer",
         "width": 1040,
         "height": 720,
         "minWidth": 900,
         "minHeight": 620,
         "resizable": true,
         "fullscreen": false,
-        "center": true,
-        "theme": "Dark"
+        "center": true
       }
     ],
     "security": {
@@ -31,6 +30,7 @@
   "bundle": {
     "active": true,
     "targets": ["nsis"],
+    "publisher": "信商科技",
     "icon": [
       "icons/32x32.png",
       "icons/128x128.png",
@@ -40,14 +40,17 @@
       "nsis": {
         "installerIcon": "icons/icon.ico",
         "uninstallerIcon": "icons/icon.ico",
+        "sidebarImage": "./windows/installer-sidebar.bmp",
+        "headerImage": "./windows/installer-header.bmp",
         "installerHooks": "./windows/hooks.nsh",
+        "template": "./windows/installer.nsi",
         "installMode": "perMachine",
         "languages": ["SimpChinese", "English"],
         "displayLanguageSelector": true
       }
     },
-    "copyright": "© 2026 沈阳信商科技 版权所有 · 技术支持:解构者",
+    "copyright": "© 2026 沈阳信商科技 版权所有 · 技术支持 解构者",
     "shortDescription": "垃圾清理与系统洞察工具",
-    "longDescription": "Cache Insight(智缓)— 看清磁盘去了哪,清得放心。"
+    "longDescription": "系统优化助手(SysOptimizer)— 看清磁盘去了哪,清得放心。"
   }
 }

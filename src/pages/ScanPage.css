@@ -146,13 +146,25 @@
   display: flex;
   flex-direction: column;
   gap: 12px;
-  height: 100%;
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
 }
 
 .results-head {
   display: flex;
-  align-items: baseline;
-  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+}
+/* 返回选择:置于标题左侧,观感与空间分析的返回按钮一致。
+   给一层浅底,避免文字按钮悬空看着像排版偏移。 */
+.results-back {
+  font-size: 12.5px !important;
+  padding: 6px 10px !important;
+  background: var(--surface-container-high);
+}
+.results-back:hover:not(:disabled) {
+  background: var(--surface-container-highest);
 }
 .results-title {
   font-size: 17px;
@@ -176,6 +188,7 @@
   flex-direction: column;
   gap: 8px;
   padding-right: 4px;
+  min-height: 0;
 }
 
 .results-footer {
@@ -195,10 +208,7 @@
   display: flex;
   align-items: center;
   gap: 12px;
-}
-.results-rescan {
-  display: inline-flex;
-  align-items: center;
+  margin-left: auto;
 }
 
 /* ---------- 扫描进行中 ---------- */

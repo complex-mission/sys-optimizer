@@ -1,6 +1,7 @@
-import { useEffect, useState, type ReactElement } from "react";
+import { useEffect, useRef, useState, type ReactElement } from "react";
 import { useI18n } from "./i18n";
 import { api } from "./lib/api";
+import { useSmoothScroll } from "./lib/useSmoothScroll";
 import { Icon, IconName } from "./components/Icon";
 import { TermsGate } from "./components/TermsGate";
 import { Banner } from "./components/Banner";
@@ -190,15 +191,26 @@ export function App() {
         {(Object.keys(PAGES) as Route[])
           .filter((r) => mounted.has(r))
           .map((r) => (
-            <div
-              key={r}
-              className="page"
-              style={r === route ? undefined : { display: "none" }}
-            >
+            <PageWrapper key={r} active={r === route}>
               {PAGES[r]()}
-            </div>
+            </PageWrapper>
           ))}
       </main>
+    </div>
+  );
+}
+
+function PageWrapper({ active, children }: { active: boolean; children: ReactElement }) {
+  const ref = useRef<HTMLDivElement>(null);
+  useSmoothScroll(ref, 0.1);
+
+  return (
+    <div
+      className="page"
+      ref={ref}
+      style={active ? undefined : { display: "none" }}
+    >
+      {children}
     </div>
   );
 }

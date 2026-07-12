@@ -63,23 +63,11 @@ function layout(nodes: SpaceNode[], width: number, height: number): Rect[] {
   return rects;
 }
 
-// 分类色板:相邻块用不同色相区分,不再是清一色蓝。
-// 选用中高饱和、明度接近的一组颜色,深浅背景下都清晰;文字色按亮度自动取黑/白。
-const PALETTE = [
-  "#4c8dff", "#22c3a6", "#f4b740", "#ef6f6c", "#a78bfa",
-  "#34d399", "#f472b6", "#60a5fa", "#fbbf24", "#38bdf8",
-  "#c084fc", "#2dd4bf", "#fb923c", "#f87171",
-];
-
-// 依据背景色感知亮度,选对比更高的文字颜色。
-function textOn(hex: string): string {
-  const h = hex.replace("#", "");
-  const r = parseInt(h.slice(0, 2), 16);
-  const g = parseInt(h.slice(2, 4), 16);
-  const b = parseInt(h.slice(4, 6), 16);
-  const lum = (0.299 * r + 0.587 * g + 0.114 * b) / 255;
-  return lum > 0.62 ? "#1a1c1e" : "#ffffff";
-}
+// 分类色板:8 个固定色相,浅/深主题各有一套明度阶(见 tokens.css 的 --viz-N),
+// 文字色随槽位由 --on-viz-N 给定,主题切换自动生效。
+const VIZ_SLOTS = 8;
+const vizColor = (idx: number) => `var(--viz-${(idx % VIZ_SLOTS) + 1})`;
+const vizTextColor = (idx: number) => `var(--on-viz-${(idx % VIZ_SLOTS) + 1})`;
 
 // squarified treemap 布局
 export function Treemap({ nodes, width, height, onDrill, otherLabel }: Props) {
@@ -97,8 +85,8 @@ export function Treemap({ nodes, width, height, onDrill, otherLabel }: Props) {
     >
       {rects.map((r, idx) => {
         const isOther = r.node.name === "__other__";
-        const color = isOther ? "var(--surface-container-highest)" : PALETTE[idx % PALETTE.length];
-        const fg = isOther ? "var(--on-surface-variant)" : textOn(PALETTE[idx % PALETTE.length]);
+        const color = isOther ? "var(--surface-container-highest)" : vizColor(idx);
+        const fg = isOther ? "var(--on-surface-variant)" : vizTextColor(idx);
         const pct = total > 0 ? Math.round((r.node.bytes / total) * 100) : 0;
         const label = isOther ? otherLabel : r.node.name;
         const showText = r.w > 54 && r.h > 26;

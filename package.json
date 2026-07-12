@@ -1,7 +1,7 @@
 {
   "name": "cache-insight",
   "version": "1.0.0",
-  "description": "Cache Insight 智缓 — Windows 垃圾清理与系统洞察工具",
+  "description": "系统优化助手 SysOptimizer — Windows 垃圾清理与系统洞察工具",
   "type": "module",
   "scripts": {
     "dev": "vite",

@@ -90,6 +90,12 @@ export interface TargetView {
   exists: boolean;
 }
 
+export interface TargetSizeCache {
+  bytes: number;
+  files: number;
+  scanned_at: number;
+}
+
 export interface AppView {
   app: string;
   group: string;
@@ -123,6 +129,12 @@ export interface SpaceProgress {
   scanned_items: number;
   current: string;
   done: boolean;
+}
+
+export interface DriveInfo {
+  letter: string;
+  drive_type: string;
+  label: string;
 }
 
 export interface LargeFile {
@@ -198,6 +210,7 @@ export interface MemorySlot {
   occupied: boolean;
   capacity_bytes: number;
   speed_mhz: number;
+  configured_speed_mhz: number;
   kind: string;
   manufacturer: string;
   part_number: string;
@@ -216,6 +229,7 @@ export interface Volume {
   fs: string;
   total_bytes: number;
   free_bytes: number;
+  disk_index: number;
 }
 
 export interface DisplayInfo {
@@ -230,6 +244,16 @@ export interface BatteryInfo {
   design_capacity: number;
   full_charge_capacity: number;
   health_percent: number;
+}
+
+export interface NetworkAdapter {
+  name: string;
+  mac_address: string;
+  ip_addresses: string[];
+  speed_mbps: number;
+  is_up: boolean;
+  adapter_type: string;
+  network_name: string;
 }
 
 export interface HardwareReport {
@@ -251,7 +275,11 @@ export interface HardwareReport {
   disks: StorageDisk[];
   volumes: Volume[];
   displays: DisplayInfo[];
+  network_adapters: NetworkAdapter[];
   battery: BatteryInfo;
+  os_name: string;
+  os_version: string;
+  os_boot_time: number;
   generated_at: number;
   available: boolean;
 }
@@ -287,7 +315,10 @@ export const api = {
     invoke<void>("set_path_override", { id, paths }),
   resolvedPaths: (id: string) => invoke<string[]>("resolved_paths", { id }),
   appRules: () => invoke<AppView[]>("app_rules"),
+  scanAppSize: (id: string) => invoke<TargetSizeCache>("scan_app_size", { id }),
+  getAppSizeCache: () => invoke<Record<string, TargetSizeCache>>("get_app_size_cache"),
   listDrives: () => invoke<string[]>("list_drives"),
+  listDrivesWithType: () => invoke<DriveInfo[]>("list_drives_with_type"),
   listNotableLocations: () => invoke<NotableLocation[]>("list_notable_locations"),
   analyzeSpace: (path: string, topN: number) =>
     invoke<SpaceLevel>("analyze_space", { path, topN }),
@@ -310,6 +341,8 @@ export const api = {
   hardwareReport: () => invoke<HardwareReport>("hardware_report"),
 
   aboutInfo: () => invoke<AboutInfo>("about_info"),
+  clearLogs: () => invoke<number>("clear_logs"),
+  resetStats: () => invoke<void>("reset_stats"),
 };
 
 /* ---------------- 事件 ---------------- */
@@ -332,6 +365,17 @@ export function onLargeProgress(cb: (p: LargeProgress) => void): Promise<Unliste
 
 export function onDupProgress(cb: (p: DupProgress) => void): Promise<UnlistenFn> {
   return listen<DupProgress>("dup://progress", (e) => cb(e.payload));
+}
+
+export interface AppSizeProgress {
+  done: number;
+  total: number;
+  current: string;
+  done_flag?: boolean;
+}
+
+export function onAppSizeProgress(cb: (p: AppSizeProgress) => void): Promise<UnlistenFn> {
+  return listen<AppSizeProgress>("appsize://progress", (e) => cb(e.payload));
 }
 
 /* ---------------- 工具 ---------------- */

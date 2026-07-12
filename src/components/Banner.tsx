@@ -16,7 +16,7 @@ export function Banner({ onDismiss }: Props) {
       <p className="banner-text">{t("banner.text")}</p>
       <button className="banner-close btn-text" onClick={onDismiss}>
         {t("banner.dismiss")}
-        <Icon name="close" size={16} style={{ marginLeft: 4 }} />
+        <Icon name="close" size={16} />
       </button>
     </div>
   );

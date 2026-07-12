@@ -1,9 +1,15 @@
-<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<!--
+  IMPORTANT: keep this file ASCII-only and do NOT add an <?xml?> declaration.
+  tauri-winres wraps each line in " ... " when inlining into the generated .rc
+  (leading space would break an XML declaration), and rc.exe re-encodes the
+  text via the ANSI codepage (non-ASCII bytes become invalid UTF-8). Either
+  corruption makes Windows fail with a side-by-side (SxS) error at launch.
+-->
 <assembly xmlns="urn:schemas-microsoft-com:asm.v1" manifestVersion="1.0">
   <trustInfo xmlns="urn:schemas-microsoft-com:asm.v3">
     <security>
       <requestedPrivileges>
-        <!-- 需求文档:启动即要求管理员,以清理系统临时文件与更新缓存 -->
+        <!-- Require admin at launch: cleaning system temp files and update caches -->
         <requestedExecutionLevel level="requireAdministrator" uiAccess="false" />
       </requestedPrivileges>
     </security>
@@ -14,8 +20,8 @@
       <supportedOS Id="{8e0f7a12-bfb3-4fe8-b9a5-48fd50a15a9a}" />
     </application>
   </compatibility>
-  <!-- Common-Controls 6.0:加载 comctl32 v6,否则 TaskDialogIndirect 等入口点找不到。
-       自定义清单会整体覆盖 tauri-build 默认清单,故必须显式声明此依赖。 -->
+  <!-- Common-Controls 6.0: required for comctl32 v6 entry points (TaskDialogIndirect).
+       A custom manifest fully replaces the tauri-build default, so declare it here. -->
   <dependency>
     <dependentAssembly>
       <assemblyIdentity

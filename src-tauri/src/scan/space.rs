@@ -229,3 +229,107 @@ pub fn list_drives() -> Vec<String> {
         vec!["/".to_string()]
     }
 }
+
+/// 列出磁盘及其类型信息
+pub fn list_drives_with_type() -> Vec<crate::types::DriveInfo> {
+    use crate::types::DriveInfo;
+    
+    #[cfg(windows)]
+    {
+        use std::path::Path;
+        let mut out = Vec::new();
+        for c in b'A'..=b'Z' {
+            let root = format!("{}:\\", c as char);
+            if Path::new(&root).exists() {
+                let drive_type = get_drive_type_wmi(&root);
+                let label = get_volume_label_wmi(&root);
+                out.push(DriveInfo {
+                    letter: root,
+                    drive_type,
+                    label,
+                });
+            }
+        }
+        out
+    }
+    #[cfg(not(windows))]
+    {
+        vec![DriveInfo {
+            letter: "/".to_string(),
+            drive_type: "local".to_string(),
+            label: String::new(),
+        }]
+    }
+}
+
+#[cfg(windows)]
+fn get_drive_type_wmi(root: &str) -> String {
+    use wmi::{WMIConnection, Variant};
+    use std::collections::HashMap;
+    
+    let letter = &root[..1]; // "C" from "C:\"
+    let query = format!("SELECT DriveType FROM Win32_LogicalDisk WHERE DeviceID = '{}:'", letter);
+    
+    let wmi = match WMIConnection::new() {
+        Ok(w) => w,
+        Err(_) => return "unknown".to_string(),
+    };
+    
+    let rows: Vec<HashMap<String, Variant>> = match wmi.raw_query(&query) {
+        Ok(r) => r,
+        Err(_) => return "unknown".to_string(),
+    };
+    
+    if let Some(row) = rows.first() {
+        if let Some(variant) = row.get("DriveType") {
+            let dt = match variant {
+                Variant::I4(v) => *v,
+                Variant::UI4(v) => *v as i32,
+                Variant::I2(v) => *v as i32,
+                Variant::UI2(v) => *v as i32,
+                Variant::I8(v) => *v as i32,
+                Variant::UI8(v) => *v as i32,
+                _ => return "unknown".to_string(),
+            };
+            return match dt {
+                0 => "unknown".to_string(),
+                1 => "noroot".to_string(),
+                2 => "removable".to_string(),
+                3 => "local".to_string(),
+                4 => "network".to_string(),
+                5 => "cdrom".to_string(),
+                6 => "ram".to_string(),
+                _ => "unknown".to_string(),
+            };
+        }
+    }
+    
+    "unknown".to_string()
+}
+
+#[cfg(windows)]
+fn get_volume_label_wmi(root: &str) -> String {
+    use wmi::{WMIConnection, Variant};
+    use std::collections::HashMap;
+    
+    let letter = &root[..1]; // "C" from "C:\"
+    let query = format!("SELECT VolumeName FROM Win32_LogicalDisk WHERE DeviceID = '{}:'", letter);
+    
+    let wmi = match WMIConnection::new() {
+        Ok(w) => w,
+        Err(_) => return String::new(),
+    };
+    
+    let rows: Vec<HashMap<String, Variant>> = match wmi.raw_query(&query) {
+        Ok(r) => r,
+        Err(_) => return String::new(),
+    };
+    
+    if let Some(row) = rows.first() {
+        if let Some(Variant::String(label)) = row.get("VolumeName") {
+            return label.clone();
+        }
+    }
+    
+    String::new()
+}

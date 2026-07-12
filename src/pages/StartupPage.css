@@ -142,11 +142,11 @@
 
 /* MD3 风格开关 */
 .toggle {
-  width: 44px;
-  height: 24px;
+  width: 38px;
+  height: 20px;
   border-radius: var(--shape-full);
   background: var(--surface-container-highest);
-  border: 2px solid var(--outline);
+  border: 1.5px solid var(--outline);
   position: relative;
   flex-shrink: 0;
   transition: background var(--spring-fast), border-color var(--spring-fast);
@@ -162,18 +162,18 @@
 .toggle-knob {
   position: absolute;
   top: 50%;
-  left: 3px;
-  width: 14px;
-  height: 14px;
+  left: 2px;
+  width: 12px;
+  height: 12px;
   border-radius: var(--shape-full);
   background: var(--outline);
   transform: translateY(-50%);
   transition: transform var(--spring-fast), background var(--spring-fast), width var(--spring-fast), height var(--spring-fast);
 }
 .toggle.on .toggle-knob {
-  transform: translate(20px, -50%);
-  width: 18px;
-  height: 18px;
-  left: 1px;
+  transform: translate(18px, -50%);
+  width: 16px;
+  height: 16px;
+  left: 0px;
   background: var(--on-primary);
 }

@@ -96,7 +96,7 @@ export function LeftoverPage() {
             ))}
           </div>
           <button className="btn-text leftover-rescan" onClick={scan}>
-            <Icon name="scan" size={14} style={{ marginRight: 4 }} />
+            <Icon name="scan" size={14} />
             {zh ? "重新检测" : "Rescan"}
           </button>
         </>

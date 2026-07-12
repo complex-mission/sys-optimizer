@@ -193,10 +193,13 @@ pub fn dismiss_banner() -> Result<(), String> {
 }
 
 #[tauri::command]
-pub fn set_language(language: String) -> Result<(), String> {
+pub fn set_language(app: tauri::AppHandle, language: String) -> Result<(), String> {
     let mut cfg = config::load();
     cfg.language = language;
-    config::save(&cfg)
+    config::save(&cfg)?;
+    // 托盘菜单文案跟随新语言
+    crate::tray::refresh_language(&app);
+    Ok(())
 }
 
 #[tauri::command]
@@ -214,9 +217,41 @@ pub fn set_expensive_to_trash(enabled: bool) -> Result<(), String> {
     config::save(&cfg)
 }
 
+/// 日志目录平时只在首次写日志时创建;这里先建好,
+/// 保证设置页"打开"按钮在从未清理过时也能打开(open_path 会校验存在性)。
 #[tauri::command]
 pub fn logs_dir() -> String {
-    logbook::logs_path_string()
+    let dir = logbook::logs_path_string();
+    let _ = std::fs::create_dir_all(&dir);
+    dir
+}
+
+/// 清理日志文件
+#[tauri::command]
+pub fn clear_logs() -> Result<u64, String> {
+    let dir = std::path::PathBuf::from(logbook::logs_path_string());
+    if !dir.exists() {
+        return Ok(0);
+    }
+    let mut count = 0u64;
+    for entry in std::fs::read_dir(&dir).map_err(|e| e.to_string())? {
+        let entry = entry.map_err(|e| e.to_string())?;
+        let path = entry.path();
+        if path.extension().map_or(false, |ext| ext == "log") {
+            std::fs::remove_file(&path).map_err(|e| e.to_string())?;
+            count += 1;
+        }
+    }
+    Ok(count)
+}
+
+/// 重置累计统计
+#[tauri::command]
+pub fn reset_stats() -> Result<(), String> {
+    let mut cfg = config::load();
+    cfg.total_freed_bytes = 0;
+    cfg.total_clean_count = 0;
+    config::save(&cfg)
 }
 
 /* ---------------- 手动覆盖路径(达芬奇等自定义路径场景) ---------------- */
@@ -261,6 +296,112 @@ pub fn resolved_paths(id: String) -> Vec<String> {
 pub fn app_rules() -> Vec<scan::rules::AppView> {
     let overrides = config::load().path_overrides;
     scan::rules::app_views(&overrides)
+}
+
+/// 扫描单个软件缓存目标的大小(懒加载)。结果缓存到配置文件。
+#[tauri::command]
+pub async fn scan_app_size(id: String) -> Result<config::TargetSizeCache, String> {
+    use config::TargetSizeCache;
+
+    let overrides = config::load().path_overrides;
+    let def = scan::categories::find(&id).ok_or_else(|| format!("未找到类别:{id}"))?;
+    let paths = def.resolved_paths(&overrides);
+
+    if paths.is_empty() {
+        return Err("未找到缓存路径".into());
+    }
+
+    let result = tauri::async_runtime::spawn_blocking(move || {
+        let mut total_bytes = 0u64;
+        let mut total_files = 0u64;
+        for p in &paths {
+            let path = std::path::Path::new(p);
+            let (bytes, files) = scan::engine::scan_dir(path, None);
+            total_bytes += bytes;
+            total_files += files;
+        }
+        TargetSizeCache {
+            bytes: total_bytes,
+            files: total_files,
+            scanned_at: config::now_secs(),
+        }
+    })
+    .await
+    .map_err(|e| format!("扫描失败:{e}"))?;
+
+    // 写入缓存
+    let mut cfg = config::load();
+    cfg.app_size_cache.insert(id, result.clone());
+    let _ = config::save(&cfg);
+
+    Ok(result)
+}
+
+/// 批量扫描多个软件缓存目标的大小(供初始化或全部刷新)。
+#[tauri::command]
+pub async fn scan_app_sizes(window: Window, ids: Vec<String>) -> Vec<(String, config::TargetSizeCache)> {
+    use config::TargetSizeCache;
+
+    let overrides = config::load().path_overrides;
+    let mut results = Vec::new();
+
+    for (i, id) in ids.iter().enumerate() {
+        let _ = window.emit(
+            "appsize://progress",
+            serde_json::json!({ "done": i, "total": ids.len(), "current": id }),
+        );
+
+        let def = match scan::categories::find(id) {
+            Some(d) => d,
+            None => continue,
+        };
+        let paths = def.resolved_paths(&overrides);
+        if paths.is_empty() {
+            continue;
+        }
+
+        let id_clone = id.clone();
+        let cache = tauri::async_runtime::spawn_blocking(move || {
+            let mut total_bytes = 0u64;
+            let mut total_files = 0u64;
+            for p in &paths {
+                let path = std::path::Path::new(p);
+                let (bytes, files) = scan::engine::scan_dir(path, None);
+                total_bytes += bytes;
+                total_files += files;
+            }
+            TargetSizeCache {
+                bytes: total_bytes,
+                files: total_files,
+                scanned_at: config::now_secs(),
+            }
+        })
+        .await;
+
+        if let Ok(c) = cache {
+            results.push((id_clone, c));
+        }
+    }
+
+    // 批量写入缓存
+    let mut cfg = config::load();
+    for (id, cache) in &results {
+        cfg.app_size_cache.insert(id.clone(), cache.clone());
+    }
+    let _ = config::save(&cfg);
+
+    let _ = window.emit(
+        "appsize://progress",
+        serde_json::json!({ "done": ids.len(), "total": ids.len(), "current": "", "done_flag": true }),
+    );
+
+    results
+}
+
+/// 获取缓存的软件大小数据(供前端初始化时读取)。
+#[tauri::command]
+pub fn get_app_size_cache() -> std::collections::HashMap<String, config::TargetSizeCache> {
+    config::load().app_size_cache
 }
 
 /* ---------------- 大文件扫描(模块 B) ---------------- */
@@ -472,6 +613,12 @@ pub fn list_drives() -> Vec<String> {
     scan::space::list_drives()
 }
 
+/// 列出磁盘及其类型信息(本地/网络/U盘等)。
+#[tauri::command]
+pub fn list_drives_with_type() -> Vec<DriveInfo> {
+    scan::space::list_drives_with_type()
+}
+
 /// 列出"值得关注但不建议自动清理"的已知位置(供空间分析页快速跳转查看)。
 #[tauri::command]
 pub fn list_notable_locations() -> Vec<NotableLocation> {
@@ -562,6 +709,6 @@ pub fn about_info() -> AboutInfo {
         version: env!("CARGO_PKG_VERSION").to_string(),
         // build.rs 注入;缺失时回退占位
         build_date: option_env!("BUILD_DATE").unwrap_or("unknown").to_string(),
-        copyright: "© 2026 沈阳信商科技 版权所有 · 技术支持:解构者".to_string(),
+        copyright: "© 2026 沈阳信商科技 版权所有 · 技术支持 解构者".to_string(),
     }
 }

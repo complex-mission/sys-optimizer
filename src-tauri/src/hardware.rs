@@ -11,7 +11,8 @@ pub struct MemorySlot {
     pub locator: String, // DIMM_A1
     pub occupied: bool,
     pub capacity_bytes: u64,
-    pub speed_mhz: u32,
+    pub speed_mhz: u32,          // 标称/最大速度
+    pub configured_speed_mhz: u32, // 实际运行速度(0=未知)
     pub kind: String, // DDR4 / DDR5
     pub manufacturer: String,
     pub part_number: String,
@@ -33,6 +34,8 @@ pub struct Volume {
     pub fs: String,     // NTFS / exFAT ...
     pub total_bytes: u64,
     pub free_bytes: u64,
+    /// 所属物理磁盘索引(对应 disks 数组下标), -1 表示未知
+    pub disk_index: i32,
 }
 
 #[derive(Debug, Clone, Serialize, Default)]
@@ -42,6 +45,19 @@ pub struct DisplayInfo {
     pub height: u32,
     /// 当前刷新率(Hz),0 表示未知
     pub refresh_hz: u32,
+}
+
+#[derive(Debug, Clone, Serialize, Default)]
+pub struct NetworkAdapter {
+    pub name: String,
+    pub mac_address: String,
+    pub ip_addresses: Vec<String>,
+    pub speed_mbps: u64,
+    pub is_up: bool,
+    /// 网络类型: "ethernet" / "wifi" / "other"
+    pub adapter_type: String,
+    /// WiFi SSID 或网络名称(仅 WiFi 连接时)
+    pub network_name: String,
 }
 
 #[derive(Debug, Clone, Serialize, Default)]
@@ -75,7 +91,14 @@ pub struct HardwareReport {
     pub disks: Vec<StorageDisk>,
     pub volumes: Vec<Volume>,
     pub displays: Vec<DisplayInfo>,
+    pub network_adapters: Vec<NetworkAdapter>,
     pub battery: BatteryInfo,
+    /// 操作系统名称
+    pub os_name: String,
+    /// 操作系统版本
+    pub os_version: String,
+    /// 系统启动时间(Unix 秒)
+    pub os_boot_time: i64,
     pub generated_at: i64,
     /// 数据是否可用(非 Windows / 查询失败为 false)
     pub available: bool,
@@ -213,7 +236,7 @@ mod win {
 
         // 每条内存明细(Win32_PhysicalMemory)
         if let Ok(rows) = wmi.raw_query::<Row>(
-            "SELECT DeviceLocator, Capacity, Speed, SMBIOSMemoryType, Manufacturer, PartNumber FROM Win32_PhysicalMemory",
+            "SELECT DeviceLocator, Capacity, Speed, ConfiguredClockSpeed, SMBIOSMemoryType, Manufacturer, PartNumber FROM Win32_PhysicalMemory",
         ) {
             for r in &rows {
                 let cap = v_u64(r, "Capacity");
@@ -222,6 +245,7 @@ mod win {
                     occupied: cap > 0,
                     capacity_bytes: cap,
                     speed_mhz: v_u32(r, "Speed"),
+                    configured_speed_mhz: v_u32(r, "ConfiguredClockSpeed"),
                     kind: mem_type(v_u32(r, "SMBIOSMemoryType") as u16),
                     manufacturer: v_str(r, "Manufacturer"),
                     part_number: v_str(r, "PartNumber"),
@@ -254,10 +278,14 @@ mod win {
                     fs: v_str(r, "FileSystem"),
                     total_bytes: total,
                     free_bytes: v_u64(r, "FreeSpace"),
+                    disk_index: -1,
                 });
             }
             report.volumes.sort_by(|a, b| a.letter.cmp(&b.letter));
         }
+
+        // 建立盘符→物理磁盘映射
+        map_volumes_to_disks(&wmi, report);
 
         // 显示设备:逐台枚举活动显示器(多屏各自的分辨率/刷新率)
         collect_displays(report);
@@ -299,6 +327,79 @@ mod win {
                     full_charge_capacity: full,
                     health_percent: health.min(100),
                 };
+            }
+        }
+
+        // 操作系统信息
+        if let Ok(rows) = wmi.raw_query::<Row>(
+            "SELECT Caption, Version, LastBootUpTime FROM Win32_OperatingSystem",
+        ) {
+            if let Some(r) = rows.first() {
+                report.os_name = v_str(r, "Caption");
+                report.os_version = v_str(r, "Version");
+                // LastBootUpTime 是 CIM_DATETIME 格式
+                let boot_str = v_str(r, "LastBootUpTime");
+                if boot_str.len() >= 14 {
+                    // 简单解析:取前14位 yyyymmddHHMMSS
+                    // 实际需要更复杂的解析,这里先留空
+                }
+            }
+        }
+
+        // 网络适配器(物理适配器,有 MAC 地址的)
+        if let Ok(rows) = wmi.raw_query::<Row>(
+            "SELECT Name, MACAddress, NetConnectionStatus, Speed, AdapterType FROM Win32_NetworkAdapter WHERE PhysicalAdapter = TRUE AND MACAddress IS NOT NULL",
+        ) {
+            for r in &rows {
+                let mac = v_str(r, "MACAddress");
+                if mac.is_empty() {
+                    continue;
+                }
+                let status = v_u32(r, "NetConnectionStatus");
+                let adapter_type_raw = v_str(r, "AdapterType");
+                let adapter_type = if adapter_type_raw.to_lowercase().contains("wireless")
+                    || adapter_type_raw.to_lowercase().contains("wi-fi")
+                    || adapter_type_raw.to_lowercase().contains("wifi")
+                {
+                    "wifi".to_string()
+                } else if adapter_type_raw.to_lowercase().contains("ethernet")
+                    || adapter_type_raw.to_lowercase().contains("有线")
+                {
+                    "ethernet".to_string()
+                } else {
+                    "other".to_string()
+                };
+                report.network_adapters.push(NetworkAdapter {
+                    name: v_str(r, "Name"),
+                    mac_address: mac,
+                    ip_addresses: Vec::new(),
+                    speed_mbps: v_u64(r, "Speed") / 1_000_000,
+                    is_up: status == 2,
+                    adapter_type,
+                    network_name: String::new(),
+                });
+            }
+        }
+
+        // 获取 WiFi 连接的 SSID (通过 MSFT_NetConnectionProfile)
+        if let Ok(net_conn) = WMIConnection::with_namespace_path(r"root\StandardCimv2") {
+            if let Ok(rows) = net_conn.raw_query::<Row>(
+                "SELECT Name, InterfaceAlias, NetworkCategory FROM MSFT_NetConnectionProfile",
+            ) {
+                for r in &rows {
+                    let name = v_str(r, "Name");
+                    let alias = v_str(r, "InterfaceAlias");
+                    // 尝试匹配网络适配器
+                    for adapter in &mut report.network_adapters {
+                        if adapter.is_up
+                            && (adapter.name.contains(&alias)
+                                || alias.contains(&adapter.name)
+                                || adapter.adapter_type == "wifi" && adapter.network_name.is_empty())
+                        {
+                            adapter.network_name = name.clone();
+                        }
+                    }
+                }
             }
         }
 
@@ -394,6 +495,44 @@ mod win {
                     media_type,
                     bus_type,
                 });
+            }
+        }
+    }
+
+    /// 建立盘符→物理磁盘索引映射。
+    /// 通过 Win32_DiskDrive → Win32_DiskPartition → Win32_LogicalDisk 关联查询。
+    fn map_volumes_to_disks(wmi: &WMIConnection, report: &mut HardwareReport) {
+        // 构建 DeviceID→索引映射(如 "C:" → 0)
+        let vol_map: std::collections::HashMap<String, usize> = report
+            .volumes
+            .iter()
+            .enumerate()
+            .map(|(i, v)| (v.letter.clone(), i))
+            .collect();
+
+        // 查询物理磁盘到分区的关联
+        if let Ok(rows) = wmi.raw_query::<Row>(
+            "SELECT DiskIndex, DeviceID FROM Win32_DiskPartition",
+        ) {
+            for r in &rows {
+                let disk_idx = v_u32(r, "DiskIndex") as i32;
+                let part_id = v_str(r, "DeviceID");
+
+                // 查询该分区关联的逻辑磁盘
+                let query = format!(
+                    "ASSOCIATORS OF {{Win32_DiskPartition.DeviceID='{}'}} WHERE AssocClass = Win32_LogicalDiskToPartition",
+                    part_id.replace('\'', "''")
+                );
+                if let Ok(logicals) = wmi.raw_query::<Row>(&query) {
+                    for lr in &logicals {
+                        let dev_id = v_str(lr, "DeviceID");
+                        if let Some(&idx) = vol_map.get(&dev_id) {
+                            if report.volumes[idx].disk_index < 0 {
+                                report.volumes[idx].disk_index = disk_idx;
+                            }
+                        }
+                    }
+                }
             }
         }
     }

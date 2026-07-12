@@ -32,7 +32,7 @@ export function HardwarePage() {
   const copyReport = async () => {
     if (!hw) return;
     const lines: string[] = [];
-    lines.push(`Cache Insight ${zh ? "硬件报告" : "Hardware Report"}`);
+    lines.push(`SysOptimizer ${zh ? "硬件报告" : "Hardware Report"}`);
     lines.push(`CPU: ${show(hw.cpu_model)} (${hw.cpu_cores}C/${hw.cpu_threads}T @ ${hw.cpu_mhz}MHz)`);
     lines.push(`${zh ? "主板" : "Board"}: ${show(hw.board_vendor)} ${show(hw.board_model)}`);
     lines.push(`BIOS: ${show(hw.bios_version)}`);
@@ -46,15 +46,31 @@ export function HardwarePage() {
       `${zh ? "内存" : "Memory"}: ${formatBytes(hw.memory_total_bytes)} (${hw.memory_slots_used}/${hw.memory_slots_total} ${zh ? "槽" : "slots"})`
     );
     hw.memory_slots.forEach((s) => {
+      const speed = s.configured_speed_mhz > 0
+        ? `${s.configured_speed_mhz}MHz${s.speed_mhz > 0 && s.configured_speed_mhz !== s.speed_mhz ? ` (${zh ? "标称" : "spec"} ${s.speed_mhz}MHz)` : ""}`
+        : s.speed_mhz > 0
+        ? `${s.speed_mhz}MHz`
+        : "";
       lines.push(
-        `  ${s.locator}: ${s.occupied ? `${formatBytes(s.capacity_bytes)} ${s.kind} ${s.speed_mhz}MHz ${s.manufacturer} ${s.part_number}` : zh ? "空" : "empty"}`
+        `  ${s.locator}: ${s.occupied ? `${formatBytes(s.capacity_bytes)} ${s.kind} ${speed} ${s.manufacturer} ${s.part_number}` : zh ? "空" : "empty"}`
       );
     });
-    hw.disks.forEach((d) => {
-      lines.push(`${zh ? "磁盘" : "Disk"}: ${show(d.model)} ${formatBytes(d.bytes)} ${d.media_type} ${d.bus_type}`);
+    hw.disks.forEach((d, i) => {
+      const diskVolumes = hw.volumes.filter((v) => v.disk_index === i);
+      const volStr = diskVolumes.length > 0 ? ` [${diskVolumes.map((v) => v.letter).join("/")}]` : "";
+      lines.push(`${zh ? "磁盘" : "Disk"}: ${show(d.model)} ${formatBytes(d.bytes)} ${d.media_type} ${d.bus_type}${volStr}`);
     });
     if (hw.battery.present) {
       lines.push(`${zh ? "电池健康" : "Battery"}: ${hw.battery.health_percent}%`);
+    }
+    if (hw.network_adapters.length > 0) {
+      hw.network_adapters.forEach((n) => {
+        const status = n.is_up ? (zh ? "已连接" : "connected") : (zh ? "未连接" : "disconnected");
+        const speed = n.speed_mbps >= 1000 ? `${(n.speed_mbps / 1000).toFixed(0)}Gbps` : `${n.speed_mbps}Mbps`;
+        const type = n.adapter_type === "wifi" ? "WiFi" : n.adapter_type === "ethernet" ? (zh ? "有线" : "Ethernet") : "";
+        const network = n.network_name ? ` "${n.network_name}"` : "";
+        lines.push(`${zh ? "网络" : "Network"}: ${n.name} ${type}${network} ${n.mac_address} ${speed} ${status}`);
+      });
     }
     try {
       await navigator.clipboard.writeText(lines.join("\n"));
@@ -93,7 +109,7 @@ export function HardwarePage() {
             <Icon name="refresh" size={15} />
           </button>
           <button className="btn-outline" onClick={copyReport}>
-            <Icon name="copy" size={14} style={{ marginRight: 4 }} />
+            <Icon name="copy" size={14} />
             {copied ? (zh ? "已复制" : "Copied") : zh ? "复制报告" : "Copy report"}
           </button>
         </div>
@@ -136,9 +152,22 @@ export function HardwarePage() {
                 <>
                   <div className="slot-cap">{formatBytes(s.capacity_bytes)}</div>
                   <div className="slot-detail">
-                    {[s.kind, s.speed_mhz > 0 ? `${s.speed_mhz}MHz` : ""].filter(Boolean).join(" · ")}
+                    {[
+                      s.kind,
+                      s.configured_speed_mhz > 0
+                        ? `${s.configured_speed_mhz}MHz`
+                        : s.speed_mhz > 0
+                        ? `${s.speed_mhz}MHz`
+                        : "",
+                      s.configured_speed_mhz > 0 && s.speed_mhz > 0 && s.configured_speed_mhz !== s.speed_mhz
+                        ? `(${zh ? "标称" : "spec"} ${s.speed_mhz}MHz)`
+                        : "",
+                    ]
+                      .filter(Boolean)
+                      .join(" · ")}
                   </div>
                   {s.manufacturer && <div className="slot-mfr">{s.manufacturer}</div>}
+                  {s.part_number && <div className="slot-part">{s.part_number}</div>}
                 </>
               ) : (
                 <div className="slot-empty-label">{zh ? "空槽" : "empty"}</div>
@@ -172,16 +201,27 @@ export function HardwarePage() {
 
           {hw.disks.length > 0 && (
             <div className="hw-rows">
-              {hw.disks.map((d, i) => (
-                <div key={i} className="hw-row">
-                  <div className="hw-row-name">{show(d.model)}</div>
-                  <div className="hw-row-meta">
-                    {[d.media_type, d.bus_type].filter(Boolean).join(" · ") ||
-                      (zh ? "磁盘" : "disk")}
+              {hw.disks.map((d, i) => {
+                // 找出该磁盘上的分区
+                const diskVolumes = hw.volumes.filter((v) => v.disk_index === i);
+                return (
+                  <div key={i} className="hw-row">
+                    <div className="hw-row-name">
+                      {show(d.model)}
+                      {diskVolumes.length > 0 && (
+                        <span className="hw-row-volumes">
+                          {diskVolumes.map((v) => v.letter).join(" / ")}
+                        </span>
+                      )}
+                    </div>
+                    <div className="hw-row-meta">
+                      {[d.media_type, d.bus_type].filter(Boolean).join(" · ") ||
+                        (zh ? "磁盘" : "disk")}
+                    </div>
+                    <div className="hw-row-value">{formatBytes(d.bytes)}</div>
                   </div>
-                  <div className="hw-row-value">{formatBytes(d.bytes)}</div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           )}
 
@@ -269,6 +309,43 @@ export function HardwarePage() {
             <span className="battery-pct">
               {hw.battery.health_percent}% {zh ? "健康度" : "health"}
             </span>
+          </div>
+        </section>
+      )}
+
+      {/* 网络适配器 */}
+      {hw.network_adapters.length > 0 && (
+        <section className="hw-section">
+          <div className="hw-section-title">
+            <Icon name="info" size={16} />
+            <span>{zh ? "网络适配器" : "Network adapters"}</span>
+          </div>
+          <div className="hw-rows">
+            {hw.network_adapters.map((n, i) => (
+              <div key={i} className="hw-row">
+                <div className="hw-row-name">
+                  {show(n.name)}
+                  {n.adapter_type === "wifi" && (
+                    <span className="hw-row-tag wifi">WiFi</span>
+                  )}
+                  {n.adapter_type === "ethernet" && (
+                    <span className="hw-row-tag ethernet">{zh ? "有线" : "Ethernet"}</span>
+                  )}
+                  {n.is_up ? (
+                    <span className="hw-row-online">{zh ? "已连接" : "connected"}</span>
+                  ) : (
+                    <span className="hw-row-offline">{zh ? "未连接" : "disconnected"}</span>
+                  )}
+                </div>
+                <div className="hw-row-meta">
+                  {n.network_name && n.is_up && (
+                    <span className="hw-row-network">{n.network_name}</span>
+                  )}
+                  {n.mac_address}
+                  {n.speed_mbps > 0 ? ` · ${n.speed_mbps >= 1000 ? `${(n.speed_mbps / 1000).toFixed(0)}Gbps` : `${n.speed_mbps}Mbps`}` : ""}
+                </div>
+              </div>
+            ))}
           </div>
         </section>
       )}

@@ -2,7 +2,19 @@
 //! 存于系统配置目录下 cache-insight/config.json。
 
 use serde::{Deserialize, Serialize};
+use std::collections::HashMap;
 use std::path::PathBuf;
+
+/// 单个缓存目标的扫描结果(用于软件专项页懒加载)。
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct TargetSizeCache {
+    /// 缓存大小(字节)
+    pub bytes: u64,
+    /// 文件数
+    pub files: u64,
+    /// 最后扫描时间(Unix 秒)
+    pub scanned_at: i64,
+}
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(default)]
@@ -24,6 +36,8 @@ pub struct AppConfig {
     /// 谨慎模式:高风险(琥珀色 / expensive)项删除时移入回收站而非永久删除。
     /// 默认开启——这些项重建代价高,值得保留反悔余地(缓存类始终永久删除以立即释放空间)。
     pub expensive_to_trash: bool,
+    /// 软件专项页缓存大小扫描结果:target_id -> TargetSizeCache
+    pub app_size_cache: HashMap<String, TargetSizeCache>,
 }
 
 impl Default for AppConfig {
@@ -35,8 +49,9 @@ impl Default for AppConfig {
             banner_dismissed_at: 0,
             total_freed_bytes: 0,
             total_clean_count: 0,
-            path_overrides: std::collections::HashMap::new(),
+            path_overrides: HashMap::new(),
             expensive_to_trash: true,
+            app_size_cache: HashMap::new(),
         }
     }
 }

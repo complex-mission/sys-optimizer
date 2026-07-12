@@ -3,14 +3,6 @@
   border-radius: var(--shape-md);
   overflow: hidden;
   transition: background var(--ease-standard);
-  /* 左侧风险色条,便于一眼区分类型 */
-  border-left: 3px solid var(--risk-cache);
-}
-.cat-row.row-expensive {
-  border-left-color: var(--risk-expensive);
-}
-.cat-row.row-report {
-  border-left-color: var(--risk-report);
 }
 /* hover 不做位移(父级 overflow 会切边),只做底色的轻变化 */
 .cat-row:hover {

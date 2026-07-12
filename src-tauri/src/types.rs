@@ -133,6 +133,17 @@ pub struct NotableLocation {
     pub path: String,
 }
 
+/// 磁盘信息(用于空间分析页显示磁盘类型)
+#[derive(Debug, Clone, Serialize)]
+pub struct DriveInfo {
+    /// 盘符(如 "C:\")
+    pub letter: String,
+    /// 磁盘类型: "local" / "network" / "removable" / "unknown"
+    pub drive_type: String,
+    /// 卷标(可选)
+    pub label: String,
+}
+
 /// 一层目录的分析结果(下钻时按需返回单层,不预先展开整棵树)。
 #[derive(Debug, Clone, Serialize)]
 pub struct SpaceLevel {
