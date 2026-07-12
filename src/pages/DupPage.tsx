@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { open, confirm } from "@tauri-apps/plugin-dialog";
+import { open } from "@tauri-apps/plugin-dialog";
 import type { UnlistenFn } from "@tauri-apps/api/event";
 import { useI18n } from "../i18n";
 import {
@@ -10,11 +10,13 @@ import {
   formatBytes,
 } from "../lib/api";
 import { Icon } from "../components/Icon";
+import { useConfirmDialog } from "../components/ConfirmDialog";
 import "./DupPage.css";
 
 export function DupPage() {
   const { t, lang } = useI18n();
   const zh = lang === "zh-CN";
+  const { confirm: confirmInApp, dialog: confirmDialog } = useConfirmDialog();
 
   const [dir, setDir] = useState("");
   const [groups, setGroups] = useState<DuplicateGroup[]>([]);
@@ -49,21 +51,25 @@ export function DupPage() {
     setToDelete(new Set());
     setProgress(null);
 
-    unlisten.current?.();
-    unlisten.current = await onDupProgress((p) => setProgress(p));
-
-    const result = await api.scanDuplicates(dir);
-    setGroups(result);
-    // 默认:每组保留第一个,其余标记删除
-    const del = new Set<string>();
-    for (const g of result) {
-      g.files.slice(1).forEach((f) => del.add(f.path));
+    try {
+      unlisten.current?.();
+      unlisten.current = await onDupProgress((p) => setProgress(p));
+      const result = await api.scanDuplicates(dir);
+      setGroups(result);
+      // 默认:每组保留第一个,其余标记删除
+      const del = new Set<string>();
+      for (const g of result) {
+        g.files.slice(1).forEach((f) => del.add(f.path));
+      }
+      setToDelete(del);
+    } catch {
+      setGroups([]);
+    } finally {
+      setScanning(false);
+      setScanned(true);
+      unlisten.current?.();
+      unlisten.current = null;
     }
-    setToDelete(del);
-    setScanning(false);
-    setScanned(true);
-    unlisten.current?.();
-    unlisten.current = null;
   };
 
   // 停止扫描:后端提前返回已确认的部分结果
@@ -97,26 +103,34 @@ export function DupPage() {
   const del = async () => {
     const paths = [...toDelete];
     if (paths.length === 0) return;
-    const ok = await confirm(
-      zh
+    const ok = await confirmInApp({
+      title: zh ? "移入回收站" : "Move to Recycle Bin",
+      message: zh
         ? `将把 ${paths.length} 个重复文件移入回收站(每组至少保留一个),可恢复。`
         : `Move ${paths.length} duplicate files to the Recycle Bin (at least one kept per group). Restorable.`,
-      { title: zh ? "移入回收站" : "Move to Recycle Bin", kind: "warning" }
-    ).catch(() => true);
+      confirmLabel: zh ? "移入回收站" : "Move",
+      cancelLabel: zh ? "取消" : "Cancel",
+      danger: true,
+    });
     if (!ok) return;
 
-    await api.deleteDuplicates(paths);
-    // 从组里移除已删文件,清掉只剩单文件的组
-    setGroups((prev) =>
-      prev
-        .map((g) => ({
-          ...g,
-          files: g.files.filter((f) => !toDelete.has(f.path)),
-        }))
-        .filter((g) => g.files.length >= 2)
-        .map((g) => ({ ...g, reclaimable: g.bytes * (g.files.length - 1) }))
-    );
-    setToDelete(new Set());
+    const [deleted, , skipped] = await api.deleteDuplicates(paths);
+    if (skipped > 0 || deleted < paths.length) {
+      // 后端只返回数量，复扫后才能准确保留被占用或删除失败的文件。
+      await startScan();
+    } else {
+      // 从组里移除已删文件,清掉只剩单文件的组
+      setGroups((prev) =>
+        prev
+          .map((g) => ({
+            ...g,
+            files: g.files.filter((f) => !toDelete.has(f.path)),
+          }))
+          .filter((g) => g.files.length >= 2)
+          .map((g) => ({ ...g, reclaimable: g.bytes * (g.files.length - 1) }))
+      );
+      setToDelete(new Set());
+    }
   };
 
   const totalReclaimable = groups.reduce((s, g) => s + g.reclaimable, 0);
@@ -258,6 +272,7 @@ export function DupPage() {
           )}
         </>
       )}
+      {confirmDialog}
     </div>
   );
 }

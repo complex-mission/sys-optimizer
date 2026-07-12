@@ -59,6 +59,7 @@
 
 .terms-body {
   overflow-y: auto;
+  overscroll-behavior: contain; /* 滚到头/尾时不把滚动链回弹窗后面的页面 */
   display: flex;
   flex-direction: column;
   gap: 16px;

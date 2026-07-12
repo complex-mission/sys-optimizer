@@ -50,13 +50,20 @@ export function SpacePage() {
     setLevel(null);
     setScanning(true);
     setProgress(null);
-    unlisten.current?.();
-    unlisten.current = await onSpaceProgress((p) => setProgress(p));
-
-    const result = await api.analyzeSpace(path, 14);
-    setScanning(false);
-    unlisten.current?.();
-    unlisten.current = null;
+    let result: SpaceLevel;
+    try {
+      unlisten.current?.();
+      unlisten.current = await onSpaceProgress((p) => setProgress(p));
+      result = await api.analyzeSpace(path, 14);
+    } catch {
+      setLevel(null);
+      setCrumbs([]);
+      return;
+    } finally {
+      setScanning(false);
+      unlisten.current?.();
+      unlisten.current = null;
+    }
     if (cancelRef.current) {
       // 被停止:结果不完整,不缓存,回到选盘页
       cancelRef.current = false;

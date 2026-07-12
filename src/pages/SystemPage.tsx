@@ -1,8 +1,8 @@
 import { useEffect, useRef, useState } from "react";
-import { confirm } from "@tauri-apps/plugin-dialog";
 import { useI18n } from "../i18n";
 import { api, SystemSpaceItem, formatBytes } from "../lib/api";
 import { Icon, IconName } from "../components/Icon";
+import { useConfirmDialog } from "../components/ConfirmDialog";
 import "./SystemPage.css";
 
 interface ItemMeta {
@@ -62,6 +62,7 @@ const META: ItemMeta[] = [
 export function SystemPage() {
   const { t, lang } = useI18n();
   const zh = lang === "zh-CN";
+  const { confirm: confirmInApp, dialog: confirmDialog } = useConfirmDialog();
 
   const [items, setItems] = useState<SystemSpaceItem[] | null>(null);
   const [loading, setLoading] = useState(false);
@@ -105,10 +106,13 @@ export function SystemPage() {
 
   const run = async (meta: ItemMeta) => {
     if (blocked(meta.id)) return;
-    const ok = await confirm(zh ? meta.costZh : meta.costEn, {
+    const ok = await confirmInApp({
       title: (zh ? meta.actionZh : meta.actionEn) + "?",
-      kind: "warning",
-    }).catch(() => false);
+      message: zh ? meta.costZh : meta.costEn,
+      confirmLabel: zh ? meta.actionZh : meta.actionEn,
+      cancelLabel: zh ? "取消" : "Cancel",
+      danger: true,
+    });
     if (!ok) return;
 
     setBusy((prev) => new Set(prev).add(meta.id));
@@ -157,7 +161,7 @@ export function SystemPage() {
       </div>
 
       <div className="system-notice">
-        <Icon name="info" size={18} style={{ flexShrink: 0, marginTop: 1 }} />
+        <Icon name="info" size={18} style={{ flexShrink: 0 }} />
         <div>
           {zh
             ? "这些操作会改变系统状态且不可轻易撤销。默认全部关闭,请逐项确认。"
@@ -239,6 +243,7 @@ export function SystemPage() {
           })}
         </div>
       )}
+      {confirmDialog}
     </div>
   );
 }

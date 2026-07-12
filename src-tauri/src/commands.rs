@@ -13,6 +13,13 @@ use tauri::{Emitter, Window};
 /// 扫描取消标记:前端点“停止”时置位,run_scan 每轮检查后提前退出。
 static SCAN_CANCEL: AtomicBool = AtomicBool::new(false);
 
+fn record_cleanup_stats(freed_bytes: u64) -> Result<(), String> {
+    let mut cfg = config::load();
+    cfg.total_freed_bytes = cfg.total_freed_bytes.saturating_add(freed_bytes);
+    cfg.total_clean_count = cfg.total_clean_count.saturating_add(1);
+    config::save(&cfg)
+}
+
 /// 请求停止当前扫描。
 #[tauri::command]
 pub fn cancel_scan() {
@@ -121,10 +128,10 @@ pub async fn run_clean(
 
     // 写日志 + 更新累计统计
     logbook::record_clean(&results);
-    let mut cfg = config::load();
-    cfg.total_freed_bytes += results.iter().map(|r| r.freed_bytes).sum::<u64>();
-    cfg.total_clean_count += 1;
-    let _ = config::save(&cfg);
+    if !results.is_empty() {
+        let freed = results.iter().map(|r| r.freed_bytes).sum::<u64>();
+        let _ = record_cleanup_stats(freed);
+    }
 
     results
 }
@@ -164,6 +171,24 @@ pub fn open_path(path: String) -> Result<(), String> {
         let _ = path;
         Ok(())
     }
+}
+
+/// 用系统默认浏览器打开链接。仅放行 https,避免被当作任意命令入口。
+#[tauri::command]
+pub fn open_url(url: String) -> Result<(), String> {
+    if !url.starts_with("https://") {
+        return Err("仅支持 https 链接".into());
+    }
+    #[cfg(windows)]
+    {
+        use std::os::windows::process::CommandExt;
+        std::process::Command::new("explorer.exe")
+            .arg(&url)
+            .creation_flags(0x0800_0000)
+            .spawn()
+            .map_err(|e| e.to_string())?;
+    }
+    Ok(())
 }
 
 /* ---------------- 配置 / 条款 / 横幅 ---------------- */
@@ -479,6 +504,9 @@ pub async fn delete_large_files(paths: Vec<String>) -> Vec<u64> {
     let r = tauri::async_runtime::spawn_blocking(move || scan::large::delete_to_trash(&paths))
         .await
         .unwrap_or((0, 0, 0));
+    if r.0 > 0 {
+        let _ = record_cleanup_stats(r.1);
+    }
     vec![r.0, r.1, r.2]
 }
 
@@ -551,6 +579,9 @@ pub async fn delete_duplicates(paths: Vec<String>) -> Vec<u64> {
     let r = tauri::async_runtime::spawn_blocking(move || scan::dup::delete_to_trash(&paths))
         .await
         .unwrap_or((0, 0, 0));
+    if r.0 > 0 {
+        let _ = record_cleanup_stats(r.1);
+    }
     vec![r.0, r.1, r.2]
 }
 
@@ -701,6 +732,7 @@ pub struct AboutInfo {
     pub version: String,
     pub build_date: String,
     pub copyright: String,
+    pub homepage: String,
 }
 
 #[tauri::command]
@@ -710,5 +742,6 @@ pub fn about_info() -> AboutInfo {
         // build.rs 注入;缺失时回退占位
         build_date: option_env!("BUILD_DATE").unwrap_or("unknown").to_string(),
         copyright: "© 2026 沈阳信商科技 版权所有 · 技术支持 解构者".to_string(),
+        homepage: "https://sys-optimizer.complexmission.com".to_string(),
     }
 }

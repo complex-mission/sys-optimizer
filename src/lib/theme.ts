@@ -23,6 +23,7 @@ function resolve(theme: Theme): "light" | "dark" {
 export function applyTheme(theme: Theme): void {
   document.documentElement.setAttribute("data-theme", resolve(theme));
   // 原生标题栏跟随:显式主题传 light/dark,system 传 null 交还系统
+  if (!("__TAURI_INTERNALS__" in window)) return;
   getCurrentWindow()
     .setTheme(theme === "system" ? null : theme)
     .catch(() => {});

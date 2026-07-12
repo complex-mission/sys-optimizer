@@ -33,7 +33,26 @@ export function useSmoothScroll(ref: RefObject<HTMLElement | null>, speed = 0.08
       }
     };
 
+    // 事件落在内层可滚动区域(如弹窗正文)时不得拦截,交还原生滚动;
+    // 标记了 data-scroll-isolate 的遮罩层内,滚轮也不应穿透滚动本页面
+    const hasInnerScroller = (start: EventTarget | null): boolean => {
+      let node = start instanceof Element ? start : null;
+      while (node && node !== el) {
+        if (node instanceof HTMLElement) {
+          if (node.dataset.scrollIsolate !== undefined) return true;
+          if (node.scrollHeight > node.clientHeight) {
+            const oy = getComputedStyle(node).overflowY;
+            if (oy === "auto" || oy === "scroll") return true;
+          }
+        }
+        node = node.parentElement;
+      }
+      return false;
+    };
+
     const onWheel = (e: WheelEvent) => {
+      if (hasInnerScroller(e.target)) return;
+
       e.preventDefault();
 
       const maxScroll = el.scrollHeight - el.clientHeight;

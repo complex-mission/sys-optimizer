@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useI18n } from "../i18n";
-import { api, AboutInfo, AppConfig, formatBytes } from "../lib/api";
+import { api, AboutInfo, AppConfig, formatBytes, onStatsChanged } from "../lib/api";
+import { TermsGate } from "../components/TermsGate";
 import logoUrl from "../assets/cache-insight-logo.svg";
 
 const OSS_LICENSES = [
@@ -17,10 +18,15 @@ export function AboutPage() {
   const zh = lang === "zh-CN";
   const [about, setAbout] = useState<AboutInfo | null>(null);
   const [cfg, setCfg] = useState<AppConfig | null>(null);
+  const [showTerms, setShowTerms] = useState(false);
+  const homepage = about ? ensureHttps(about.homepage) : "";
 
   useEffect(() => {
     api.aboutInfo().then(setAbout).catch(() => {});
     api.getConfig().then(setCfg).catch(() => {});
+    return onStatsChanged(() => {
+      api.getConfig().then(setCfg).catch(() => {});
+    });
   }, []);
 
   return (
@@ -28,9 +34,9 @@ export function AboutPage() {
       <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
         <img src={logoUrl} width={44} height={44} alt="" style={{ borderRadius: 10 }} />
         <div>
-          <h1 style={{ fontSize: 20, fontWeight: 500 }}>{t("app.name")}</h1>
+          <h1 style={{ fontSize: 20, fontWeight: 500, lineHeight: 1.2 }}>{t("app.name")}</h1>
           {about && (
-            <p style={{ fontSize: 12, color: "var(--on-surface-variant)" }}>
+            <p style={{ fontSize: 12, color: "var(--on-surface-variant)", marginTop: 2 }}>
               v{about.version} / {about.build_date}
             </p>
           )}
@@ -64,13 +70,46 @@ export function AboutPage() {
         </div>
       </div>
 
+      <button style={termsLink} onClick={() => setShowTerms(true)}>
+        {t("about.terms")}
+      </button>
+
       {about && (
-        <p style={{ fontSize: 12, color: "var(--on-surface-variant)", lineHeight: 1.6 }}>
-          {zh ? about.copyright : "© 2026 XS Tech Co, Ltd. All rights reserved. · Support: Complex Mission"}
-        </p>
+        <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
+          <p style={{ fontSize: 12, color: "var(--on-surface-variant)", lineHeight: 1.6 }}>
+            {t("about.website_hint")}
+            <a
+              href={homepage}
+              title={t("about.website")}
+              onClick={(e) => {
+                e.preventDefault();
+                api.openUrl(homepage).catch(() => {});
+              }}
+              style={{
+                color: "var(--primary)",
+                textDecoration: "none",
+                cursor: "pointer",
+              }}
+            >
+              {homepage}
+            </a>
+          </p>
+          <p style={{ fontSize: 12, color: "var(--on-surface-variant)", lineHeight: 1.6 }}>
+            {zh ? about.copyright : "© 2026 XS Tech Co, Ltd. All rights reserved. · Support: Complex Mission"}
+          </p>
+        </div>
       )}
+
+      {showTerms && <TermsGate viewOnly onAccept={() => setShowTerms(false)} />}
     </div>
   );
+}
+
+function ensureHttps(url: string): string {
+  const value = url.trim();
+  if (value.startsWith("https://")) return value;
+  if (value.startsWith("http://")) return `https://${value.slice("http://".length)}`;
+  return `https://${value}`;
 }
 
 const statCardsWrap: React.CSSProperties = {
@@ -97,6 +136,15 @@ const sectionTitle: React.CSSProperties = {
   fontWeight: 500,
   color: "var(--primary)",
   marginBottom: 10,
+};
+const termsLink: React.CSSProperties = {
+  alignSelf: "flex-start",
+  background: "none",
+  border: "none",
+  padding: 0,
+  fontSize: 13,
+  color: "var(--primary)",
+  cursor: "pointer",
 };
 const ossRow: React.CSSProperties = {
   display: "flex",

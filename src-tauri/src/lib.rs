@@ -67,6 +67,7 @@ pub fn run() {
             commands::preview_category,
             commands::run_clean,
             commands::open_path,
+            commands::open_url,
             commands::get_config,
             commands::accept_terms,
             commands::should_show_banner,

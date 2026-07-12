@@ -75,10 +75,17 @@ export interface AppConfig {
   expensive_to_trash: boolean;
 }
 
+const STATS_CHANGED_EVENT = "cache-insight:stats-changed";
+
+function notifyStatsChanged() {
+  window.dispatchEvent(new Event(STATS_CHANGED_EVENT));
+}
+
 export interface AboutInfo {
   version: string;
   build_date: string;
   copyright: string;
+  homepage: string;
 }
 
 export interface TargetView {
@@ -296,8 +303,11 @@ export const api = {
   diskUsage: (path: string) => invoke<DiskUsage>("disk_usage", { path }),
   previewCategory: (id: string, offset: number, limit: number) =>
     invoke<PreviewPage>("preview_category", { id, offset, limit }),
-  runClean: (ids: string[], keepPaths: string[]) =>
-    invoke<CleanResult[]>("run_clean", { ids, keepPaths }),
+  runClean: async (ids: string[], keepPaths: string[]) => {
+    const results = await invoke<CleanResult[]>("run_clean", { ids, keepPaths });
+    notifyStatsChanged();
+    return results;
+  },
   openPath: (path: string) => invoke<void>("open_path", { path }),
 
   getConfig: () => invoke<AppConfig>("get_config"),
@@ -325,12 +335,18 @@ export const api = {
   defaultScanDir: () => invoke<string>("default_scan_dir"),
   scanLargeFiles: (path: string, thresholdMb: number, maxResults: number) =>
     invoke<LargeFile[]>("scan_large_files", { path, thresholdMb, maxResults }),
-  deleteLargeFiles: (paths: string[]) =>
-    invoke<number[]>("delete_large_files", { paths }),
+  deleteLargeFiles: async (paths: string[]) => {
+    const result = await invoke<number[]>("delete_large_files", { paths });
+    if ((result[0] ?? 0) > 0) notifyStatsChanged();
+    return result;
+  },
   scanDuplicates: (path: string) =>
     invoke<DuplicateGroup[]>("scan_duplicates", { path }),
-  deleteDuplicates: (paths: string[]) =>
-    invoke<number[]>("delete_duplicates", { paths }),
+  deleteDuplicates: async (paths: string[]) => {
+    const result = await invoke<number[]>("delete_duplicates", { paths });
+    if ((result[0] ?? 0) > 0) notifyStatsChanged();
+    return result;
+  },
   listStartup: () => invoke<StartupItem[]>("list_startup"),
   setStartupEnabled: (id: string, enable: boolean) =>
     invoke<void>("set_startup_enabled", { id, enable }),
@@ -341,8 +357,12 @@ export const api = {
   hardwareReport: () => invoke<HardwareReport>("hardware_report"),
 
   aboutInfo: () => invoke<AboutInfo>("about_info"),
+  openUrl: (url: string) => invoke<void>("open_url", { url }),
   clearLogs: () => invoke<number>("clear_logs"),
-  resetStats: () => invoke<void>("reset_stats"),
+  resetStats: async () => {
+    await invoke<void>("reset_stats");
+    notifyStatsChanged();
+  },
 };
 
 /* ---------------- 事件 ---------------- */
@@ -353,6 +373,11 @@ export function onScanProgress(cb: (p: ScanProgress) => void): Promise<UnlistenF
 
 export function onCleanProgress(cb: (p: CleanProgress) => void): Promise<UnlistenFn> {
   return listen<CleanProgress>("clean://progress", (e) => cb(e.payload));
+}
+
+export function onStatsChanged(cb: () => void): UnlistenFn {
+  window.addEventListener(STATS_CHANGED_EVENT, cb);
+  return () => window.removeEventListener(STATS_CHANGED_EVENT, cb);
 }
 
 export function onSpaceProgress(cb: (p: SpaceProgress) => void): Promise<UnlistenFn> {

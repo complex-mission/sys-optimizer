@@ -1,8 +1,9 @@
 import { useEffect, useState } from "react";
-import { confirm, message } from "@tauri-apps/plugin-dialog";
+import { message } from "@tauri-apps/plugin-dialog";
 import { useI18n, Lang } from "../i18n";
-import { api, AppConfig, formatBytes } from "../lib/api";
+import { api, AppConfig, formatBytes, onStatsChanged } from "../lib/api";
 import { Icon } from "../components/Icon";
+import { useConfirmDialog } from "../components/ConfirmDialog";
 import { getTheme, setTheme, Theme } from "../lib/theme";
 import "./SettingsPage.css";
 
@@ -11,6 +12,7 @@ type LangChoice = "system" | Lang;
 export function SettingsPage() {
   const { t, lang, setLang } = useI18n();
   const zh = lang === "zh-CN";
+  const { confirm: confirmInApp, dialog: confirmDialog } = useConfirmDialog();
 
   const [cfg, setCfg] = useState<AppConfig | null>(null);
   const [logPath, setLogPath] = useState("");
@@ -37,6 +39,9 @@ export function SettingsPage() {
 
   useEffect(() => {
     load();
+    return onStatsChanged(() => {
+      api.getConfig().then(setCfg).catch(() => {});
+    });
   }, []);
 
   const chooseLang = async (choice: LangChoice) => {
@@ -67,10 +72,13 @@ export function SettingsPage() {
     );
 
   const clearLogs = async () => {
-    const ok = await confirm(
-      zh ? "确定要清理所有日志文件吗？" : "Are you sure you want to clear all log files?",
-      { title: zh ? "清理日志" : "Clear logs", kind: "warning" }
-    ).catch(() => false);
+    const ok = await confirmInApp({
+      title: zh ? "清理日志" : "Clear logs",
+      message: zh ? "确定要清理所有日志文件吗？" : "Are you sure you want to clear all log files?",
+      confirmLabel: zh ? "清理日志" : "Clear logs",
+      cancelLabel: zh ? "取消" : "Cancel",
+      danger: true,
+    });
     if (!ok) return;
     try {
       const count = await api.clearLogs();
@@ -87,10 +95,13 @@ export function SettingsPage() {
   };
 
   const resetStats = async () => {
-    const ok = await confirm(
-      zh ? "确定要重置累计统计吗？" : "Are you sure you want to reset statistics?",
-      { title: zh ? "重置统计" : "Reset stats", kind: "warning" }
-    ).catch(() => false);
+    const ok = await confirmInApp({
+      title: zh ? "重置统计" : "Reset stats",
+      message: zh ? "确定要重置累计统计吗？" : "Are you sure you want to reset statistics?",
+      confirmLabel: zh ? "重置" : "Reset",
+      cancelLabel: zh ? "取消" : "Cancel",
+      danger: true,
+    });
     if (!ok) return;
     try {
       await api.resetStats();
@@ -104,12 +115,15 @@ export function SettingsPage() {
   };
 
   const reset = async () => {
-    const ok = await confirm(
-      zh
+    const ok = await confirmInApp({
+      title: zh ? "恢复默认设置" : "Reset to defaults",
+      message: zh
         ? "将语言、默认挡位等偏好恢复为初始值。使用条款同意状态与累计统计不受影响。"
         : "Reset preferences like language and default scan depth. Terms acceptance and totals are unaffected.",
-      { title: zh ? "恢复默认设置" : "Reset to defaults", kind: "warning" }
-    ).catch(() => false);
+      confirmLabel: zh ? "恢复默认" : "Reset",
+      cancelLabel: zh ? "取消" : "Cancel",
+      danger: true,
+    });
     if (!ok) return;
     await api.setLanguage("system").catch(() => {});
     await api.setDefaultTier("standard").catch(() => {});
@@ -288,6 +302,7 @@ export function SettingsPage() {
           {t("settings.reset")}
         </button>
       </section>
+      {confirmDialog}
     </div>
   );
 }

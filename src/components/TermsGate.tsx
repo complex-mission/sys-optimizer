@@ -1,18 +1,20 @@
 ﻿// 首次启动的使用条款门禁。未同意则铺满全屏,同意后写入配置并放行。
+// viewOnly 模式用于"关于"页回看:仅展示,按钮变为"关闭"。
 
 import { useI18n } from "../i18n";
 import "./TermsGate.css";
 
 interface Props {
   onAccept: () => void;
+  viewOnly?: boolean;
 }
 
-export function TermsGate({ onAccept }: Props) {
+export function TermsGate({ onAccept, viewOnly }: Props) {
   const { lang, setLang } = useI18n();
   const zh = lang === "zh-CN";
 
   return (
-    <div className="terms-scrim">
+    <div className="terms-scrim" data-scroll-isolate>
       <div className="terms-card">
         <div className="terms-lang-seg">
           <button
@@ -32,9 +34,13 @@ export function TermsGate({ onAccept }: Props) {
           {zh ? "使用条款" : "Terms of Use"}
         </h1>
         <p className="terms-lead">
-          {zh
-            ? "在使用 Cache Insight(智缓)前,请阅读并同意以下条款。点击“同意并继续”即表示你已阅读、理解并接受全部内容。"
-            : "Before using Cache Insight, please read and accept the terms below. Clicking “Agree and continue” means you have read, understood, and accepted them."}
+          {viewOnly
+            ? zh
+              ? "以下为本软件的使用条款与免责声明,首次启动时你已阅读并同意。"
+              : "Below are the terms of use and disclaimer you accepted on first launch."
+            : zh
+              ? "在使用 Cache Insight(智缓)前,请阅读并同意以下条款。点击“同意并继续”即表示你已阅读、理解并接受全部内容。"
+              : "Before using Cache Insight, please read and accept the terms below. Clicking “Agree and continue” means you have read, understood, and accepted them."}
         </p>
         <div className="terms-body">
           {(zh ? TERMS_ZH : TERMS_EN).map((s, i) => (
@@ -46,7 +52,9 @@ export function TermsGate({ onAccept }: Props) {
         </div>
         <div className="terms-actions">
           <button className="btn-filled" onClick={onAccept}>
-            {zh ? "同意并继续" : "Agree and continue"}
+            {viewOnly
+              ? zh ? "关闭" : "Close"
+              : zh ? "同意并继续" : "Agree and continue"}
           </button>
         </div>
       </div>

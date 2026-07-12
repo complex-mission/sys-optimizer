@@ -80,6 +80,7 @@ Var NoShortcutMode
 Var WixMode
 Var OldMainBinaryName
 Var ShortcutName
+Var HqBitmapResult
 
 Name "${PRODUCTNAME}"
 BrandingText "${COPYRIGHT}"
@@ -155,6 +156,9 @@ VIAddVersionKey "ProductVersion" "${VERSION}"
 ; Installer header image
 !if "${HEADERIMAGE}" != ""
   !define MUI_HEADERIMAGE_BITMAP "${HEADERIMAGE}"
+  ; Put the image on the right so page titles keep the full left width
+  ; instead of being pushed right by the bitmap's blank margins
+  !define MUI_HEADERIMAGE_RIGHT
 !endif
 
 ; Uninstaller header image
@@ -167,6 +171,114 @@ VIAddVersionKey "ProductVersion" "${VERSION}"
   !define MUI_UNICON "${UNINSTALLERICON}"
 !endif
 
+; ---------------------------------------------------------------------------
+; High-quality wizard/header bitmaps on any display scale.
+; MUI2 stretches its bitmaps onto the controls with LoadImage / StretchBlt in
+; COLORONCOLOR (nearest-neighbor) mode. The control pixel size follows dialog
+; units (font- and DPI-dependent), so it never exactly matches a pre-rendered
+; bitmap — the leftover stretch is what produces the jagged edges. Instead of
+; guessing sizes, we bundle a single 2x asset per image (<name>-192.bmp, from
+; the same generator as the base bitmaps) and, right before the page shows,
+; HALFTONE-StretchBlt it to the control's real client size. HALFTONE averages
+; source pixels, so any scale factor (100%..300%+) comes out smooth.
+!define /ifndef STM_SETIMAGE 0x0172
+
+; In (stack, top first): image control HWND, bmp file path.
+; Renders the bmp into a screen-compatible bitmap at exactly the control's
+; client size using HALFTONE StretchBlt, then assigns it via STM_SETIMAGE.
+!macro SET_IMAGE_HALFTONE un
+Function ${un}SetImageHalftone
+  StrCpy $HqBitmapResult 0
+  Exch $1 ; control HWND
+  Exch
+  Exch $2 ; bmp path
+  Push $0
+  Push $3
+  Push $4
+  Push $5
+  Push $6
+  Push $7
+  Push $8
+  Push $9
+  ; Load source at its native size; LR_LOADFROMFILE|LR_CREATEDIBSECTION
+  System::Call 'user32::LoadImage(p 0, t r2, i 0, i 0, i 0, i 0x2010) p .r0'
+  ${If} $0 P<> 0
+    ; Target size = control client rect
+    System::Call '*(i, i, i, i) p .r3'
+    System::Call 'user32::GetClientRect(p r1, p r3)'
+    System::Call '*$3(i, i, i .r4, i .r5)'
+    System::Free $3
+    ${If} $4 > 0
+    ${AndIf} $5 > 0
+      ; Source size from the BITMAP struct (8 ints = 32 bytes, its x64 size)
+      System::Call '*(i, i, i, i, i, i, i, i) p .r3'
+      System::Call 'gdi32::GetObject(p r0, i 32, p r3)'
+      System::Call '*$3(i, i .r6, i .r7)'
+      System::Free $3
+      System::Call 'user32::GetDC(p 0) p .r3'
+      System::Call 'gdi32::CreateCompatibleBitmap(p r3, i r4, i r5) p .r8'
+      System::Call 'gdi32::CreateCompatibleDC(p r3) p .r9' ; dest DC
+      System::Call 'gdi32::SelectObject(p r9, p r8) p .s'
+      System::Call 'gdi32::SetStretchBltMode(p r9, i 4)' ; HALFTONE
+      System::Call 'gdi32::SetBrushOrgEx(p r9, i 0, i 0, p 0)'
+      System::Call 'gdi32::CreateCompatibleDC(p r3) p .r2' ; src DC ($2 free now)
+      System::Call 'gdi32::SelectObject(p r2, p r0) p .s'
+      ; SRCCOPY
+      System::Call 'gdi32::StretchBlt(p r9, i 0, i 0, i r4, i r5, p r2, i 0, i 0, i r6, i r7, i 0x00CC0020)'
+      System::Call 'gdi32::SelectObject(p r2, p s)'
+      System::Call 'gdi32::SelectObject(p r9, p s)'
+      System::Call 'gdi32::DeleteDC(p r2)'
+      System::Call 'gdi32::DeleteDC(p r9)'
+      System::Call 'user32::ReleaseDC(p 0, p r3)'
+      ; The STATIC control owns neither bitmap. Delete the MUI bitmap that was
+      ; replaced, then let the page callback put the new handle in MUI's bitmap
+      ; variable so its normal page teardown frees it.
+      SendMessage $1 ${STM_SETIMAGE} 0 $8 $0
+      ${If} $0 P<> 0
+        System::Call 'gdi32::DeleteObject(p r0)'
+      ${EndIf}
+      StrCpy $HqBitmapResult $8
+    ${EndIf}
+    System::Call 'gdi32::DeleteObject(p r0)'
+  ${EndIf}
+  Pop $9
+  Pop $8
+  Pop $7
+  Pop $6
+  Pop $5
+  Pop $4
+  Pop $3
+  Pop $0
+  Pop $2
+  Pop $1
+FunctionEnd
+!macroend
+!insertmacro SET_IMAGE_HALFTONE ""
+!insertmacro SET_IMAGE_HALFTONE "un."
+
+!if "${SIDEBARIMAGE}" != ""
+  !searchreplace SIDEBARIMAGE_BASE "${SIDEBARIMAGE}" ".bmp" ""
+!endif
+
+!if "${HEADERIMAGE}" != ""
+  !searchreplace HEADERIMAGE_BASE "${HEADERIMAGE}" ".bmp" ""
+  ; Replace the header image (already loaded stretched by MUI in onGUIInit,
+  ; window not yet visible) with the smooth rendition.
+  !macro RELOAD_HEADER_HQ un
+  Function ${un}ReloadHeaderImageHq
+    File "/oname=$PLUGINSDIR\header-2x.bmp" "${HEADERIMAGE_BASE}-192.bmp"
+    Push "$PLUGINSDIR\header-2x.bmp"
+    Push $mui.Header.Image
+    Call ${un}SetImageHalftone
+  FunctionEnd
+  !macroend
+  !insertmacro RELOAD_HEADER_HQ ""
+  !insertmacro RELOAD_HEADER_HQ "un."
+  !define MUI_CUSTOMFUNCTION_GUIINIT ReloadHeaderImageHq
+  !define MUI_CUSTOMFUNCTION_UNGUIINIT un.ReloadHeaderImageHq
+!endif
+; ---------------------------------------------------------------------------
+
 ; Define registry key to store installer language
 !define MUI_LANGDLL_REGISTRY_ROOT "HKCU"
 !define MUI_LANGDLL_REGISTRY_KEY "${MANUPRODUCTKEY}"
@@ -174,6 +286,9 @@ VIAddVersionKey "ProductVersion" "${VERSION}"
 
 ; Installer pages, must be ordered as they appear
 ; 1. Welcome Page
+!if "${SIDEBARIMAGE}" != ""
+  !define MUI_PAGE_CUSTOMFUNCTION_SHOW WelcomeShowSidebar
+!endif
 !define MUI_PAGE_CUSTOMFUNCTION_PRE SkipIfPassive
 !insertmacro MUI_PAGE_WELCOME
 
@@ -421,8 +536,35 @@ Var AppStartMenuFolder
 ; Show run app after installation.
 !define MUI_FINISHPAGE_RUN
 !define MUI_FINISHPAGE_RUN_FUNCTION RunMainBinary
+!if "${SIDEBARIMAGE}" != ""
+  !define MUI_PAGE_CUSTOMFUNCTION_SHOW FinishShowSidebar
+!endif
 !define MUI_PAGE_CUSTOMFUNCTION_PRE SkipIfPassive
 !insertmacro MUI_PAGE_FINISH
+
+!if "${SIDEBARIMAGE}" != ""
+  ; SHOW callbacks for the welcome/finish pages. They are intentionally
+  ; defined after both MUI page macros, because those macros declare the
+  ; $mui.*.Image.Bitmap variables used to hand bitmap ownership back to MUI.
+  Function WelcomeShowSidebar
+    File "/oname=$PLUGINSDIR\wizard-2x.bmp" "${SIDEBARIMAGE_BASE}-192.bmp"
+    Push "$PLUGINSDIR\wizard-2x.bmp"
+    Push $mui.WelcomePage.Image
+    Call SetImageHalftone
+    ${If} $HqBitmapResult P<> 0
+      StrCpy $mui.WelcomePage.Image.Bitmap $HqBitmapResult
+    ${EndIf}
+  FunctionEnd
+  Function FinishShowSidebar
+    File "/oname=$PLUGINSDIR\wizard-2x.bmp" "${SIDEBARIMAGE_BASE}-192.bmp"
+    Push "$PLUGINSDIR\wizard-2x.bmp"
+    Push $mui.FinishPage.Image
+    Call SetImageHalftone
+    ${If} $HqBitmapResult P<> 0
+      StrCpy $mui.FinishPage.Image.Bitmap $HqBitmapResult
+    ${EndIf}
+  FunctionEnd
+!endif
 
 Function RunMainBinary
   nsis_tauri_utils::RunAsUser "$INSTDIR\${MAINBINARYNAME}.exe" ""
@@ -451,7 +593,9 @@ Function un.ConfirmShow ; Add add a `Delete app data` check box
     StrCpy $3 "${__NSD_CheckBox_EXSTYLE}"
     IntOp $4 0 * $2
   ${EndIf}
-  IntOp $5 100 * $2
+  ; 115 instead of upstream's 100: keep a visible gap below the
+  ; "Uninstalling from:" folder line above this checkbox
+  IntOp $5 115 * $2
   IntOp $6 400 * $2
   IntOp $7 25 * $2
   IntOp $4 $4 / 96

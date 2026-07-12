@@ -1,0 +1,181 @@
+export type Locale = "zh" | "en";
+
+export const locales: Locale[] = ["zh", "en"];
+
+export function isLocale(v: string): v is Locale {
+  return v === "zh" || v === "en";
+}
+
+export type Dict = Record<string, string>;
+
+const zh: Dict = {
+  "site.name": "系统优化助手",
+  "site.nameEn": "SysOptimizer",
+  "site.tagline": "看清磁盘去了哪,清得放心。",
+
+  "nav.home": "首页",
+  "nav.download": "下载",
+  "nav.admin": "管理",
+
+  "hero.badge": "Windows 10 / 11 · 免费",
+  "hero.title": "看清磁盘去了哪,清得放心",
+  "hero.desc":
+    "系统优化助手(SysOptimizer)是一款 Windows 垃圾清理与系统洞察工具。三挡扫描、风险三级标识、13 款软件专项清理,所有操作在本机完成。",
+  "hero.cta": "免费下载",
+  "hero.cta2": "了解功能",
+
+  "features.title": "核心功能",
+  "features.f1.title": "三挡智能扫描",
+  "features.f1.desc": "快速 / 标准 / 深度三种挡位:从秒级出结果的临时文件清理,到覆盖大文件与重复文件的全盘洞察。",
+  "features.f2.title": "风险三级体系",
+  "features.f2.desc": "蓝色缓存默认勾选、放心清理;琥珀色重建耗时项默认不勾并行内警告;属于你的内容仅报告体积,不提供删除。",
+  "features.f3.title": "软件专项清理",
+  "features.f3.desc": "内置 13 款软件、19 个清理目标:DaVinci Resolve、Premiere、After Effects、Blender、Unreal、JetBrains、npm、Docker、剪映等。",
+  "features.f4.title": "文件级预览",
+  "features.f4.desc": "清理前逐文件预览,按大小排序,随手反选要保留的文件;被占用的文件自动跳过。",
+  "features.f5.title": "路径智能解析",
+  "features.f5.desc": "自动探测软件的自定义缓存位置(如达芬奇代理目录);探测不到时可手动指定,不漏扫。",
+  "features.f6.title": "本地运行,尊重隐私",
+  "features.f6.desc": "扫描与清理全部在本机完成,操作写入本地日志,随时可查;不上传你的任何文件信息。",
+
+  "risk.title": "清理前,先看懂风险标识",
+  "risk.cache": "缓存,可放心清理",
+  "risk.expensive": "删除有代价,请确认后清理",
+  "risk.report": "仅报告体积,不会清理",
+
+  "cta.title": "现在就把磁盘清爽起来",
+  "cta.desc": "免费下载,安装即用,中英双语。",
+
+  "download.title": "下载",
+  "download.desc": "下载系统优化助手最新安装包。链接为临时签名地址,请直接点击下载。",
+  "download.latest": "最新",
+  "download.name": "文件名",
+  "download.size": "大小",
+  "download.date": "更新日期",
+  "download.action": "下载",
+  "download.empty": "暂无可下载文件,请稍后再来。",
+  "download.error": "文件列表暂时不可用,请稍后再试。",
+  "download.note": "为保障服务质量,同一 IP 的下载次数与单连接速度受限。",
+
+  "admin.title": "管理后台",
+  "admin.password": "管理密码",
+  "admin.login": "登录",
+  "admin.loggingIn": "登录中…",
+  "admin.wrongPassword": "密码错误",
+  "admin.tooMany": "尝试次数过多,请 10 分钟后再试",
+  "admin.networkError": "网络错误,请重试",
+  "admin.logout": "退出登录",
+  "admin.tab.upload": "上传文件",
+  "admin.tab.files": "文件管理",
+  "admin.tab.logs": "下载日志",
+  "admin.upload.select": "选择文件",
+  "admin.upload.rename": "重命名(可选,留空使用原文件名)",
+  "admin.upload.submit": "上传到 OSS",
+  "admin.upload.uploading": "上传中",
+  "admin.upload.done": "上传成功:",
+  "admin.upload.fail": "上传失败",
+  "admin.upload.hint": "文件将上传至私有桶的配置前缀下,上传后立即出现在下载页。",
+  "admin.files.refresh": "刷新",
+  "admin.files.delete": "删除",
+  "admin.files.confirm": "确定删除该文件?此操作不可恢复。",
+  "admin.files.empty": "桶内暂无文件。",
+  "admin.logs.time": "时间",
+  "admin.logs.ip": "IP",
+  "admin.logs.file": "文件",
+  "admin.logs.ua": "User-Agent",
+  "admin.logs.total": "共 {n} 条记录,显示最近 {m} 条",
+  "admin.logs.empty": "暂无下载记录。",
+  "admin.loadFail": "加载失败,请重试",
+
+  "footer.copyright": "© 2026 沈阳信商科技 版权所有",
+  "footer.support": "技术支持:解构者",
+};
+
+const en: Dict = {
+  "site.name": "SysOptimizer",
+  "site.nameEn": "SysOptimizer",
+  "site.tagline": "See where your disk space went. Clean with confidence.",
+
+  "nav.home": "Home",
+  "nav.download": "Download",
+  "nav.admin": "Admin",
+
+  "hero.badge": "Windows 10 / 11 · Free",
+  "hero.title": "See where your disk space went. Clean with confidence.",
+  "hero.desc":
+    "SysOptimizer is a junk cleaner and system insight tool for Windows. Three scan tiers, three-level risk labels, dedicated cleaning for 13 popular apps — everything runs locally on your machine.",
+  "hero.cta": "Download for free",
+  "hero.cta2": "Explore features",
+
+  "features.title": "Features",
+  "features.f1.title": "Three scan tiers",
+  "features.f1.desc": "Quick, Standard and Deep: from instant temp-file cleanup to full-disk insight covering large and duplicate files.",
+  "features.f2.title": "Three-level risk labels",
+  "features.f2.desc": "Blue caches are safe and pre-selected; amber items that are slow to rebuild stay unchecked with inline warnings; your own content is reported only — never deleted.",
+  "features.f3.title": "App-specific cleaning",
+  "features.f3.desc": "13 apps and 19 cleaning targets built in: DaVinci Resolve, Premiere, After Effects, Blender, Unreal, JetBrains, npm, Docker, CapCut and more.",
+  "features.f4.title": "File-level preview",
+  "features.f4.desc": "Preview every file before cleaning, sorted by size. Deselect anything you want to keep; files in use are skipped automatically.",
+  "features.f5.title": "Smart path resolution",
+  "features.f5.desc": "Detects custom cache locations automatically (e.g. DaVinci proxy folders). If detection fails you can point to the path yourself — nothing gets missed.",
+  "features.f6.title": "Local-first, privacy-respecting",
+  "features.f6.desc": "Scanning and cleaning happen entirely on your machine, with a local action log you can inspect anytime. No file information ever leaves your PC.",
+
+  "risk.title": "Understand the risk labels before you clean",
+  "risk.cache": "Cache — safe to clean",
+  "risk.expensive": "Costly to rebuild — confirm before cleaning",
+  "risk.report": "Report only — never deleted",
+
+  "cta.title": "Give your disk a fresh start",
+  "cta.desc": "Free download. Install and go. Chinese and English included.",
+
+  "download.title": "Download",
+  "download.desc": "Get the latest SysOptimizer installer. Links are temporary signed URLs — just click to download.",
+  "download.latest": "Latest",
+  "download.name": "File",
+  "download.size": "Size",
+  "download.date": "Updated",
+  "download.action": "Download",
+  "download.empty": "No files available yet. Please check back later.",
+  "download.error": "The file list is temporarily unavailable. Please try again later.",
+  "download.note": "To keep the service healthy, downloads per IP and per-connection speed are limited.",
+
+  "admin.title": "Admin",
+  "admin.password": "Admin password",
+  "admin.login": "Sign in",
+  "admin.loggingIn": "Signing in…",
+  "admin.wrongPassword": "Wrong password",
+  "admin.tooMany": "Too many attempts. Try again in 10 minutes.",
+  "admin.networkError": "Network error, please retry",
+  "admin.logout": "Sign out",
+  "admin.tab.upload": "Upload",
+  "admin.tab.files": "Files",
+  "admin.tab.logs": "Download log",
+  "admin.upload.select": "Choose file",
+  "admin.upload.rename": "Rename (optional, defaults to original name)",
+  "admin.upload.submit": "Upload to OSS",
+  "admin.upload.uploading": "Uploading",
+  "admin.upload.done": "Uploaded:",
+  "admin.upload.fail": "Upload failed",
+  "admin.upload.hint": "Files go to the configured prefix in the private bucket and appear on the download page immediately.",
+  "admin.files.refresh": "Refresh",
+  "admin.files.delete": "Delete",
+  "admin.files.confirm": "Delete this file? This cannot be undone.",
+  "admin.files.empty": "No files in the bucket.",
+  "admin.logs.time": "Time",
+  "admin.logs.ip": "IP",
+  "admin.logs.file": "File",
+  "admin.logs.ua": "User-Agent",
+  "admin.logs.total": "{n} records total, showing latest {m}",
+  "admin.logs.empty": "No downloads yet.",
+  "admin.loadFail": "Failed to load, please retry",
+
+  "footer.copyright": "© 2026 Shenyang Xinshang Technology. All rights reserved.",
+  "footer.support": "Technical support: Deconstructor",
+};
+
+const dicts: Record<Locale, Dict> = { zh, en };
+
+export function getDict(locale: Locale): Dict {
+  return dicts[locale];
+}

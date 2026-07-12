@@ -18,6 +18,7 @@
 /* 免责提示 */
 .leftover-notice {
   display: flex;
+  align-items: center;
   gap: 10px;
   padding: 12px 16px;
   background: var(--risk-expensive-container);

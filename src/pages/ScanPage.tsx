@@ -1,5 +1,4 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { confirm } from "@tauri-apps/plugin-dialog";
 import { useI18n } from "../i18n";
 import {
   api,
@@ -12,6 +11,7 @@ import {
 } from "../lib/api";
 import { Icon, IconName } from "../components/Icon";
 import { CategoryRow } from "../components/CategoryRow";
+import { useConfirmDialog } from "../components/ConfirmDialog";
 import "./ScanPage.css";
 
 type Phase = "idle" | "scanning" | "results" | "cleaning" | "done";
@@ -24,6 +24,7 @@ const TIERS: { id: Tier; icon: IconName; recommended?: boolean }[] = [
 
 export function ScanPage() {
   const { t } = useI18n();
+  const { confirm: confirmInApp, dialog: confirmDialog } = useConfirmDialog();
   const [cats, setCats] = useState<CategoryMeta[]>([]);
   const [tier, setTier] = useState<Tier>("standard");
   const [phase, setPhase] = useState<Phase>("idle");
@@ -49,6 +50,11 @@ export function ScanPage() {
 
   useEffect(() => {
     api.listCategories().then(setCats).catch(() => setCats([]));
+    api.getConfig().then((cfg) => {
+      if (cfg.default_tier === "quick" || cfg.default_tier === "standard" || cfg.default_tier === "deep") {
+        setTier(cfg.default_tier);
+      }
+    }).catch(() => {});
     return () => {
       scanUnlisten.current?.();
       cleanUnlisten.current?.();
@@ -111,17 +117,25 @@ export function ScanPage() {
     setStopping(false);
     setPhase("scanning");
 
-    scanUnlisten.current?.();
-    scanUnlisten.current = await onScanProgress((p) => {
-      // 完成事件才写入体积(开始事件的 result 为占位 0)
-      if (p.result && (p.result.bytes > 0 || p.result.files > 0)) {
-        setSizes((prev) => ({ ...prev, [p.result.id]: p.result }));
-      }
-      setProgress({ done: p.done, total: p.total });
-      if (p.current) setCurrent(p.current);
-    });
-
-    const results = await api.runScan(ids);
+    let results: CategoryScanResult[];
+    try {
+      scanUnlisten.current?.();
+      scanUnlisten.current = await onScanProgress((p) => {
+        // 完成事件才写入体积(开始事件的 result 为占位 0)
+        if (p.result && (p.result.bytes > 0 || p.result.files > 0)) {
+          setSizes((prev) => ({ ...prev, [p.result.id]: p.result }));
+        }
+        setProgress({ done: p.done, total: p.total });
+        if (p.current) setCurrent(p.current);
+      });
+      results = await api.runScan(ids);
+    } catch {
+      setPhase("idle");
+      return;
+    } finally {
+      scanUnlisten.current?.();
+      scanUnlisten.current = null;
+    }
     const map: Record<string, CategoryScanResult> = {};
     for (const r of results) map[r.id] = r;
     setSizes(map);
@@ -193,10 +207,12 @@ export function ScanPage() {
     });
     if (ids.length === 0) return;
 
-    const ok = await confirm(
-      t("result.footer"),
-      { title: t("confirm.title"), kind: "warning" }
-    ).catch(() => true); // 浏览器预览无 dialog 时放行
+    const ok = await confirmInApp({
+      title: t("confirm.title"),
+      message: t("result.footer"),
+      confirmLabel: t("confirm.ok"),
+      cancelLabel: t("confirm.cancel"),
+    });
     if (!ok) return;
 
     const keepPaths: string[] = [];
@@ -209,27 +225,42 @@ export function ScanPage() {
     setSkipped(0);
     setPhase("cleaning");
 
-    cleanUnlisten.current?.();
-    cleanUnlisten.current = await onCleanProgress((p) => {
-      setProgress({ done: p.done, total: p.total });
-    });
+    try {
+      cleanUnlisten.current?.();
+      cleanUnlisten.current = await onCleanProgress((p) => {
+        setProgress({ done: p.done, total: p.total });
+      });
+      const results = await api.runClean(ids, keepPaths);
+      let f = 0;
+      let s = 0;
+      for (const r of results) {
+        f += r.freed_bytes;
+        s += r.skipped;
+      }
+      setFreed(f);
+      setSkipped(s);
 
-    const results = await api.runClean(ids, keepPaths);
-    let f = 0;
-    let s = 0;
-    for (const r of results) {
-      f += r.freed_bytes;
-      s += r.skipped;
+      // 重新扫描刚清理的类别。保留项或被占用文件仍会正确显示，不能简单归零。
+      const refreshed = await api.runScan(ids).catch(() => [] as CategoryScanResult[]);
+      setSizes((prev) => {
+        const next = { ...prev };
+        for (const id of ids) next[id] = { id, bytes: 0, files: 0 };
+        for (const result of refreshed) next[result.id] = result;
+        return next;
+      });
+      setChecked((prev) => {
+        const next = new Set(prev);
+        for (const id of ids) next.delete(id);
+        return next;
+      });
+      setPhase("done");
+    } catch {
+      // 失败时恢复结果页，避免按钮永久停留在“清理中”。
+      setPhase("results");
+    } finally {
+      cleanUnlisten.current?.();
+      cleanUnlisten.current = null;
     }
-    setFreed(f);
-    setSkipped(s);
-    // 清理后把这些类别大小归零
-    setSizes((prev) => {
-      const next = { ...prev };
-      for (const id of ids) next[id] = { id, bytes: 0, files: 0 };
-      return next;
-    });
-    setPhase("done");
   };
 
   const catName = (id: string) => {
@@ -375,7 +406,7 @@ export function ScanPage() {
         <div className="results-title">
           {phase === "done" ? (
             <>
-              {t("result.freed")} {formatBytes(freed)}
+              {t("result.cleaned")} · {t("result.freed")} {formatBytes(freed)}
               {skipped > 0 && (
                 <span className="results-skipped">
                   · {skipped} {t("result.skipped")}
@@ -389,7 +420,7 @@ export function ScanPage() {
           )}
         </div>
         <div className="results-sub">
-          {phase !== "done" && (
+          {(phase !== "done" || selectedBytes > 0) && (
             <>
               {t("result.selected")} {formatBytes(selectedBytes)}
             </>
@@ -415,7 +446,7 @@ export function ScanPage() {
         ))}
       </div>
 
-      {phase !== "done" && (
+      {(phase !== "done" || selectedBytes > 0) && (
         <div className="results-footer">
           <span className="results-footer-note">{t("result.footer")}</span>
           <button
@@ -429,6 +460,7 @@ export function ScanPage() {
           </button>
         </div>
       )}
+      {confirmDialog}
     </div>
   );
 }

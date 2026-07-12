@@ -38,7 +38,7 @@ export function LeftoverPage() {
 
       {/* 醒目免责:这是启发式猜测,只报告不删除 */}
       <div className="leftover-notice">
-        <Icon name="info" size={18} style={{ flexShrink: 0, marginTop: 1 }} />
+        <Icon name="info" size={18} style={{ flexShrink: 0 }} />
         <div>
           {zh
             ? "以下为启发式检测结果,仅供参考,可能包含正在使用的软件。本工具不提供删除功能,请你确认后手动处理。"

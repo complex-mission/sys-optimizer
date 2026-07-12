@@ -1,9 +1,10 @@
 import { useEffect, useRef, useState } from "react";
-import { open, confirm } from "@tauri-apps/plugin-dialog";
+import { open } from "@tauri-apps/plugin-dialog";
 import type { UnlistenFn } from "@tauri-apps/api/event";
 import { useI18n } from "../i18n";
 import { api, onLargeProgress, LargeFile, LargeProgress, formatBytes } from "../lib/api";
 import { Icon, IconName } from "../components/Icon";
+import { useConfirmDialog } from "../components/ConfirmDialog";
 import "./LargePage.css";
 
 const THRESHOLDS = [50, 100, 500, 1024]; // MB
@@ -18,6 +19,7 @@ function iconForExt(ext: string): IconName {
 export function LargePage() {
   const { t, lang } = useI18n();
   const zh = lang === "zh-CN";
+  const { confirm: confirmInApp, dialog: confirmDialog } = useConfirmDialog();
 
   const [dir, setDir] = useState("");
   const [thresholdMb, setThresholdMb] = useState(100);
@@ -52,15 +54,18 @@ export function LargePage() {
     setChecked(new Set());
     setProgress(null);
 
-    unlisten.current?.();
-    unlisten.current = await onLargeProgress((p) => setProgress(p));
-
-    const result = await api.scanLargeFiles(dir, thresholdMb, 200);
-    setFiles(result);
-    setScanning(false);
-    setScanned(true);
-    unlisten.current?.();
-    unlisten.current = null;
+    try {
+      unlisten.current?.();
+      unlisten.current = await onLargeProgress((p) => setProgress(p));
+      setFiles(await api.scanLargeFiles(dir, thresholdMb, 200));
+    } catch {
+      setFiles([]);
+    } finally {
+      setScanning(false);
+      setScanned(true);
+      unlisten.current?.();
+      unlisten.current = null;
+    }
   };
 
   // 停止扫描:后端提前返回已找到的部分结果
@@ -81,19 +86,25 @@ export function LargePage() {
   const del = async () => {
     const paths = [...checked];
     if (paths.length === 0) return;
-    const ok = await confirm(
-      zh
+    const ok = await confirmInApp({
+      title: zh ? "移入回收站" : "Move to Recycle Bin",
+      message: zh
         ? `将把选中的 ${paths.length} 个文件移入回收站,可从回收站恢复。`
         : `Move the ${paths.length} selected files to the Recycle Bin. You can restore them from there.`,
-      { title: zh ? "移入回收站" : "Move to Recycle Bin", kind: "warning" }
-    ).catch(() => true);
+      confirmLabel: zh ? "移入回收站" : "Move",
+      cancelLabel: zh ? "取消" : "Cancel",
+      danger: true,
+    });
     if (!ok) return;
 
-    const [, freed] = await api.deleteLargeFiles(paths);
-    // 从列表移除已删的
-    setFiles((prev) => prev.filter((f) => !checked.has(f.path)));
-    setChecked(new Set());
-    void freed;
+    const [deleted, , skipped] = await api.deleteLargeFiles(paths);
+    if (skipped > 0 || deleted < paths.length) {
+      // 后端只返回数量，无法知道具体失败路径；复扫可避免把未删除项从界面隐藏。
+      await startScan();
+    } else {
+      setFiles((prev) => prev.filter((f) => !checked.has(f.path)));
+      setChecked(new Set());
+    }
   };
 
   return (
@@ -223,6 +234,7 @@ export function LargePage() {
           )}
         </>
       )}
+      {confirmDialog}
     </div>
   );
 }

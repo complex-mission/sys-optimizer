@@ -31,6 +31,7 @@
     "active": true,
     "targets": ["nsis"],
     "publisher": "信商科技",
+    "homepage": "https://sys-optimizer.complexmission.com",
     "icon": [
       "icons/32x32.png",
       "icons/128x128.png",

@@ -62,7 +62,7 @@ const dict: Record<Lang, Record<string, string>> = {
     "result.expensive.note": "删除不丢数据,但重新生成可能较慢,默认未选中",
     "result.report.note": "属于你的内容,本工具不提供删除",
     "result.cleaning": "清理中",
-    "result.cleaned": "已清理",
+    "result.cleaned": "已清理完",
     "result.freed": "已释放",
     "result.files": "个文件",
     "result.showing": "显示",
@@ -112,6 +112,9 @@ const dict: Record<Lang, Record<string, string>> = {
     "settings.reset": "恢复默认设置",
 
     "about.support": "技术支持",
+    "about.website": "官方网站",
+    "about.website_hint": "更多信息访问官网:",
+    "about.terms": "查看使用条款与免责声明",
     "about.oss": "开源组件许可",
     "about.total_freed": "累计释放空间",
     "about.total_count": "累计清理次数",
@@ -297,7 +300,7 @@ const dict: Record<Lang, Record<string, string>> = {
     "result.expensive.note": "No data lost, but regenerating may be slow. Off by default.",
     "result.report.note": "This is your content. Cache Insight won’t delete it.",
     "result.cleaning": "Cleaning",
-    "result.cleaned": "Cleaned",
+    "result.cleaned": "Cleanup complete",
     "result.freed": "Freed",
     "result.files": "files",
     "result.showing": "Showing",
@@ -347,6 +350,9 @@ const dict: Record<Lang, Record<string, string>> = {
     "settings.reset": "Reset to defaults",
 
     "about.support": "Support",
+    "about.website": "Website",
+    "about.website_hint": "For more information, visit ",
+    "about.terms": "View Terms of Use & Disclaimer",
     "about.oss": "Open-source licenses",
     "about.total_freed": "Total space freed",
     "about.total_count": "Total cleanups",
@@ -506,6 +512,10 @@ export function I18nProvider({ children }: { children: ReactNode }) {
 
   // 窗口标题跟随语言(浏览器预览无 tauri 环境时静默忽略)
   useEffect(() => {
+    if (!("__TAURI_INTERNALS__" in window)) {
+      document.title = dict[lang]["app.name"];
+      return;
+    }
     getCurrentWindow()
       .setTitle(dict[lang]["app.name"])
       .catch(() => {});
