@@ -23,7 +23,7 @@
       "name": "Google Chrome",
       "detect_installed": ["%LOCALAPPDATA%/Google/Chrome/User Data"],
       "targets": [
-        { "id": "chrome-cache", "paths": ["%LOCALAPPDATA%/Google/Chrome/User Data"], "risk": "cache", "privilege": "normal", "tier": "quick", "detect": "chromium" }
+        { "id": "chrome-cache", "paths": ["%LOCALAPPDATA%/Google/Chrome/User Data"], "risk": "cache", "privilege": "normal", "tier": "quick", "detect": "chromium", "skip_if_running": ["chrome.exe"] }
       ]
     },
     {
@@ -32,7 +32,7 @@
       "name": "Microsoft Edge",
       "detect_installed": ["%LOCALAPPDATA%/Microsoft/Edge/User Data"],
       "targets": [
-        { "id": "edge-cache", "paths": ["%LOCALAPPDATA%/Microsoft/Edge/User Data"], "risk": "cache", "privilege": "normal", "tier": "quick", "detect": "chromium" }
+        { "id": "edge-cache", "paths": ["%LOCALAPPDATA%/Microsoft/Edge/User Data"], "risk": "cache", "privilege": "normal", "tier": "quick", "detect": "chromium", "skip_if_running": ["msedge.exe"] }
       ]
     },
     {
@@ -41,7 +41,7 @@
       "name": "Mozilla Firefox",
       "detect_installed": ["%APPDATA%/Mozilla/Firefox", "%LOCALAPPDATA%/Mozilla/Firefox"],
       "targets": [
-        { "id": "firefox-cache", "paths": [], "risk": "cache", "privilege": "normal", "tier": "quick", "detect": "firefox", "previewable": false }
+        { "id": "firefox-cache", "paths": [], "risk": "cache", "privilege": "normal", "tier": "quick", "detect": "firefox", "previewable": false, "skip_if_running": ["firefox.exe"] }
       ]
     },
     {

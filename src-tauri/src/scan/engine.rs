@@ -266,6 +266,7 @@ pub fn clean_dir(
             freed_bytes: 0,
             deleted_files: 0,
             skipped: 0,
+            blocked_by: None,
         };
     }
 
@@ -277,6 +278,7 @@ pub fn clean_dir(
             freed_bytes: 0,
             deleted_files: 0,
             skipped: 0,
+            blocked_by: None,
         };
     }
 
@@ -355,5 +357,6 @@ pub fn clean_dir(
         freed_bytes: freed,
         deleted_files: deleted,
         skipped,
+        blocked_by: None,
     }
 }

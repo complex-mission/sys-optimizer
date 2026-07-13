@@ -65,6 +65,7 @@ pub fn run() {
             commands::cancel_task,
             commands::disk_usage,
             commands::preview_category,
+            commands::check_running_blockers,
             commands::run_clean,
             commands::open_path,
             commands::open_url,

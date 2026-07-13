@@ -263,9 +263,9 @@ mod win {
         // 存储(优先 MSFT_PhysicalDisk 拿 SSD/HDD 与总线;失败退 Win32_DiskDrive)
         collect_storage(&wmi, report);
 
-        // 逻辑卷占用(DriveType=3 本地磁盘),用于使用率显示
+        // 逻辑卷占用(DriveType=3 本地磁盘 + DriveType=2 可移动盘/U盘),用于使用率显示
         if let Ok(rows) = wmi.raw_query::<Row>(
-            "SELECT DeviceID, VolumeName, FileSystem, Size, FreeSpace FROM Win32_LogicalDisk WHERE DriveType = 3",
+            "SELECT DeviceID, VolumeName, FileSystem, Size, FreeSpace FROM Win32_LogicalDisk WHERE DriveType = 3 OR DriveType = 2",
         ) {
             for r in &rows {
                 let total = v_u64(r, "Size");

@@ -65,14 +65,25 @@ export function useSmoothScroll(ref: RefObject<HTMLElement | null>, speed = 0.08
       }
     };
 
+    // 程序化滚动(如清理完毕后 scrollTo 顶部)时同步目标位置,
+    // 否则下次滚轮会从旧目标继续,页面瞬间跳回原位
+    const onScroll = () => {
+      if (!isScrolling.current) {
+        targetY.current = el.scrollTop;
+        currentY.current = el.scrollTop;
+      }
+    };
+
     // 同步初始位置
     targetY.current = el.scrollTop;
     currentY.current = el.scrollTop;
 
     el.addEventListener("wheel", onWheel, { passive: false });
+    el.addEventListener("scroll", onScroll, { passive: true });
 
     return () => {
       el.removeEventListener("wheel", onWheel);
+      el.removeEventListener("scroll", onScroll);
       cancelAnimationFrame(rafId.current);
     };
   }, [ref, speed]);

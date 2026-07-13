@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { open } from "@tauri-apps/plugin-dialog";
 import type { UnlistenFn } from "@tauri-apps/api/event";
 import { useI18n } from "../i18n";
-import { api, onLargeProgress, LargeFile, LargeProgress, formatBytes } from "../lib/api";
+import { api, onLargeProgress, onLargeFound, LargeFile, LargeProgress, formatBytes } from "../lib/api";
 import { Icon, IconName } from "../components/Icon";
 import { useConfirmDialog } from "../components/ConfirmDialog";
 import "./LargePage.css";
@@ -29,11 +29,13 @@ export function LargePage() {
   const [scanned, setScanned] = useState(false);
   const [progress, setProgress] = useState<LargeProgress | null>(null);
   const unlisten = useRef<UnlistenFn | null>(null);
+  const foundUnlisten = useRef<UnlistenFn | null>(null);
 
   useEffect(() => {
     api.defaultScanDir().then(setDir).catch(() => setDir(""));
     return () => {
       unlisten.current?.();
+      foundUnlisten.current?.();
     };
   }, []);
 
@@ -57,7 +59,21 @@ export function LargePage() {
     try {
       unlisten.current?.();
       unlisten.current = await onLargeProgress((p) => setProgress(p));
-      setFiles(await api.scanLargeFiles(dir, thresholdMb, 200));
+      // 命中即上屏:扫描过程中把已找到的文件实时插入列表(按大小降序)
+      foundUnlisten.current?.();
+      foundUnlisten.current = await onLargeFound((f) => {
+        setFiles((prev) => {
+          if (prev.length >= 500 || prev.some((x) => x.path === f.path)) return prev;
+          const next = [...prev, f];
+          next.sort((a, b) => b.bytes - a.bytes);
+          return next;
+        });
+      });
+      const result = await api.scanLargeFiles(dir, thresholdMb, 200);
+      // 先停掉实时事件再落最终结果,避免迟到事件插入重复项
+      foundUnlisten.current?.();
+      foundUnlisten.current = null;
+      setFiles(result);
     } catch {
       setFiles([]);
     } finally {
@@ -65,6 +81,8 @@ export function LargePage() {
       setScanned(true);
       unlisten.current?.();
       unlisten.current = null;
+      foundUnlisten.current?.();
+      foundUnlisten.current = null;
     }
   };
 
@@ -170,11 +188,13 @@ export function LargePage() {
         </div>
       )}
 
-      {scanned && !scanning && (
+      {/* 扫描中就实时列出已找到的文件,不等扫描结束 */}
+      {(scanned || (scanning && files.length > 0)) && (
         <>
           <div className="large-summary">
             <span>
-              {zh ? "找到" : "Found"} {files.length} {zh ? "个大文件" : "large files"}
+              {scanning ? (zh ? "已找到" : "Found so far") : zh ? "找到" : "Found"} {files.length}{" "}
+              {zh ? "个大文件" : "large files"}
             </span>
             {checked.size > 0 && (
               <span className="large-summary-sel">
@@ -222,7 +242,7 @@ export function LargePage() {
             </div>
           )}
 
-          {checked.size > 0 && (
+          {!scanning && checked.size > 0 && (
             <div className="large-footer">
               <span className="large-footer-note">
                 {zh ? "删除的文件会进入回收站,可恢复" : "Deleted files go to the Recycle Bin"}

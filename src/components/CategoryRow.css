@@ -90,6 +90,10 @@
 .cat-desc.hint-misplaced {
   color: var(--risk-expensive);
 }
+/* 对应程序正在运行,清理时将整类跳过(浏览器缓存等) */
+.cat-desc.hint-running {
+  color: var(--risk-expensive);
+}
 
 /* 体积占比条(相对本次结果最大项) */
 .cat-share {

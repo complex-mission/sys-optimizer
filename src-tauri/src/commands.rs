@@ -79,6 +79,19 @@ pub async fn run_scan(window: Window, ids: Vec<String>) -> Vec<CategoryScanResul
             );
             results.push(r);
         }
+        // 扫描结果同步进软件专项的大小缓存:同一套类别 id,
+        // 智能扫描(含清理后的复扫)也能刷新软件卡片上显示的大小。
+        if !results.is_empty() {
+            let now = config::now_secs();
+            let mut cfg = config::load();
+            for r in &results {
+                cfg.app_size_cache.insert(
+                    r.id.clone(),
+                    config::TargetSizeCache { bytes: r.bytes, files: r.files, scanned_at: now },
+                );
+            }
+            let _ = config::save(&cfg);
+        }
         results
     })
     .await
@@ -99,6 +112,31 @@ pub async fn preview_category(id: String, offset: u64, limit: u64) -> PreviewPag
     tauri::async_runtime::spawn_blocking(move || scan::preview_one(&id, offset, limit))
         .await
         .unwrap_or(PreviewPage { id: String::new(), total: 0, offset, entries: vec![] })
+}
+
+/// 查询哪些类别会因对应进程正在运行而在清理时被整类跳过
+/// (如浏览器开着时的浏览器缓存)。返回 类别id -> 运行中的进程名。
+#[tauri::command]
+pub async fn check_running_blockers(
+    ids: Vec<String>,
+) -> std::collections::HashMap<String, String> {
+    tauri::async_runtime::spawn_blocking(move || {
+        let running = scan::process::running_process_names();
+        let mut map = std::collections::HashMap::new();
+        for id in ids {
+            let Some(def) = scan::categories::find(&id) else { continue };
+            if let Some(p) = def
+                .skip_if_running
+                .iter()
+                .find(|n| running.contains(&n.to_ascii_lowercase()))
+            {
+                map.insert(id, p.clone());
+            }
+        }
+        map
+    })
+    .await
+    .unwrap_or_default()
 }
 
 /// 清理一组类别。`keep_paths` 为反选保留的绝对路径。
@@ -477,8 +515,19 @@ pub async fn scan_large_files(
     let threshold = threshold_mb.saturating_mul(1024 * 1024);
     let max = if max_results == 0 { 200 } else { max_results };
     let counter_work = counter.clone();
+    let win_found = window.clone();
     let result = tauri::async_runtime::spawn_blocking(move || {
-        scan::large::scan_large(std::path::Path::new(&path), threshold, max, Some(&counter_work))
+        // 每命中一个文件即推送,前端边扫边显示
+        let mut on_found = |f: &LargeFile| {
+            let _ = win_found.emit("large://found", f.clone());
+        };
+        scan::large::scan_large(
+            std::path::Path::new(&path),
+            threshold,
+            max,
+            Some(&counter_work),
+            Some(&mut on_found),
+        )
     })
     .await
     .unwrap_or_default();
@@ -607,10 +656,10 @@ pub async fn set_startup_enabled(id: String, enable: bool) -> Result<(), String>
 
 /// 检测疑似卸载残留目录。仅报告,不提供删除。
 #[tauri::command]
-pub async fn detect_leftovers() -> Vec<LeftoverItem> {
+pub async fn detect_leftovers() -> LeftoverReport {
     tauri::async_runtime::spawn_blocking(scan::leftover::detect)
         .await
-        .unwrap_or_default()
+        .unwrap_or(LeftoverReport { scanned_dirs: 0, items: vec![] })
 }
 
 /* ---------------- 系统级空间回收(模块 H) ---------------- */

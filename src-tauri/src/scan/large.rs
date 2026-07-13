@@ -71,11 +71,13 @@ fn ext_of(name: &str) -> String {
 
 /// 扫描单个目录树,收集 ≥ threshold 字节的文件。
 /// max_results 限制返回数量(仍会遍历全部,只是最终截断,保证按全局大小排序)。
+/// on_found:每命中一个文件即回调(供前端实时显示已找到项)。
 pub fn scan_large(
     root: &Path,
     threshold: u64,
     max_results: usize,
     counter: Option<&LargeCounter>,
+    mut on_found: Option<&mut dyn FnMut(&LargeFile)>,
 ) -> Vec<LargeFile> {
     let mut found: Vec<LargeFile> = Vec::new();
     if !root.exists() {
@@ -130,13 +132,17 @@ pub fn scan_large(
                         .map(|d| d.as_secs() as i64)
                         .unwrap_or(0);
                     let ext = ext_of(&name);
-                    found.push(LargeFile {
+                    let file = LargeFile {
                         path: p.to_string_lossy().into_owned(),
                         name,
                         bytes: md.len(),
                         mtime,
                         ext,
-                    });
+                    };
+                    if let Some(cb) = on_found.as_deref_mut() {
+                        cb(&file);
+                    }
+                    found.push(file);
                     if let Some(c) = counter {
                         c.found.fetch_add(1, Ordering::Relaxed);
                     }

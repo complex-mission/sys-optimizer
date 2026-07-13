@@ -41,8 +41,9 @@ winreg = "0.56"
 wmi = "0.18"
 # 显示器枚举(EnumDisplayDevices/EnumDisplaySettings:各屏分辨率与刷新率)
 # Win32_Globalization:托盘菜单跟随系统语言(GetUserDefaultUILanguage)
+# Win32_System_Diagnostics_ToolHelp:进程快照(清理前检测浏览器是否运行)
 # 版本须与 tauri 所用 windows-core 0.61 对齐
-windows = { version = "0.61", features = ["Win32_Graphics_Gdi", "Win32_Foundation", "Win32_Globalization"] }
+windows = { version = "0.61", features = ["Win32_Graphics_Gdi", "Win32_Foundation", "Win32_Globalization", "Win32_System_Diagnostics_ToolHelp"] }
 
 [profile.release]
 panic = "abort"     # 更小的体积;崩溃由 panic hook 先落日志

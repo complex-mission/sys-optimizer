@@ -11,7 +11,7 @@
 //!
 //! 原则:宁可漏报不可误报 —— 明显活跃(近期修改)的目录降级或排除。
 
-use crate::types::LeftoverItem;
+use crate::types::{LeftoverItem, LeftoverReport};
 use std::collections::HashSet;
 use std::path::{Path, PathBuf};
 
@@ -154,30 +154,35 @@ fn is_whitelisted(name: &str) -> bool {
     WHITE.contains(&n.as_str())
 }
 
+/// a 是否为 b 本身或 b 的祖先/后代目录(按路径分隔符边界判断,
+/// 避免 "c:\foo" 误匹配 "c:\foobar")。
+fn path_related(a: &str, b: &str) -> bool {
+    a == b
+        || a.strip_prefix(b).is_some_and(|rest| rest.starts_with('\\'))
+        || b.strip_prefix(a).is_some_and(|rest| rest.starts_with('\\'))
+}
+
 /// 判断目录名是否与"已知软件"匹配(名字包含或被包含,或安装路径命中)。
 fn is_known(dir_name: &str, full_path: &str, names: &HashSet<String>, paths: &HashSet<String>) -> bool {
     let dn = normalize(dir_name);
     let fp = normalize(full_path);
 
-    // 安装路径直接命中
-    if paths.contains(&fp) {
+    // 安装路径命中:候选目录在某条已记录安装路径之内(或反之)。
+    // 只按目录边界前缀匹配 —— 任意子串 contains 会让注册表里的
+    // "C:\Program Files" 之类根路径把其下所有目录都误判为已知。
+    if paths.iter().any(|p| path_related(p, &fp)) {
         return true;
     }
-    for p in paths {
-        if p.contains(&fp) || fp.contains(p) {
-            return true;
-        }
-    }
-    // 名字匹配:软件名常含公司/产品名,做双向包含判断
+    // 名字匹配:软件名常含公司/产品名,做双向包含判断。
+    // 被包含的一侧至少 4 个字符,防止 "R"、"7z" 之类短名吞掉一切。
     if names.contains(&dn) {
         return true;
     }
     for n in names {
-        if n.is_empty() {
-            continue;
+        if n.len() >= 4 && dn.contains(n) {
+            return true;
         }
-        // 目录名出现在某软件名里,或反之(如目录 "Zoom" vs 软件名 "Zoom Meetings")
-        if n.contains(&dn) || dn.contains(n) {
+        if dn.len() >= 4 && n.contains(&dn) {
             return true;
         }
     }
@@ -186,11 +191,21 @@ fn is_known(dir_name: &str, full_path: &str, names: &HashSet<String>, paths: &Ha
 
 const NINETY_DAYS: i64 = 90 * 24 * 60 * 60;
 
-/// 检测疑似残留。返回按大小降序。
-pub fn detect() -> Vec<LeftoverItem> {
-    let (names, paths) = installed_names_and_paths();
+/// 检测疑似残留。items 按大小降序,并附带实际检查过的目录数。
+pub fn detect() -> LeftoverReport {
+    let (names, mut paths) = installed_names_and_paths();
+    // 剔除过于宽泛的记录路径:扫描根目录本身(Program Files / AppData 等)
+    // 与盘符根 —— 它们会让 path_related 命中所有候选目录,导致什么都检不出。
+    let roots: HashSet<String> = scan_locations()
+        .iter()
+        .filter_map(|l| l.dir.as_ref())
+        .map(|d| normalize(&d.to_string_lossy()))
+        .collect();
+    paths.retain(|p| p.len() > 3 && !roots.contains(p));
+
     let now = crate::config::now_secs();
     let mut out = Vec::new();
+    let mut scanned_dirs = 0u64;
 
     for loc in scan_locations() {
         let Some(dir) = loc.dir else {
@@ -210,6 +225,7 @@ pub fn detect() -> Vec<LeftoverItem> {
                 Some(n) => n.to_string(),
                 None => continue,
             };
+            scanned_dirs += 1;
             if is_whitelisted(&name) {
                 continue;
             }
@@ -245,5 +261,5 @@ pub fn detect() -> Vec<LeftoverItem> {
     }
 
     out.sort_by(|a, b| b.bytes.cmp(&a.bytes));
-    out
+    LeftoverReport { scanned_dirs, items: out }
 }

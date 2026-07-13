@@ -100,6 +100,62 @@
   padding: 40px 0;
 }
 
+/* 加载骨架:结构对齐概览卡片,shimmer 与其他页一致 */
+.hw-sk {
+  border-radius: var(--shape-full);
+  background: linear-gradient(
+    90deg,
+    var(--surface-container-high) 25%,
+    var(--surface-container-highest) 50%,
+    var(--surface-container-high) 75%
+  );
+  background-size: 200% 100%;
+  animation: hw-shimmer 1.3s ease-in-out infinite;
+}
+.hw-sk-card {
+  display: flex;
+  flex-direction: column;
+  gap: 9px;
+}
+.hw-sk-icon {
+  width: 30px;
+  height: 30px;
+  border-radius: var(--shape-sm);
+}
+.hw-sk-line {
+  height: 12px;
+  width: 85%;
+}
+.hw-sk-line.short {
+  width: 38%;
+}
+@keyframes hw-shimmer {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+.hw-loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 9px;
+  color: var(--on-surface-variant);
+  font-size: 13px;
+  padding: 26px 0;
+}
+.hw-spinner {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  border: 2px solid var(--outline-variant);
+  border-top-color: var(--primary);
+  animation: hw-spin 0.8s linear infinite;
+  flex-shrink: 0;
+}
+@keyframes hw-spin {
+  to { transform: rotate(360deg); }
+}
+
 /* 概览卡片 */
 .hw-overview {
   display: grid;

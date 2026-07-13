@@ -1,7 +1,7 @@
 import { useEffect, useState, useCallback } from "react";
 import { open, message } from "@tauri-apps/plugin-dialog";
 import { useI18n } from "../i18n";
-import { api, AppView, Risk, TargetSizeCache, formatBytes } from "../lib/api";
+import { api, onAppSizeCacheChanged, AppView, Risk, TargetSizeCache, formatBytes } from "../lib/api";
 import { Icon, IconName } from "../components/Icon";
 import { AppIcon } from "../components/AppIcon";
 import "./AppsPage.css";
@@ -68,6 +68,8 @@ export function AppsPage() {
   useEffect(() => {
     load();
     loadSizeCache();
+    // 智能扫描(含清理后的复扫)会更新同一份大小缓存,这里跟着刷新卡片上的数字
+    return onAppSizeCacheChanged(loadSizeCache);
   }, []);
 
   const scanSize = useCallback(async (targetId: string) => {
@@ -181,7 +183,11 @@ export function AppsPage() {
               <span>{t(`group.${g.id}`)}</span>
             </div>
             <div className="apps-grid">
-              {g.apps.map((app) => (
+              {g.apps.map((app) => {
+                // 第四槽(清除自定义路径)按卡片保留:卡内有手动指定的目标才占位,
+                // 否则整槽不渲染,避免动作区右侧常年空一格
+                const anyOverride = app.targets.some((t) => t.has_override);
+                return (
                 <div
                   key={app.app}
                   className={`app-card ${app.installed ? "" : "not-installed"}`}
@@ -231,7 +237,7 @@ export function AppsPage() {
                                 </span>
                               </div>
                             )}
-                            {/* 四个动作槽位恒定:不可用的显示压暗图标,不适用的留同宽空位,保证各行列对齐 */}
+                            {/* 前三个动作槽位恒定:不可用的显示压暗图标,不适用的留同宽空位,保证各行列对齐 */}
                             {path && tg.exists ? (
                               <button
                                 className={`btn-text target-size-btn ${isScanning ? "scanning" : ""}`}
@@ -282,16 +288,17 @@ export function AppsPage() {
                               >
                                 <Icon name="close" size={14} />
                               </button>
-                            ) : (
+                            ) : anyOverride ? (
                               <span className="target-btn target-slot-empty" aria-hidden="true" />
-                            )}
+                            ) : null}
                           </div>
                         </div>
                       );
                     })}
                   </div>
                 </div>
-              ))}
+                );
+              })}
             </div>
           </section>
         ))

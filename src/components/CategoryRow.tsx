@@ -16,10 +16,11 @@ interface Props {
   result?: CategoryScanResult;
   checked: boolean;
   keptPaths: Set<string>;
+  /// 正在运行、会导致该类别清理被整类跳过的进程名(浏览器缓存等);undefined 表示无阻塞
+  runningBlocker?: string;
   disabled: boolean;
   onToggle: (on: boolean) => void;
   onToggleKeep: (path: string, keep: boolean) => void;
-  onOpen: (path: string) => void;
   onSpecifyPath?: () => void;
   /// 体积占本次结果最大项的比例(0~1),用于行内占比条
   share?: number;
@@ -44,10 +45,10 @@ export function CategoryRow({
   result,
   checked,
   keptPaths,
+  runningBlocker,
   disabled,
   onToggle,
   onToggleKeep,
-  onOpen,
   onSpecifyPath,
   share = 0,
 }: Props) {
@@ -63,6 +64,24 @@ export function CategoryRow({
   const isExpensive = meta.risk === "expensive";
   // 漏扫兜底:支持自定义路径的类别却扫出 0,很可能路径被用户改到别处
   const maybeMisplaced = meta.supports_override && bytes === 0;
+
+  // 仅报告项的"打开位置":打开该类别解析出的实际目录。
+  // (旧实现打开预览首个文件的路径,但报告项不可展开、预览永远为空,按钮点了没反应)
+  const handleOpenLocation = async () => {
+    try {
+      const paths = await api.resolvedPaths(meta.id);
+      for (const p of paths) {
+        try {
+          await api.openPath(p);
+          return;
+        } catch {
+          /* 该路径不存在,尝试下一个 */
+        }
+      }
+    } catch {
+      /* 忽略 */
+    }
+  };
 
   const handleSpecify = async () => {
     try {
@@ -104,7 +123,8 @@ export function CategoryRow({
   return (
     <div className={`cat-row ${riskClass} ${expanded ? "open" : ""}`}>
       <div className="cat-main">
-        {isReport ? (
+        {/* 报告项与 0B 项(无可清理内容)都不给勾选框 */}
+        {isReport || bytes === 0 ? (
           <span className="cat-check-spacer" />
         ) : (
           <input
@@ -135,9 +155,15 @@ export function CategoryRow({
               <span className="tag tag-report">{t("result.risk.report")}</span>
             )}
           </div>
-          <div className={`cat-desc ${maybeMisplaced ? "hint-misplaced" : ""}`}>
+          <div
+            className={`cat-desc ${
+              maybeMisplaced ? "hint-misplaced" : runningBlocker && bytes > 0 ? "hint-running" : ""
+            }`}
+          >
             {maybeMisplaced
               ? t("result.misplaced.note")
+              : runningBlocker && bytes > 0
+              ? t("result.running.note")
               : isExpensive
               ? t("result.expensive.note")
               : isReport
@@ -164,10 +190,7 @@ export function CategoryRow({
         </div>
 
         {isReport ? (
-          <button
-            className="btn-outline cat-action"
-            onClick={() => onOpen(previewFirstPath(entries))}
-          >
+          <button className="btn-outline cat-action" onClick={handleOpenLocation}>
             {t("result.open")}
           </button>
         ) : maybeMisplaced ? (
@@ -236,6 +259,3 @@ export function CategoryRow({
   );
 }
 
-function previewFirstPath(entries: FileEntry[]): string {
-  return entries[0]?.path ?? "";
-}

@@ -13,6 +13,9 @@ import { Icon } from "../components/Icon";
 import { useConfirmDialog } from "../components/ConfirmDialog";
 import "./DupPage.css";
 
+/// 分批渲染的批大小:结果可达数千组,DOM 一次全挂会让页面切换明显卡顿
+const BATCH = 300;
+
 export function DupPage() {
   const { t, lang } = useI18n();
   const zh = lang === "zh-CN";
@@ -25,7 +28,26 @@ export function DupPage() {
   const [scanning, setScanning] = useState(false);
   const [scanned, setScanned] = useState(false);
   const [progress, setProgress] = useState<DupProgress | null>(null);
+  // 当前渲染的组数上限(数据始终全量在 groups 里,只是 DOM 分批挂)
+  const [visibleCount, setVisibleCount] = useState(BATCH);
   const unlisten = useRef<UnlistenFn | null>(null);
+  const sentinelRef = useRef<HTMLDivElement | null>(null);
+
+  // 滚近列表底部的哨兵时自动追加下一批
+  useEffect(() => {
+    const el = sentinelRef.current;
+    if (!el) return;
+    const io = new IntersectionObserver(
+      (entries) => {
+        if (entries.some((e) => e.isIntersecting)) {
+          setVisibleCount((c) => Math.min(c + BATCH, groups.length));
+        }
+      },
+      { rootMargin: "600px" }
+    );
+    io.observe(el);
+    return () => io.disconnect();
+  }, [groups.length, visibleCount]);
 
   useEffect(() => {
     api.defaultScanDir().then(setDir).catch(() => setDir(""));
@@ -50,11 +72,14 @@ export function DupPage() {
     setGroups([]);
     setToDelete(new Set());
     setProgress(null);
+    setVisibleCount(BATCH);
 
     try {
       unlisten.current?.();
       unlisten.current = await onDupProgress((p) => setProgress(p));
       const result = await api.scanDuplicates(dir);
+      // 可省空间大的组排前面:几千组没人从头看到尾,最值得处理的先看到
+      result.sort((a, b) => b.reclaimable - a.reclaimable);
       setGroups(result);
       // 默认:每组保留第一个,其余标记删除
       const del = new Set<string>();
@@ -212,7 +237,7 @@ export function DupPage() {
             </div>
           ) : (
             <div className="dup-groups">
-              {groups.map((g, gi) => (
+              {groups.slice(0, visibleCount).map((g, gi) => (
                 <div key={gi} className="dup-group">
                   <div className="dup-group-head">
                     <span className="dup-group-size">{formatBytes(g.bytes)}</span>
@@ -257,6 +282,13 @@ export function DupPage() {
                   </div>
                 </div>
               ))}
+              {visibleCount < groups.length && (
+                <div ref={sentinelRef} className="dup-more">
+                  {zh
+                    ? `已显示 ${visibleCount.toLocaleString()} / ${groups.length.toLocaleString()} 组,继续滚动加载…`
+                    : `Showing ${visibleCount.toLocaleString()} of ${groups.length.toLocaleString()} groups — scroll for more…`}
+                </div>
+              )}
             </div>
           )}
 

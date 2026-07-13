@@ -23,6 +23,8 @@ pub struct CategoryDef {
     pub name_filter: Option<String>,
     /// 特殊处理标记(如 "recycle-bin")
     pub special: Option<String>,
+    /// 列出的任一进程正在运行时,整类跳过清理
+    pub skip_if_running: Vec<String>,
 }
 
 impl CategoryDef {
@@ -147,6 +149,7 @@ pub fn all_categories() -> Vec<CategoryDef> {
                 subdir: t.subdir.clone(),
                 name_filter: t.name_filter.clone(),
                 special: t.special.clone(),
+                skip_if_running: t.skip_if_running.clone(),
             });
         }
     }

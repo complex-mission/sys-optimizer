@@ -6,6 +6,7 @@ pub mod dup;
 pub mod engine;
 pub mod large;
 pub mod leftover;
+pub mod process;
 pub mod recycle;
 pub mod rules;
 pub mod space;
@@ -77,17 +78,30 @@ pub fn preview_one(id: &str, offset: u64, limit: u64) -> PreviewPage {
 /// 清理单个类别。`keep` 为反选保留的绝对路径集合。
 pub fn clean_one(id: &str, keep: &HashSet<String>) -> CleanResult {
     let Some(def) = categories::find(id) else {
-        return CleanResult { id: id.into(), freed_bytes: 0, deleted_files: 0, skipped: 0 };
+        return CleanResult { id: id.into(), freed_bytes: 0, deleted_files: 0, skipped: 0, blocked_by: None };
     };
+
+    // 进程拦截:声明了 skip_if_running 的类别(浏览器缓存等),对应进程
+    // 运行中则整类跳过 —— 运行期间删缓存会损坏其内存中的缓存索引,
+    // 造成已打开页面刷新后加载残缺。
+    if let Some(proc_name) = process::first_running(&def.skip_if_running) {
+        return CleanResult {
+            id: id.into(),
+            freed_bytes: 0,
+            deleted_files: 0,
+            skipped: 0,
+            blocked_by: Some(proc_name),
+        };
+    }
 
     if def.special.as_deref() == Some("recycle-bin") {
         let (freed_bytes, deleted_files) = recycle::clear_recycle_bin();
-        return CleanResult { id: id.into(), freed_bytes, deleted_files, skipped: 0 };
+        return CleanResult { id: id.into(), freed_bytes, deleted_files, skipped: 0, blocked_by: None };
     }
 
     // report 级永不删除(双保险:前端无按钮,后端也拒绝)
     if def.meta.risk == Risk::Report {
-        return CleanResult { id: id.into(), freed_bytes: 0, deleted_files: 0, skipped: 0 };
+        return CleanResult { id: id.into(), freed_bytes: 0, deleted_files: 0, skipped: 0, blocked_by: None };
     }
 
     // 删除模式按风险等级 + 用户偏好决定:
@@ -111,5 +125,5 @@ pub fn clean_one(id: &str, keep: &HashSet<String>) -> CleanResult {
         deleted += r.deleted_files;
         skipped += r.skipped;
     }
-    CleanResult { id: id.into(), freed_bytes: freed, deleted_files: deleted, skipped }
+    CleanResult { id: id.into(), freed_bytes: freed, deleted_files: deleted, skipped, blocked_by: None }
 }

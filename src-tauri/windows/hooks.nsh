@@ -39,4 +39,14 @@
   ${EndIf}
   ; 兼容旧版本钩子生成的桌面混合名
   Delete "$DESKTOP\${DISPLAYNAME_ZH}.lnk"
+
+  ; 勾选"删除程序数据"时补删程序真实的数据目录 %APPDATA%\cache-insight
+  ; (config.json、清理/崩溃日志,见 config.rs 与 logbook.rs)。
+  ; 模板默认只删按 ${BUNDLEID} 命名的目录,本程序数据不在那里,
+  ; 不补删会导致重装后条款同意、累计统计等记录仍在。
+  ${If} $DeleteAppDataCheckboxState = 1
+  ${AndIf} $UpdateMode <> 1
+    SetShellVarContext current
+    RmDir /r "$APPDATA\cache-insight"
+  ${EndIf}
 !macroend

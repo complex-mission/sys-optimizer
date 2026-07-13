@@ -1,9 +1,11 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { message } from "@tauri-apps/plugin-dialog";
 import { useI18n } from "../i18n";
 import {
   api,
   onScanProgress,
   onCleanProgress,
+  onDefaultTierChanged,
   CategoryMeta,
   CategoryScanResult,
   Tier,
@@ -23,7 +25,8 @@ const TIERS: { id: Tier; icon: IconName; recommended?: boolean }[] = [
 ];
 
 export function ScanPage() {
-  const { t } = useI18n();
+  const { t, lang } = useI18n();
+  const zh = lang === "zh-CN";
   const { confirm: confirmInApp, dialog: confirmDialog } = useConfirmDialog();
   const [cats, setCats] = useState<CategoryMeta[]>([]);
   const [tier, setTier] = useState<Tier>("standard");
@@ -38,6 +41,8 @@ export function ScanPage() {
   const [checked, setChecked] = useState<Set<string>>(new Set());
   // 反选保留的文件路径:catId -> Set<path>
   const [kept, setKept] = useState<Record<string, Set<string>>>({});
+  // 因进程正在运行、清理时会被整类跳过的类别:catId -> 进程名(浏览器缓存等)
+  const [blockers, setBlockers] = useState<Record<string, string>>({});
   // 进度
   const [progress, setProgress] = useState({ done: 0, total: 0 });
   const [current, setCurrent] = useState<string>("");
@@ -47,6 +52,12 @@ export function ScanPage() {
 
   const scanUnlisten = useRef<null | (() => void)>(null);
   const cleanUnlisten = useRef<null | (() => void)>(null);
+  const rootRef = useRef<HTMLDivElement>(null);
+  // 供事件监听器读取最新状态(页面 keep-alive,监听器只注册一次)
+  const phaseRef = useRef(phase);
+  phaseRef.current = phase;
+  const customIdsRef = useRef(customIds);
+  customIdsRef.current = customIds;
 
   useEffect(() => {
     api.listCategories().then(setCats).catch(() => setCats([]));
@@ -55,7 +66,18 @@ export function ScanPage() {
         setTier(cfg.default_tier);
       }
     }).catch(() => {});
+    // 设置页改了默认挡位:若本页还停在挡位选择(无扫描任务),跟随新默认值
+    const offTier = onDefaultTierChanged(async (newTier) => {
+      if (phaseRef.current !== "idle") return;
+      if (newTier !== "quick" && newTier !== "standard" && newTier !== "deep") return;
+      setTier(newTier);
+      if (customIdsRef.current !== null) {
+        const ids = await api.idsForTier(newTier).catch(() => [] as string[]);
+        setCustomIds(new Set(ids));
+      }
+    });
     return () => {
+      offTier();
       scanUnlisten.current?.();
       cleanUnlisten.current?.();
     };
@@ -139,6 +161,8 @@ export function ScanPage() {
     const map: Record<string, CategoryScanResult> = {};
     for (const r of results) map[r.id] = r;
     setSizes(map);
+    // 标出浏览器等正在运行的类别,提前告知"清理时将跳过"
+    api.checkRunningBlockers(ids).then(setBlockers).catch(() => setBlockers({}));
     // 扫描结果为 0B 的类别没有可清理内容,取消其默认勾选
     setChecked((prev) => {
       const next = new Set([...prev].filter((id) => (map[id]?.bytes ?? 0) > 0));
@@ -253,9 +277,13 @@ export function ScanPage() {
       }
       setFreed(f);
       setSkipped(s);
+      // 因进程正在运行被整类跳过的类别(浏览器缓存等),弹窗与行内提示都要说明
+      const blocked = results.filter((r) => r.blocked_by).map((r) => catName(r.id));
 
       // 重新扫描刚清理的类别。保留项或被占用文件仍会正确显示，不能简单归零。
       const refreshed = await api.runScan(ids).catch(() => [] as CategoryScanResult[]);
+      // 刷新运行中标记(清理期间用户可能已关闭浏览器)
+      api.checkRunningBlockers(Object.keys(sizes)).then(setBlockers).catch(() => {});
       setSizes((prev) => {
         const next = { ...prev };
         for (const id of ids) next[id] = { id, bytes: 0, files: 0 };
@@ -268,6 +296,22 @@ export function ScanPage() {
         return next;
       });
       setPhase("done");
+      // 回到顶部展示"已清理"标题,并弹窗告知结果
+      rootRef.current?.closest(".page")?.scrollTo({ top: 0 });
+      await message(
+        zh
+          ? `清理完毕,已释放 ${formatBytes(f)}${s > 0 ? `,${s} 项被占用已跳过` : ""}${
+              blocked.length > 0
+                ? `。${blocked.join("、")}因对应程序正在运行未清理,关闭后可再次清理`
+                : ""
+            }`
+          : `Cleanup complete. Freed ${formatBytes(f)}${s > 0 ? `, ${s} in-use item(s) skipped` : ""}.${
+              blocked.length > 0
+                ? ` ${blocked.join(", ")} skipped because the app is still running — close it and clean again.`
+                : ""
+            }`,
+        { title: zh ? "清理完毕" : "Cleanup complete", kind: "info" }
+      ).catch(() => {});
     } catch {
       // 失败时恢复结果页，避免按钮永久停留在“清理中”。
       setPhase("results");
@@ -407,7 +451,7 @@ export function ScanPage() {
 
   // results / cleaning / done
   return (
-    <div className="scan-results">
+    <div className="scan-results" ref={rootRef}>
       <div className="results-head">
         <button
           className="btn-text results-back"
@@ -450,10 +494,10 @@ export function ScanPage() {
             result={sizes[c.id]}
             checked={checked.has(c.id)}
             keptPaths={kept[c.id] ?? new Set()}
+            runningBlocker={blockers[c.id]}
             disabled={phase === "cleaning"}
             onToggle={(on) => toggleCat(c.id, on)}
             onToggleKeep={(path, keep) => toggleKeep(c.id, path, keep)}
-            onOpen={(path) => api.openPath(path).catch(() => {})}
             onSpecifyPath={() => rescanOne(c.id)}
             share={(sizes[c.id]?.bytes ?? 0) / maxBytes}
           />

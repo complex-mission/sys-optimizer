@@ -40,6 +40,10 @@ pub struct RuleTarget {
     /// 是否支持手动指定路径(通常自定义路径类软件为 true)
     #[serde(default)]
     pub supports_override: bool,
+    /// 列出的任一进程正在运行时,整类跳过清理(如浏览器开着时清其缓存
+    /// 会损坏缓存索引,导致已打开页面刷新后显示异常)
+    #[serde(default)]
+    pub skip_if_running: Vec<String>,
 }
 
 /// 一款软件的规则(含多个清理目标)。

@@ -43,6 +43,8 @@ export interface CleanResult {
   freed_bytes: number;
   deleted_files: number;
   skipped: number;
+  /** 因该进程正在运行而整类跳过(如浏览器开着时的浏览器缓存);null 表示正常执行 */
+  blocked_by: string | null;
 }
 
 export interface ScanProgress {
@@ -76,9 +78,15 @@ export interface AppConfig {
 }
 
 const STATS_CHANGED_EVENT = "cache-insight:stats-changed";
+const APP_SIZE_CACHE_CHANGED_EVENT = "cache-insight:app-size-cache-changed";
+const DEFAULT_TIER_CHANGED_EVENT = "cache-insight:default-tier-changed";
 
 function notifyStatsChanged() {
   window.dispatchEvent(new Event(STATS_CHANGED_EVENT));
+}
+
+function notifyAppSizeCacheChanged() {
+  window.dispatchEvent(new Event(APP_SIZE_CACHE_CHANGED_EVENT));
 }
 
 export interface AboutInfo {
@@ -199,6 +207,11 @@ export interface LeftoverItem {
   mtime: number;
 }
 
+export interface LeftoverReport {
+  scanned_dirs: number;
+  items: LeftoverItem[];
+}
+
 export interface SystemSpaceItem {
   id: string;
   bytes: number;
@@ -296,13 +309,21 @@ export interface HardwareReport {
 export const api = {
   listCategories: () => invoke<CategoryMeta[]>("list_categories"),
   idsForTier: (tier: Tier) => invoke<string[]>("ids_for_tier", { tier }),
-  runScan: (ids: string[]) => invoke<CategoryScanResult[]>("run_scan", { ids }),
+  runScan: async (ids: string[]) => {
+    const results = await invoke<CategoryScanResult[]>("run_scan", { ids });
+    // 后端会把扫描结果写进软件专项的大小缓存,通知已挂载的软件专项页刷新
+    notifyAppSizeCacheChanged();
+    return results;
+  },
   cancelScan: () => invoke<void>("cancel_scan"),
   cancelTask: (kind: "space" | "large" | "dup") =>
     invoke<void>("cancel_task", { kind }),
   diskUsage: (path: string) => invoke<DiskUsage>("disk_usage", { path }),
   previewCategory: (id: string, offset: number, limit: number) =>
     invoke<PreviewPage>("preview_category", { id, offset, limit }),
+  // 类别id -> 正在运行、会导致该类别清理被跳过的进程名(如浏览器缓存)
+  checkRunningBlockers: (ids: string[]) =>
+    invoke<Record<string, string>>("check_running_blockers", { ids }),
   runClean: async (ids: string[], keepPaths: string[]) => {
     const results = await invoke<CleanResult[]>("run_clean", { ids, keepPaths });
     notifyStatsChanged();
@@ -315,7 +336,11 @@ export const api = {
   shouldShowBanner: () => invoke<boolean>("should_show_banner"),
   dismissBanner: () => invoke<void>("dismiss_banner"),
   setLanguage: (language: string) => invoke<void>("set_language", { language }),
-  setDefaultTier: (tier: string) => invoke<void>("set_default_tier", { tier }),
+  setDefaultTier: async (tier: string) => {
+    await invoke<void>("set_default_tier", { tier });
+    // 智能扫描页若停留在挡位选择,同步选中新默认挡位
+    window.dispatchEvent(new CustomEvent(DEFAULT_TIER_CHANGED_EVENT, { detail: tier }));
+  },
   setExpensiveToTrash: (enabled: boolean) =>
     invoke<void>("set_expensive_to_trash", { enabled }),
   logsDir: () => invoke<string>("logs_dir"),
@@ -350,7 +375,7 @@ export const api = {
   listStartup: () => invoke<StartupItem[]>("list_startup"),
   setStartupEnabled: (id: string, enable: boolean) =>
     invoke<void>("set_startup_enabled", { id, enable }),
-  detectLeftovers: () => invoke<LeftoverItem[]>("detect_leftovers"),
+  detectLeftovers: () => invoke<LeftoverReport>("detect_leftovers"),
   listSystemSpace: () => invoke<SystemSpaceItem[]>("list_system_space"),
   executeSystemSpace: (id: string) =>
     invoke<SystemSpaceResult>("execute_system_space", { id }),
@@ -380,12 +405,28 @@ export function onStatsChanged(cb: () => void): UnlistenFn {
   return () => window.removeEventListener(STATS_CHANGED_EVENT, cb);
 }
 
+export function onAppSizeCacheChanged(cb: () => void): UnlistenFn {
+  window.addEventListener(APP_SIZE_CACHE_CHANGED_EVENT, cb);
+  return () => window.removeEventListener(APP_SIZE_CACHE_CHANGED_EVENT, cb);
+}
+
+export function onDefaultTierChanged(cb: (tier: string) => void): UnlistenFn {
+  const handler = (e: Event) => cb(String((e as CustomEvent).detail));
+  window.addEventListener(DEFAULT_TIER_CHANGED_EVENT, handler);
+  return () => window.removeEventListener(DEFAULT_TIER_CHANGED_EVENT, handler);
+}
+
 export function onSpaceProgress(cb: (p: SpaceProgress) => void): Promise<UnlistenFn> {
   return listen<SpaceProgress>("space://progress", (e) => cb(e.payload));
 }
 
 export function onLargeProgress(cb: (p: LargeProgress) => void): Promise<UnlistenFn> {
   return listen<LargeProgress>("large://progress", (e) => cb(e.payload));
+}
+
+/** 大文件扫描:每命中一个文件即推送(供扫描过程中实时列出)。 */
+export function onLargeFound(cb: (f: LargeFile) => void): Promise<UnlistenFn> {
+  return listen<LargeFile>("large://found", (e) => cb(e.payload));
 }
 
 export function onDupProgress(cb: (p: DupProgress) => void): Promise<UnlistenFn> {

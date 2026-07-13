@@ -82,6 +82,9 @@ pub struct CleanResult {
     pub deleted_files: u64,
     /// 被占用/无权限而跳过的数量
     pub skipped: u64,
+    /// 因该进程正在运行而整类跳过(如浏览器开着时清浏览器缓存会损坏其缓存索引);
+    /// None 表示正常执行
+    pub blocked_by: Option<String>,
 }
 
 /// 扫描进度事件(经 Tauri emit 推送给前端)。
@@ -267,6 +270,15 @@ pub struct LeftoverItem {
     pub confidence: String,
     /// 最近修改时间(Unix 秒),越久未动越可能是残留
     pub mtime: i64,
+}
+
+/// 卸载残留检测的整体结果:带"检查了多少个目录"的统计,
+/// 让"没有发现残留"的结论可被用户验证,而非疑似没跑。
+#[derive(Debug, Clone, Serialize)]
+pub struct LeftoverReport {
+    /// 实际检查过的顶层目录数
+    pub scanned_dirs: u64,
+    pub items: Vec<LeftoverItem>,
 }
 
 /// 卸载残留扫描进度。

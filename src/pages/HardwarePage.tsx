@@ -82,7 +82,27 @@ export function HardwarePage() {
   };
 
   if (loading) {
-    return <div className="hw-empty">{zh ? "正在读取硬件信息…" : "Reading hardware info…"}</div>;
+    // WMI 十余条查询首读约 1~3 秒且因机器而异,给出结构化骨架而非一行文字
+    return (
+      <div className="hw-page">
+        <h1 className="hw-title">{t("nav.hardware")}</h1>
+        <div className="hw-overview" aria-hidden="true">
+          {Array.from({ length: 3 }).map((_, i) => (
+            <div key={i} className="ov-card hw-sk-card">
+              <span className="hw-sk hw-sk-icon" />
+              <span className="hw-sk hw-sk-line short" />
+              <span className="hw-sk hw-sk-line" />
+            </div>
+          ))}
+        </div>
+        <div className="hw-loading" role="status">
+          <span className="hw-spinner" />
+          {zh
+            ? "正在读取硬件信息(SMBIOS / WMI),首次需 1~3 秒…"
+            : "Reading hardware info (SMBIOS / WMI) — the first read takes a few seconds…"}
+        </div>
+      </div>
+    );
   }
 
   if (!hw || !hw.available) {

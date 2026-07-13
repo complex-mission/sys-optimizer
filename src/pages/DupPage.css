@@ -98,6 +98,18 @@
   background: var(--surface-container);
   border-radius: var(--shape-md);
   overflow: hidden;
+  /* 结果可达数千组:视口外的组跳过布局/绘制,
+     避免页面 display 切换时全量重排卡顿(占位高约一头部+两行) */
+  content-visibility: auto;
+  contain-intrinsic-size: auto 150px;
+}
+
+/* 分批加载哨兵:滚近底部时自动追加下一批 */
+.dup-more {
+  color: var(--on-surface-variant);
+  font-size: 12.5px;
+  text-align: center;
+  padding: 14px 0;
 }
 .dup-group-head {
   display: flex;

@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useI18n } from "../i18n";
-import { api, LeftoverItem, formatBytes } from "../lib/api";
+import { api, LeftoverReport, formatBytes } from "../lib/api";
 import { Icon } from "../components/Icon";
 import "./LeftoverPage.css";
 
@@ -8,21 +8,21 @@ export function LeftoverPage() {
   const { t, lang } = useI18n();
   const zh = lang === "zh-CN";
 
-  const [items, setItems] = useState<LeftoverItem[] | null>(null);
+  const [report, setReport] = useState<LeftoverReport | null>(null);
   const [scanning, setScanning] = useState(false);
 
   const scan = async () => {
     setScanning(true);
     try {
-      const list = await api.detectLeftovers();
-      setItems(list);
+      setReport(await api.detectLeftovers());
     } catch {
-      setItems([]);
+      setReport({ scanned_dirs: 0, items: [] });
     } finally {
       setScanning(false);
     }
   };
 
+  const items = report?.items ?? null;
   const totalBytes = (items ?? []).reduce((s, i) => s + i.bytes, 0);
 
   return (
@@ -53,16 +53,27 @@ export function LeftoverPage() {
           </button>
         </div>
       ) : scanning ? (
-        <div className="leftover-empty">…</div>
-      ) : items.length === 0 ? (
         <div className="leftover-empty">
-          {zh ? "没有发现明显的残留目录" : "No obvious leftovers found"}
+          {zh ? "正在检测并统计目录大小,请稍候…" : "Scanning and sizing folders, please wait…"}
         </div>
+      ) : items.length === 0 ? (
+        <>
+          <div className="leftover-empty">
+            {zh
+              ? `已检查 ${report?.scanned_dirs ?? 0} 个目录,没有发现明显的残留目录`
+              : `Checked ${report?.scanned_dirs ?? 0} folders — no obvious leftovers found`}
+          </div>
+          <button className="btn-text leftover-rescan" onClick={scan}>
+            <Icon name="scan" size={14} />
+            {zh ? "重新检测" : "Rescan"}
+          </button>
+        </>
       ) : (
         <>
           <div className="leftover-summary">
             <span>
-              {zh ? "发现" : "Found"} {items.length} {zh ? "个疑似残留" : "possible leftovers"}
+              {zh ? "已检查" : "Checked"} {report?.scanned_dirs ?? 0} {zh ? "个目录,发现" : "folders, found"}{" "}
+              {items.length} {zh ? "个疑似残留" : "possible leftovers"}
             </span>
             <span className="leftover-summary-size">
               {zh ? "合计" : "Total"} {formatBytes(totalBytes)}
