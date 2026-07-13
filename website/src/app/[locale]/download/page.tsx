@@ -53,6 +53,11 @@ export default async function DownloadPage({ params }: { params: Promise<{ local
                     <td className="file-name">
                       {f.name}
                       {i === 0 && <span className="badge-latest">{dict["download.latest"]}</span>}
+                      {f.sha256 && (
+                        <div className="file-hash">
+                          SHA-256: <code>{f.sha256}</code>
+                        </div>
+                      )}
                     </td>
                     <td>{formatSize(f.size)}</td>
                     <td>{formatDate(f.lastModified, locale)}</td>

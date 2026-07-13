@@ -146,7 +146,10 @@ function UploadPanel({ t }: { t: (k: string) => string }) {
       setProgress(-1);
       if (xhr.status >= 200 && xhr.status < 300) {
         const data = JSON.parse(xhr.responseText);
-        setMessage({ ok: true, text: `${t("admin.upload.done")} ${data.key}` });
+        setMessage({
+          ok: true,
+          text: `${t("admin.upload.done")} ${data.key}${data.sha256 ? ` · SHA-256: ${data.sha256}` : ""}`,
+        });
         setFile(null);
         setRename("");
         if (inputRef.current) inputRef.current.value = "";

@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 
 // 无语言前缀的路径按浏览器语言跳转到 /zh 或 /en
-export function middleware(req: NextRequest) {
+// (Next 16 起 middleware.ts 更名为 proxy.ts,逻辑不变)
+export function proxy(req: NextRequest) {
   const { pathname } = req.nextUrl;
   if (pathname.startsWith("/zh") || pathname.startsWith("/en")) {
     return NextResponse.next();

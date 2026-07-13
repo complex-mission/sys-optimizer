@@ -23,6 +23,7 @@ const zh: Dict = {
     "系统优化助手(SysOptimizer)是一款 Windows 垃圾清理与系统洞察工具。三挡扫描、风险三级标识、13 款软件专项清理,所有操作在本机完成。",
   "hero.cta": "免费下载",
   "hero.cta2": "了解功能",
+  "hero.screenshotAlt": "系统优化助手主界面:选择扫描深度与清理类别",
 
   "features.title": "核心功能",
   "features.f1.title": "三挡智能扫描",
@@ -106,6 +107,7 @@ const en: Dict = {
     "SysOptimizer is a junk cleaner and system insight tool for Windows. Three scan tiers, three-level risk labels, dedicated cleaning for 13 popular apps — everything runs locally on your machine.",
   "hero.cta": "Download for free",
   "hero.cta2": "Explore features",
+  "hero.screenshotAlt": "SysOptimizer main window: choosing scan depth and cleanup categories",
 
   "features.title": "Features",
   "features.f1.title": "Three scan tiers",

@@ -6,15 +6,17 @@
   "scripts": {
     "dev": "node scripts/start.js dev",
     "build": "next build",
-    "start": "node scripts/start.js start",
-    "lint": "next lint"
+    "start": "node scripts/start.js start"
   },
   "dependencies": {
     "@alicloud/pop-core": "^1.8.0",
     "ali-oss": "^6.21.0",
-    "next": "^15.3.0",
+    "next": "^16.2.10",
     "react": "^19.1.0",
     "react-dom": "^19.1.0"
+  },
+  "overrides": {
+    "postcss": "^8.5.10"
   },
   "devDependencies": {
     "@types/ali-oss": "^6.16.11",

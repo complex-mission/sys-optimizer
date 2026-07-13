@@ -1,3 +1,4 @@
+import { createHash } from "node:crypto";
 import OSS from "ali-oss";
 import { env } from "./env";
 import { getStsCredentials } from "./sts";
@@ -9,6 +10,8 @@ export interface OssFile {
   name: string;
   size: number;
   lastModified: string;
+  /** 上传时计算的 SHA-256(hex),存于对象元数据;旧文件可能没有 */
+  sha256?: string;
 }
 
 async function client(): Promise<OSS> {
@@ -46,16 +49,29 @@ export function sanitizeFileName(name: string): string {
 export async function listFiles(): Promise<OssFile[]> {
   const oss = await client();
   const res = await oss.list({ prefix: env.ossPrefix, "max-keys": 200 }, {});
-  const objects = res.objects ?? [];
-  return objects
-    .filter((o) => o.size > 0 && !o.name.endsWith("/"))
-    .map((o) => ({
+  const objects = (res.objects ?? []).filter((o) => o.size > 0 && !o.name.endsWith("/"));
+  const files = await Promise.all(
+    objects.map(async (o): Promise<OssFile> => ({
       key: o.name,
       name: o.name.slice(env.ossPrefix.length),
       size: o.size,
       lastModified: o.lastModified,
-    }))
-    .sort((a, b) => (a.lastModified < b.lastModified ? 1 : -1));
+      sha256: await readSha256(oss, o.name),
+    })),
+  );
+  return files.sort((a, b) => (a.lastModified < b.lastModified ? 1 : -1));
+}
+
+/** 读取对象元数据中的 sha256;失败或不存在(旧文件)返回 undefined */
+async function readSha256(oss: OSS, key: string): Promise<string | undefined> {
+  try {
+    const head = await oss.head(key);
+    const meta = (head as { meta?: Record<string, string> }).meta;
+    const v = meta?.sha256;
+    return typeof v === "string" && /^[0-9a-f]{64}$/.test(v) ? v : undefined;
+  } catch {
+    return undefined;
+  }
 }
 
 /** 生成带有效期的签名下载 URL,可选单连接限速 */
@@ -75,11 +91,14 @@ export async function signDownloadUrl(key: string): Promise<string> {
   return oss.signatureUrl(key, options);
 }
 
-export async function uploadFile(name: string, data: Buffer): Promise<string> {
+export async function uploadFile(name: string, data: Buffer): Promise<{ key: string; sha256: string }> {
   const oss = await client();
   const key = env.ossPrefix + name;
-  await oss.put(key, data);
-  return key;
+  const sha256 = createHash("sha256").update(data).digest("hex");
+  // 哈希随对象一起存为 x-oss-meta-sha256,供下载页展示校验值。
+  // @types/ali-oss 的 UserMeta 误将 uid/pid 设为必填,实际接口接受任意自定义键。
+  await oss.put(key, data, { meta: { sha256 } as unknown as OSS.UserMeta });
+  return { key, sha256 };
 }
 
 export async function deleteFile(key: string): Promise<void> {

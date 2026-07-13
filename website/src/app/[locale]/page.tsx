@@ -1,3 +1,4 @@
+import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { getDict, isLocale } from "@/i18n/dict";
@@ -30,6 +31,16 @@ export default async function HomePage({ params }: { params: Promise<{ locale: s
             <a href="#features" className="btn btn-tonal">
               {dict["hero.cta2"]}
             </a>
+          </div>
+          <div className="hero-shot">
+            <Image
+              src={locale === "zh" ? "/cn.webp" : "/en.webp"}
+              alt={dict["hero.screenshotAlt"]}
+              width={1560}
+              height={1123}
+              priority
+              sizes="(max-width: 848px) 100vw, 800px"
+            />
           </div>
         </div>
       </section>

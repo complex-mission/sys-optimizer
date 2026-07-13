@@ -24,8 +24,8 @@ export async function POST(req: NextRequest) {
 
   try {
     const buffer = Buffer.from(await file.arrayBuffer());
-    const key = await uploadFile(name, buffer);
-    return NextResponse.json({ ok: true, key, size: buffer.length });
+    const { key, sha256 } = await uploadFile(name, buffer);
+    return NextResponse.json({ ok: true, key, size: buffer.length, sha256 });
   } catch (e) {
     console.error("upload failed:", e);
     return NextResponse.json({ error: "upload failed" }, { status: 502 });

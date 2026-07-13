@@ -139,6 +139,11 @@ export function ScanPage() {
     const map: Record<string, CategoryScanResult> = {};
     for (const r of results) map[r.id] = r;
     setSizes(map);
+    // 扫描结果为 0B 的类别没有可清理内容,取消其默认勾选
+    setChecked((prev) => {
+      const next = new Set([...prev].filter((id) => (map[id]?.bytes ?? 0) > 0));
+      return next;
+    });
     setCurrent("");
     // 全部被停止且无结果时回到挡位选择,否则展示(可能是部分)结果
     setPhase(results.length === 0 ? "idle" : "results");
@@ -197,7 +202,16 @@ export function ScanPage() {
   // 用户为某类别手动指定路径后,单独重扫该类别刷新大小
   const rescanOne = async (id: string) => {
     const [r] = await api.runScan([id]);
-    if (r) setSizes((prev) => ({ ...prev, [id]: r }));
+    if (r) {
+      setSizes((prev) => ({ ...prev, [id]: r }));
+      if (r.bytes === 0) {
+        setChecked((prev) => {
+          const next = new Set(prev);
+          next.delete(id);
+          return next;
+        });
+      }
+    }
   };
 
   const startClean = async () => {
