@@ -299,6 +299,11 @@ a { color: var(--primary); text-decoration: none; }
 .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
 @media (max-width: 620px) { .form-row { grid-template-columns: 1fr; } }
 .form-field { display: flex; flex-direction: column; gap: 6px; }
+/* 页面底色即 --bg,输入框改用 surface 底色以从背景中浮起 */
+.feedback-form .input {
+  background: var(--surface);
+  box-shadow: 0 1px 2px rgba(16, 24, 40, 0.04);
+}
 .feedback-textarea { min-height: 180px; resize: vertical; line-height: 1.6; }
 /* 蜜罐:移出视口而非 display:none,部分机器人会跳过后者 */
 .hp-field { position: absolute; left: -9999px; width: 1px; height: 1px; opacity: 0; }
