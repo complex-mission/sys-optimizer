@@ -25,7 +25,7 @@ export interface HomeContent {
   craft: { title: string; desc: string }[];
   techTitle: string;
   techDesc: string;
-  tech: { title: string; desc: string }[];
+  tech: { title: string; desc: string; link?: { href: string; label: string } }[];
   faqTitle: string;
   faq: { q: string; a: string }[];
 }
@@ -209,7 +209,8 @@ const zh: HomeContent = {
     },
     {
       title: "开源软件",
-      desc: "代码公开在 github.com/complex-mission/sys-optimizer,每一条清理规则、每一道安全闸都可以被审计。「关于」页列出全部开源组件许可。",
+      desc: "代码完全公开,每一条清理规则、每一道安全闸都可以被审计。「关于」页列出全部开源组件许可。",
+      link: { href: "https://github.com/complex-mission/sys-optimizer", label: "GitHub 上查看源码 →" },
     },
     {
       title: "中英双语",
@@ -429,7 +430,8 @@ const en: HomeContent = {
     },
     {
       title: "Open source",
-      desc: "The code is public at github.com/complex-mission/sys-optimizer — every cleaning rule and every safety gate can be audited. The About page lists all open-source component licenses.",
+      desc: "The code is fully public — every cleaning rule and every safety gate can be audited. The About page lists all open-source component licenses.",
+      link: { href: "https://github.com/complex-mission/sys-optimizer", label: "View the source on GitHub →" },
     },
     {
       title: "Bilingual",

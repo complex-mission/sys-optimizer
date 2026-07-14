@@ -185,6 +185,11 @@ export default async function HomePage({ params }: { params: Promise<{ locale: s
               <div className="tech-card" key={t.title}>
                 <h3>{t.title}</h3>
                 <p>{t.desc}</p>
+                {t.link && (
+                  <a className="tech-link" href={t.link.href} target="_blank" rel="noopener noreferrer">
+                    {t.link.label}
+                  </a>
+                )}
               </div>
             ))}
           </div>
