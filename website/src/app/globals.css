@@ -140,6 +140,13 @@ a { color: var(--primary); text-decoration: none; }
 .btn-sm { padding: 7px 16px; font-size: 13px; }
 .btn-lg { padding: 14px 34px; font-size: 16px; }
 
+/* ===== Stats strip ===== */
+.stats-strip { border-top: 1px solid var(--border); background: var(--surface); padding: 30px 0; }
+.stats-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 18px; text-align: center; }
+@media (max-width: 720px) { .stats-grid { grid-template-columns: repeat(2, 1fr); } }
+.stat-value { font-size: 30px; font-weight: 700; color: var(--primary); letter-spacing: -0.5px; }
+.stat-label { font-size: 13px; color: var(--muted); margin-top: 2px; }
+
 /* ===== Risk strip ===== */
 .risk-strip { border-block: 1px solid var(--border); background: var(--surface); padding: 26px 0; }
 .risk-title { font-size: 16px; margin: 0 0 12px; font-weight: 600; }
@@ -149,6 +156,7 @@ a { color: var(--primary); text-decoration: none; }
 .dot-cache { background: var(--cache); }
 .dot-expensive { background: var(--expensive); }
 .dot-report { background: var(--report); }
+.risk-note { margin: 12px 0 0; color: var(--muted); font-size: 13px; }
 
 /* ===== Features ===== */
 .features { padding: 72px 0; }
@@ -166,6 +174,122 @@ a { color: var(--primary); text-decoration: none; }
 .feature-card h3 { margin: 14px 0 8px; font-size: 17px; }
 .feature-card p { margin: 0; color: var(--muted); font-size: 14px; }
 .feature-icon { width: 30px; height: 30px; fill: var(--primary); }
+
+/* ===== 通用 section 描述 ===== */
+.section-desc {
+  max-width: 720px;
+  margin: -26px auto 36px;
+  text-align: center;
+  color: var(--muted);
+  font-size: 15px;
+}
+
+/* ===== 功能说明书 ===== */
+.manual { padding: 24px 0 72px; }
+.manual-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 20px; }
+@media (max-width: 860px) { .manual-grid { grid-template-columns: 1fr; } }
+.manual-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 24px;
+  box-shadow: var(--shadow);
+}
+.manual-head { display: flex; gap: 14px; align-items: flex-start; }
+.manual-index {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--primary);
+  background: var(--tonal);
+  border-radius: 8px;
+  padding: 4px 8px;
+  line-height: 1.4;
+  flex: none;
+  margin-top: 2px;
+}
+.manual-head h3 { margin: 0; font-size: 18px; }
+.manual-tagline { margin: 3px 0 0; color: var(--muted); font-size: 13.5px; }
+.manual-points { margin: 16px 0 0; padding: 0 0 0 18px; display: flex; flex-direction: column; gap: 8px; }
+.manual-points li { color: var(--muted); font-size: 13.5px; line-height: 1.65; }
+.manual-points li::marker { color: var(--primary); }
+
+/* ===== 支持软件清单 ===== */
+.apps-list { padding: 24px 0 72px; }
+.apps-legend { justify-content: center; margin-bottom: 28px; }
+.apps-groups { display: flex; flex-direction: column; gap: 26px; }
+.apps-group-title { font-size: 15px; margin: 0 0 10px; color: var(--text); }
+.apps-chips { display: flex; flex-wrap: wrap; gap: 8px; }
+.app-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 6px 12px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  font-size: 13px;
+  cursor: default;
+}
+.app-chip b { font-weight: 600; }
+.app-chip .app-chip-target { color: var(--muted); }
+.app-chip .dot { width: 8px; height: 8px; flex: none; }
+.apps-list .page-note { text-align: center; max-width: 720px; margin: 26px auto 0; }
+
+/* ===== 工程细节 / 技术 ===== */
+.craft, .tech { padding: 24px 0 72px; }
+.craft-grid, .tech-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 18px; }
+.craft-card, .tech-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 22px 22px 20px;
+  box-shadow: var(--shadow);
+}
+.craft-card h3, .tech-card h3 { margin: 0 0 8px; font-size: 15.5px; }
+.craft-card p, .tech-card p { margin: 0; color: var(--muted); font-size: 13.5px; line-height: 1.65; }
+
+/* ===== 不做的事 ===== */
+.notdo { padding: 24px 0 72px; }
+.notdo-list {
+  max-width: 760px;
+  margin: 0 auto;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.notdo-list li {
+  position: relative;
+  padding: 14px 18px 14px 46px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  color: var(--muted);
+  font-size: 14px;
+  line-height: 1.65;
+}
+.notdo-list li::before {
+  content: "✕";
+  position: absolute;
+  left: 18px;
+  top: 14px;
+  color: var(--danger);
+  font-weight: 700;
+}
+
+/* ===== FAQ ===== */
+.faq { padding: 24px 0 72px; }
+.faq-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 18px; }
+@media (max-width: 780px) { .faq-grid { grid-template-columns: 1fr; } }
+.faq-item {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 20px 22px;
+}
+.faq-item h3 { margin: 0 0 8px; font-size: 15px; }
+.faq-item p { margin: 0; color: var(--muted); font-size: 13.5px; line-height: 1.7; }
 
 /* ===== CTA ===== */
 .cta { padding: 30px 0 84px; }

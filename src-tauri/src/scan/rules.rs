@@ -125,6 +125,26 @@ pub fn load_library() -> RuleLibrary {
     }
 }
 
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    /// 解析失败时 load_library 只打日志并返回空库,应用照常启动但所有规则消失;
+    /// 编辑 rules.json 手滑不会有任何编译期信号,靠这个测试兜住。
+    /// 顺带保证类别 id 全局唯一(i18n 键和大小缓存都按 id 索引)。
+    #[test]
+    fn builtin_rules_parse_and_ids_unique() {
+        let lib = load_library();
+        assert!(!lib.apps.is_empty(), "内置规则库解析失败或为空");
+        let mut seen = std::collections::HashSet::new();
+        for app in &lib.apps {
+            for t in &app.targets {
+                assert!(seen.insert(t.id.clone()), "类别 id 重复: {}", t.id);
+            }
+        }
+    }
+}
+
 use serde::Serialize;
 
 /// 发给专项页的软件视图:含是否安装、分组、目标类别列表。

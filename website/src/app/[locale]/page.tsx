@@ -1,7 +1,9 @@
 import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { getDict, isLocale } from "@/i18n/dict";
+import { getDict, isLocale, type Locale } from "@/i18n/dict";
+import { getHomeContent } from "@/content/home";
+import { appGroups } from "@/content/apps";
 
 const featureIcons: Record<string, React.ReactNode> = {
   f1: <path d="M4 14l4-8 4 6 3-4 5 8H4z" />,
@@ -16,6 +18,8 @@ export default async function HomePage({ params }: { params: Promise<{ locale: s
   const { locale } = await params;
   if (!isLocale(locale)) notFound();
   const dict = getDict(locale);
+  const home = getHomeContent(locale);
+  const lang: Locale = locale;
 
   return (
     <>
@@ -45,6 +49,17 @@ export default async function HomePage({ params }: { params: Promise<{ locale: s
         </div>
       </section>
 
+      <section className="stats-strip">
+        <div className="container stats-grid">
+          {home.stats.map((s) => (
+            <div className="stat" key={s.label}>
+              <div className="stat-value">{s.value}</div>
+              <div className="stat-label">{s.label}</div>
+            </div>
+          ))}
+        </div>
+      </section>
+
       <section className="risk-strip">
         <div className="container">
           <h2 className="risk-title">{dict["risk.title"]}</h2>
@@ -53,6 +68,7 @@ export default async function HomePage({ params }: { params: Promise<{ locale: s
             <span className="risk-item"><i className="dot dot-expensive" />{dict["risk.expensive"]}</span>
             <span className="risk-item"><i className="dot dot-report" />{dict["risk.report"]}</span>
           </div>
+          <p className="risk-note">{dict["risk.note"]}</p>
         </div>
       </section>
 
@@ -67,6 +83,122 @@ export default async function HomePage({ params }: { params: Promise<{ locale: s
                 </svg>
                 <h3>{dict[`features.${k}.title`]}</h3>
                 <p>{dict[`features.${k}.desc`]}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      <section id="manual" className="manual">
+        <div className="container">
+          <h2 className="section-title">{home.modulesTitle}</h2>
+          <p className="section-desc">{home.modulesDesc}</p>
+          <div className="manual-grid">
+            {home.modules.map((m, i) => (
+              <article className="manual-card" key={m.key}>
+                <div className="manual-head">
+                  <span className="manual-index">{String(i + 1).padStart(2, "0")}</span>
+                  <div>
+                    <h3>{m.name}</h3>
+                    <p className="manual-tagline">{m.tagline}</p>
+                  </div>
+                </div>
+                <ul className="manual-points">
+                  {m.points.map((p, j) => (
+                    <li key={j}>{p}</li>
+                  ))}
+                </ul>
+              </article>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      <section id="apps" className="apps-list">
+        <div className="container">
+          <h2 className="section-title">{home.appsTitle}</h2>
+          <p className="section-desc">{home.appsDesc}</p>
+          <div className="risk-items apps-legend">
+            <span className="risk-item"><i className="dot dot-cache" />{dict["risk.cache"]}</span>
+            <span className="risk-item"><i className="dot dot-expensive" />{dict["risk.expensive"]}</span>
+            <span className="risk-item"><i className="dot dot-report" />{dict["risk.report"]}</span>
+          </div>
+          <div className="apps-groups">
+            {appGroups.map((g) => (
+              <div className="apps-group" key={g.key}>
+                <h3 className="apps-group-title">{g.title[lang]}</h3>
+                <div className="apps-chips">
+                  {g.apps.flatMap((a) =>
+                    a.targets.map((t, ti) => (
+                      <span
+                        className="app-chip"
+                        key={`${a.name}-${ti}`}
+                        title={t.desc[lang] || t.name[lang]}
+                      >
+                        <i className={`dot dot-${t.risk}`} />
+                        <b>{a.name}</b>
+                        <span className="app-chip-target">{t.name[lang]}</span>
+                      </span>
+                    ))
+                  )}
+                </div>
+              </div>
+            ))}
+          </div>
+          <p className="page-note">{home.appsNote}</p>
+        </div>
+      </section>
+
+      <section className="craft">
+        <div className="container">
+          <h2 className="section-title">{home.craftTitle}</h2>
+          <p className="section-desc">{home.craftDesc}</p>
+          <div className="craft-grid">
+            {home.craft.map((c) => (
+              <div className="craft-card" key={c.title}>
+                <h3>{c.title}</h3>
+                <p>{c.desc}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      <section className="notdo">
+        <div className="container">
+          <h2 className="section-title">{home.notDoTitle}</h2>
+          <p className="section-desc">{home.notDoDesc}</p>
+          <ul className="notdo-list">
+            {home.notDo.map((n, i) => (
+              <li key={i}>{n}</li>
+            ))}
+          </ul>
+        </div>
+      </section>
+
+      <section id="tech" className="tech">
+        <div className="container">
+          <h2 className="section-title">{home.techTitle}</h2>
+          <p className="section-desc">{home.techDesc}</p>
+          <div className="tech-grid">
+            {home.tech.map((t) => (
+              <div className="tech-card" key={t.title}>
+                <h3>{t.title}</h3>
+                <p>{t.desc}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      <section className="faq">
+        <div className="container">
+          <h2 className="section-title">{home.faqTitle}</h2>
+          <div className="faq-grid">
+            {home.faq.map((f) => (
+              <div className="faq-item" key={f.q}>
+                <h3>{f.q}</h3>
+                <p>{f.a}</p>
               </div>
             ))}
           </div>

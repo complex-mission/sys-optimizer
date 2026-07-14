@@ -1,8 +1,35 @@
-# Cache Insight(智缓)
+# SysOptimizer(系统优化助手)
 
-Windows 10/11 垃圾清理与系统洞察工具 · Tauri 2(Rust)+ React。
+> 看清磁盘去了哪,清得放心。
 
-当前为**工程骨架**:纵向打通了「快速扫描 → 三级风险结果 → 文件预览/反选 → 清理 → 日志/累计统计」这条主路径,作为后续所有模块的样板。
+用 Rust 打造的开源 Windows 清理与系统洞察工具。Tauri 2(Rust)+ React,安装包约 1.5 MB。
+
+- 官网与下载:<https://sys-optimizer.complexmission.com>
+- 完整功能说明书:[USER_GUIDE.md](USER_GUIDE.md) —— 每个模块能扫到什么、有意不碰什么、清理后会怎样
+- 支持系统:Windows 10(1809+)/ Windows 11,64 位
+
+## 功能一览
+
+| 模块 | 作用 | 会删东西吗 |
+|---|---|---|
+| 智能扫描 | 三挡(快速/标准/深度)一键清理缓存与临时文件 | 会(经确认) |
+| 软件专项清理 | 66 条规则识别 56 款软件的缓存位置 | 会(经确认) |
+| 空间分析 | treemap 逐层看磁盘被谁占了 | 不会(纯查看) |
+| 大文件 | 按阈值找出大文件 | 会(进回收站) |
+| 重复文件 | 逐字节确认的重复检测,每组强制保留一个 | 会(进回收站) |
+| 启动项 | 管理开机自启 | 不删,只禁用/启用 |
+| 卸载残留 | 启发式发现疑似残留 | **不删,只报告** |
+| 系统级空间 | 休眠文件 / 还原点 / Windows.old / WinSxS,调用官方工具回收 | 会(逐项确认) |
+| 系统信息 | 硬件配置,重点是内存插槽 | 不会(纯查看) |
+
+## 核心设计
+
+- **风险三级体系**:蓝色缓存默认勾选、放心清;琥珀色重建耗时项默认不勾并行内警告;灰色"仅报告"项前后端都不提供删除(双保险)。
+- **谨慎删除模式**(默认开启):琥珀色项删除时先进回收站,可反悔。
+- **危险目录安全闸**(`src-tauri/src/scan/engine.rs`):规则或手动路径指向盘符根、系统目录、个人文件夹或 AppData 根时,引擎拒绝递归清理。
+- **路径三级解析**:手动覆盖 > 自动探测 > 默认位置;扫出 0 时行内提示"指定路径",自定义缓存位置不漏扫。
+- **本地优先**:不联网、不上传、无埋点;操作写本地日志,"关于"页可看累计释放量。
+- 不跟随符号链接、被占用文件自动跳过、清理前二次确认、重复文件每组至少保留一个。
 
 ## 环境要求(在 Windows 上开发)
 
@@ -21,33 +48,23 @@ npm run tauri dev
 > 首次启动会弹使用条款(需同意),之后主页顶部出现风险提示横幅(收起后 30 天再现)。
 > 应用清单声明了 `requireAdministrator`,启动会弹一次 UAC。
 
+## 测试
+
+```bash
+cd src-tauri && cargo test --lib
+```
+
 ## 打包(NSIS 安装程序)
 
 ```bash
-# 先放好图标:src-tauri/icons/{32x32.png,128x128.png,icon.ico}
-# 或一键生成:npm run tauri icon path/to/logo.png
 npm run tauri build
 ```
 
 产物在 `src-tauri/target/release/bundle/nsis/`。
 
-## 已实现(骨架)
+## 规则库(rules.json)
 
-- 三挡扫描(快速/标准/深度)= 类别预设,底层共用类别系统
-- **风险三级体系**:cache 默认勾 / expensive 默认不勾+行内警告 / report 无删除按钮(前后端双保险)
-- 文件级预览(按大小排序、反选保留)
-- **路径三级解析:手动覆盖 > 自动探测 > 默认写死**
-  - 达芬奇作为样例:探测其配置解析自定义缓存根;扫出 0 时行内提示「指定路径」让用户手动指定(解决自定义 proxy 路径的漏扫)
-- **软件专项页 + JSON 规则库**
-  - 规则全部外置到 `src-tauri/rules/rules.json`(编译时 include),新增一款软件 = 加一段 JSON,无需改 Rust
-  - 专项页按软件分组展示,自动检测安装状态,可为每个类别手动指定/清除路径,实时显示当前解析到的路径
-  - 首批 13 款软件 / 19 个清理目标(达芬奇、Premiere、AE、Blender、Unreal、JetBrains、npm、Spotify、Docker、Zoom 等)
-- 使用条款门禁、启动横幅(30 天再现)、关于页(版权/构建日期/累计统计/开源许可)
-- 中英双语(跟随系统,可切换)
-- MD3 Expressive 令牌系统(种子色 #378ADD)、内联 SVG 图标、无 emoji
-- 本地操作日志、崩溃 panic 落盘、release 体积优化
-
-## 规则库(rules.json)结构
+清理规则全部外置到 `src-tauri/rules/rules.json`(编译时 include)。**新增一款软件 = 加一段 JSON + 两个 i18n 键**,无需改 Rust:
 
 ```json
 {
@@ -68,37 +85,28 @@ npm run tauri build
 }
 ```
 
-路径支持 `%APPDATA%` `%LOCALAPPDATA%` `%WINDIR%` `%TEMP%` `%USERPROFILE%` 占位符。
-`detect` 按名引用 Rust 探测函数(当前:`davinci` / `chromium`);`name_filter` 同理(`thumbcache` / `blender-temp`)。
-新增软件只需加 JSON;仅当需要新的探测逻辑或文件名过滤时才动 Rust。
+- 路径支持 `%APPDATA%` `%LOCALAPPDATA%` `%WINDIR%` `%TEMP%` `%USERPROFILE%` 占位符。
+- `risk` 取 `cache`(蓝,默认勾)/ `expensive`(琥珀,默认不勾)/ `report`(灰,仅报告)。
+- `detect` 按名引用 Rust 探测函数;仅当需要新的探测逻辑或文件名过滤时才动 Rust。
+- 每个 target 需在 `src/i18n/index.tsx` 补 `cat.<id>.name` / `cat.<id>.desc` 两个键(中英各一)。
 
 ## 目录
 
 ```
 src/                 前端(React + TS)
-  styles/tokens.css  MD3E 设计令牌(种子色派生)
+  styles/tokens.css  MD3E 设计令牌(种子色 #378ADD)
   i18n/              中英双语语言包
-  pages/ScanPage     扫描主流程(样板)
-  components/        CategoryRow(三级风险行)/ Banner / TermsGate / Icon
+  pages/             九大模块页面 + 设置 + 关于
+  components/        CategoryRow(三级风险行)/ Banner / TermsGate / Icon 等
   lib/api.ts         与 Rust 的桥接层
 src-tauri/
   rules/rules.json   JSON 规则库(编译时 include)
-  src/scan/
-    categories.rs    从规则库构建类别 + 三级路径解析
-    rules.rs         规则库加载/解析 + 专项页视图构建
-    detect.rs        软件配置路径探测(达芬奇)
-    engine.rs        扫描/清理引擎(白名单、跳过占用、不跟随符号链接)
-    recycle.rs       回收站(PowerShell)
+  src/scan/          扫描/清理引擎(类别、规则解析、探测、回收站、安全闸)
   src/commands.rs    Tauri 命令层
   src/config.rs      本地配置(条款/横幅/覆盖路径/统计)
-  src/hardware.rs    模块 I 硬件检测(结构就绪,WMI 待接入)
+  src/hardware.rs    硬件检测(WMI)
+website/             官网(Next.js):产品页、下载分发(OSS 签名直链)、管理后台
+  scripts/gen-apps.js  从规则库生成官网"支持软件清单",规则更新后运行
 ```
 
-## 后续扩展
-
-- 软件专项页:规则库 JSON 化 + 手动指定路径的管理 UI(当前覆盖能力后端已就绪)
-- 空间分析(treemap)、大文件、重复文件(worker/rayon)、启动项、卸载残留
-- 硬件检测接入 `wmi` crate(hardware.rs 已留接口与 TODO)
-- 单实例插件(lib.rs 已注释说明接入位置)
-
-© 2026 沈阳信商科技 版权所有 · 技术支持:解构者
+© 2026 沈阳信商科技 版权所有 · 技术支持：解构者

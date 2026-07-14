@@ -308,6 +308,15 @@
       ]
     },
     {
+      "app": "creativecloud",
+      "group": "media",
+      "name": "Adobe Creative Cloud",
+      "detect_installed": ["%USERPROFILE%/AppData/LocalLow/Adobe/CRLogs", "%APPDATA%/Adobe/CRLogs"],
+      "targets": [
+        { "id": "adobe-crash-dumps", "paths": ["%USERPROFILE%/AppData/LocalLow/Adobe/CRLogs", "%APPDATA%/Adobe/CRLogs"], "risk": "cache", "privilege": "normal", "tier": "standard", "supports_override": true }
+      ]
+    },
+    {
       "app": "figma",
       "group": "media",
       "name": "Figma",

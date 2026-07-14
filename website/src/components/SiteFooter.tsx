@@ -11,6 +11,9 @@ export default function SiteFooter({ locale, dict }: { locale: Locale; dict: Dic
         </div>
         <nav className="footer-nav">
           <Link href={`/${locale}/download`}>{dict["nav.download"]}</Link>
+          <a href="https://github.com/complex-mission/sys-optimizer" target="_blank" rel="noopener noreferrer">
+            {dict["footer.github"]}
+          </a>
         </nav>
       </div>
     </footer>

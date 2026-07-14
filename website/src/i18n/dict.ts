@@ -17,10 +17,10 @@ const zh: Dict = {
   "nav.download": "下载",
   "nav.admin": "管理",
 
-  "hero.badge": "Windows 10 / 11 · 免费",
+  "hero.badge": "Windows 10 / 11 · 免费 · 开源",
   "hero.title": "看清磁盘去了哪,清得放心",
   "hero.desc":
-    "系统优化助手(SysOptimizer)是一款 Windows 垃圾清理与系统洞察工具。三挡扫描、风险三级标识、13 款软件专项清理,所有操作在本机完成。",
+    "系统优化助手(SysOptimizer)是一款用 Rust 打造的开源 Windows 清理与系统洞察工具:9 大功能模块,66 条清理规则覆盖 56 款常用软件,安装包仅约 1.5 MB,所有操作在本机完成、不上传任何数据。",
   "hero.cta": "免费下载",
   "hero.cta2": "了解功能",
   "hero.screenshotAlt": "系统优化助手主界面:选择扫描深度与清理类别",
@@ -31,7 +31,7 @@ const zh: Dict = {
   "features.f2.title": "风险三级体系",
   "features.f2.desc": "蓝色缓存默认勾选、放心清理;琥珀色重建耗时项默认不勾并行内警告;属于你的内容仅报告体积,不提供删除。",
   "features.f3.title": "软件专项清理",
-  "features.f3.desc": "内置 13 款软件、19 个清理目标:DaVinci Resolve、Premiere、After Effects、Blender、Unreal、JetBrains、npm、Docker、剪映等。",
+  "features.f3.desc": "内置 56 款软件、66 条清理规则:DaVinci Resolve、Premiere、剪映、Blender、Unreal、JetBrains、VS Code、npm、Steam、微信等,持续增加中。",
   "features.f4.title": "文件级预览",
   "features.f4.desc": "清理前逐文件预览,按大小排序,随手反选要保留的文件;被占用的文件自动跳过。",
   "features.f5.title": "路径智能解析",
@@ -43,9 +43,11 @@ const zh: Dict = {
   "risk.cache": "缓存,可放心清理",
   "risk.expensive": "删除有代价,请确认后清理",
   "risk.report": "仅报告体积,不会清理",
+  "risk.note":
+    "配合「谨慎删除模式」(默认开启):重建耗时的琥珀色项删除时先进回收站,给你反悔的机会。",
 
   "cta.title": "现在就把磁盘清爽起来",
-  "cta.desc": "免费下载,安装即用,中英双语。",
+  "cta.desc": "免费下载,安装包约 1.5 MB,装完即用,中英双语。",
 
   "download.title": "下载",
   "download.desc": "下载系统优化助手最新安装包。链接为临时签名地址,请直接点击下载。",
@@ -89,7 +91,8 @@ const zh: Dict = {
   "admin.loadFail": "加载失败,请重试",
 
   "footer.copyright": "© 2026 沈阳信商科技 版权所有",
-  "footer.support": "技术支持:解构者",
+  "footer.support": "技术支持：解构者",
+  "footer.github": "GitHub 源码",
 };
 
 const en: Dict = {
@@ -101,10 +104,10 @@ const en: Dict = {
   "nav.download": "Download",
   "nav.admin": "Admin",
 
-  "hero.badge": "Windows 10 / 11 · Free",
+  "hero.badge": "Windows 10 / 11 · Free · Open source",
   "hero.title": "See where your disk space went. Clean with confidence.",
   "hero.desc":
-    "SysOptimizer is a junk cleaner and system insight tool for Windows. Three scan tiers, three-level risk labels, dedicated cleaning for 13 popular apps — everything runs locally on your machine.",
+    "SysOptimizer is an open-source Windows cleaner and system insight tool built with Rust: 9 feature modules, 66 cleaning rules covering 56 popular apps, a ~1.5 MB installer — everything runs locally, nothing is ever uploaded.",
   "hero.cta": "Download for free",
   "hero.cta2": "Explore features",
   "hero.screenshotAlt": "SysOptimizer main window: choosing scan depth and cleanup categories",
@@ -115,7 +118,7 @@ const en: Dict = {
   "features.f2.title": "Three-level risk labels",
   "features.f2.desc": "Blue caches are safe and pre-selected; amber items that are slow to rebuild stay unchecked with inline warnings; your own content is reported only — never deleted.",
   "features.f3.title": "App-specific cleaning",
-  "features.f3.desc": "13 apps and 19 cleaning targets built in: DaVinci Resolve, Premiere, After Effects, Blender, Unreal, JetBrains, npm, Docker, CapCut and more.",
+  "features.f3.desc": "56 apps and 66 cleaning rules built in: DaVinci Resolve, Premiere, CapCut, Blender, Unreal, JetBrains, VS Code, npm, Steam, WeChat and more — with new rules added continuously.",
   "features.f4.title": "File-level preview",
   "features.f4.desc": "Preview every file before cleaning, sorted by size. Deselect anything you want to keep; files in use are skipped automatically.",
   "features.f5.title": "Smart path resolution",
@@ -127,9 +130,11 @@ const en: Dict = {
   "risk.cache": "Cache — safe to clean",
   "risk.expensive": "Costly to rebuild — confirm before cleaning",
   "risk.report": "Report only — never deleted",
+  "risk.note":
+    "Paired with cautious delete mode (on by default): amber slow-to-rebuild items go to the Recycle Bin first, so you can always change your mind.",
 
   "cta.title": "Give your disk a fresh start",
-  "cta.desc": "Free download. Install and go. Chinese and English included.",
+  "cta.desc": "Free download, ~1.5 MB installer, ready in seconds. Chinese and English included.",
 
   "download.title": "Download",
   "download.desc": "Get the latest SysOptimizer installer. Links are temporary signed URLs — just click to download.",
@@ -174,6 +179,7 @@ const en: Dict = {
 
   "footer.copyright": "© 2026 Shenyang Xinshang Technology. All rights reserved.",
   "footer.support": "Technical support: Deconstructor",
+  "footer.github": "Source on GitHub",
 };
 
 const dicts: Record<Locale, Dict> = { zh, en };

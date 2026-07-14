@@ -4,6 +4,7 @@ import type { UnlistenFn } from "@tauri-apps/api/event";
 import { useI18n } from "../i18n";
 import { api, onLargeProgress, onLargeFound, LargeFile, LargeProgress, formatBytes } from "../lib/api";
 import { Icon, IconName } from "../components/Icon";
+import { Notice } from "../components/Notice";
 import { useConfirmDialog } from "../components/ConfirmDialog";
 import "./LargePage.css";
 
@@ -135,6 +136,15 @@ export function LargePage() {
             : "Find space-hogging files in a folder. Deletions go to the Recycle Bin and can be restored."}
         </p>
       </div>
+
+      <Notice
+        icon="warning"
+        text={
+          zh
+            ? "文件大不等于可以删。扫描只按体积找文件,不判断它是否被系统或软件使用。删除前请自行确认文件用途——看清所在路径属于哪个程序,拿不准就搜索一下文件名,或保持原样。"
+            : "Large does not mean safe to delete. This scan finds files by size only — it does not know whether the system or an app still needs them. Before deleting, judge for yourself: check which program the path belongs to, search the file name if unsure, or leave it alone."
+        }
+      />
 
       <div className="large-controls">
         <div className="large-dir">

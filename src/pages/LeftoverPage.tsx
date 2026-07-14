@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useI18n } from "../i18n";
 import { api, LeftoverReport, formatBytes } from "../lib/api";
 import { Icon } from "../components/Icon";
+import { Notice } from "../components/Notice";
 import "./LeftoverPage.css";
 
 export function LeftoverPage() {
@@ -37,14 +38,13 @@ export function LeftoverPage() {
       </div>
 
       {/* 醒目免责:这是启发式猜测,只报告不删除 */}
-      <div className="leftover-notice">
-        <Icon name="info" size={18} style={{ flexShrink: 0 }} />
-        <div>
-          {zh
+      <Notice
+        text={
+          zh
             ? "以下为启发式检测结果,仅供参考,可能包含正在使用的软件。本工具不提供删除功能,请你确认后手动处理。"
-            : "These are heuristic guesses and may include software you still use. Cache Insight does not delete them — review and handle manually."}
-        </div>
-      </div>
+            : "These are heuristic guesses and may include software you still use. Cache Insight does not delete them — review and handle manually."
+        }
+      />
 
       {items === null ? (
         <div className="leftover-start">

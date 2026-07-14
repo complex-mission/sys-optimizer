@@ -34,7 +34,8 @@ export type IconName =
   | "refresh"
   | "check"
   | "sync"
-  | "database";
+  | "database"
+  | "warning";
 
 const paths: Record<IconName, string> = {
   scan: "M4 7V5a1 1 0 0 1 1-1h2M4 17v2a1 1 0 0 0 1 1h2M20 7V5a1 1 0 0 0-1-1h-2M20 17v2a1 1 0 0 1-1 1h-2M3 12h18",
@@ -65,6 +66,8 @@ const paths: Record<IconName, string> = {
   check: "M20 6 9 17l-5-5",
   sync: "M21 12a9 9 0 1 1-2.64-6.36M21 4v5h-5M3 12a9 9 0 0 1 2.64-6.36M3 4v5h5",
   database: "M12 3C7 3 3 5 3 7v10c0 2 4 4 9 4s9-2 9-4V7c0-2-4-4-9-4ZM3 7c0 2 4 4 9 4s9-2 9-4M3 12c0 2 4 4 9 4s9-2 9-4",
+  warning:
+    "M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0ZM12 9v4M12 17h.01",
 };
 
 export function Icon({ name, size = 20, style }: IconProps) {

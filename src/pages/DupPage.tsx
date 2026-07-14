@@ -10,6 +10,7 @@ import {
   formatBytes,
 } from "../lib/api";
 import { Icon } from "../components/Icon";
+import { Notice } from "../components/Notice";
 import { useConfirmDialog } from "../components/ConfirmDialog";
 import "./DupPage.css";
 
@@ -186,6 +187,15 @@ export function DupPage() {
             : "Find identical files. One per group is kept by default; the rest can go to the Recycle Bin."}
         </p>
       </div>
+
+      <Notice
+        icon="warning"
+        text={
+          zh
+            ? "内容相同不等于多余。有些程序依赖固定路径上的各自副本,删掉其中一份可能导致程序出错。删除前请自行确认每份副本的用途——看清所在路径属于哪个程序,拿不准就搜索一下,或保持原样。"
+            : "Identical does not mean redundant. Some programs rely on their own copy at a fixed path, and removing one can break them. Before deleting, judge for yourself: check which program each path belongs to, search if unsure, or leave them alone."
+        }
+      />
 
       <div className="dup-controls">
         <div className="dup-dir">

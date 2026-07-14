@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { useI18n } from "../i18n";
 import { api, SystemSpaceItem, formatBytes } from "../lib/api";
 import { Icon, IconName } from "../components/Icon";
+import { Notice } from "../components/Notice";
 import { useConfirmDialog } from "../components/ConfirmDialog";
 import "./SystemPage.css";
 
@@ -160,14 +161,13 @@ export function SystemPage() {
         </button>
       </div>
 
-      <div className="system-notice">
-        <Icon name="info" size={18} style={{ flexShrink: 0 }} />
-        <div>
-          {zh
+      <Notice
+        text={
+          zh
             ? "这些操作会改变系统状态且不可轻易撤销。默认全部关闭,请逐项确认。"
-            : "These change system state and aren't easily undone. All off by default — confirm each one."}
-        </div>
-      </div>
+            : "These change system state and aren't easily undone. All off by default — confirm each one."
+        }
+      />
 
       {loading && !items ? (
         <div className="system-grid">
