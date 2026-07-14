@@ -293,6 +293,16 @@ a { color: var(--primary); text-decoration: none; }
 .craft-card p, .tech-card p { margin: 0; color: var(--muted); font-size: 13.5px; line-height: 1.65; }
 .tech-link { display: inline-block; margin-top: 10px; font-size: 13.5px; font-weight: 500; }
 
+/* ===== 留言反馈 ===== */
+.container-narrow { max-width: 720px; }
+.feedback-form { display: flex; flex-direction: column; gap: 16px; }
+.form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+@media (max-width: 620px) { .form-row { grid-template-columns: 1fr; } }
+.form-field { display: flex; flex-direction: column; gap: 6px; }
+.feedback-textarea { min-height: 180px; resize: vertical; line-height: 1.6; }
+/* 蜜罐:移出视口而非 display:none,部分机器人会跳过后者 */
+.hp-field { position: absolute; left: -9999px; width: 1px; height: 1px; opacity: 0; }
+
 /* ===== GitHub 入口 ===== */
 .gh-link { display: inline-flex; align-items: center; gap: 6px; color: var(--text); }
 .gh-link:hover { color: var(--primary); }

@@ -13,6 +13,7 @@ export default function SiteHeader({ locale, dict }: { locale: Locale; dict: Dic
         <nav className="site-nav">
           <Link href={`/${locale}`}>{dict["nav.home"]}</Link>
           <Link href={`/${locale}/download`}>{dict["nav.download"]}</Link>
+          <Link href={`/${locale}/feedback`}>{dict["nav.feedback"]}</Link>
           <a
             href="https://github.com/complex-mission/sys-optimizer"
             target="_blank"

@@ -35,4 +35,18 @@ export const env = {
   get downloadSpeedLimitKbps() { return intOr("DOWNLOAD_SPEED_LIMIT_KBPS", 0); },
 
   get logDir() { return process.env.LOG_DIR || "./data"; },
+
+  // ===== 留言反馈(SMTP)=====
+  /** 未配置 SMTP_HOST 时反馈功能整体禁用(接口返回 503) */
+  get smtpHost() { return process.env.SMTP_HOST ?? ""; },
+  get smtpPort() { return intOr("SMTP_PORT", 465); },
+  /** 465 走隐式 TLS;587 等端口置 false 用 STARTTLS */
+  get smtpSecure() { return (process.env.SMTP_SECURE ?? "true") !== "false"; },
+  get smtpUser() { return required("SMTP_USER"); },
+  get smtpPass() { return required("SMTP_PASS"); },
+  /** 管理员收件邮箱 */
+  get feedbackTo() { return required("FEEDBACK_TO"); },
+  /** 发件人;多数 SMTP 服务要求与登录账号一致,默认取 SMTP_USER */
+  get feedbackFrom() { return process.env.FEEDBACK_FROM || this.smtpUser; },
+  get feedbackRateLimitPerHour() { return intOr("FEEDBACK_RATE_LIMIT_PER_HOUR", 5); },
 };

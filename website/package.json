@@ -12,6 +12,7 @@
     "@alicloud/pop-core": "^1.8.0",
     "ali-oss": "^6.21.0",
     "next": "^16.2.10",
+    "nodemailer": "^9.0.3",
     "react": "^19.1.0",
     "react-dom": "^19.1.0"
   },
@@ -21,6 +22,7 @@
   "devDependencies": {
     "@types/ali-oss": "^6.16.11",
     "@types/node": "^22.10.0",
+    "@types/nodemailer": "^8.0.1",
     "@types/react": "^19.1.0",
     "@types/react-dom": "^19.1.0",
     "typescript": "^5.8.0"
