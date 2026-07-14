@@ -41,7 +41,7 @@ export const appGroups: AppGroup[] = [
               "en": "DaVinci Resolve render cache"
             },
             "desc": {
-              "zh": "达芬奇渲染缓存,可自动重建",
+              "zh": "达芬奇渲染缓存，可自动重建",
               "en": "Render cache, rebuilt automatically"
             }
           },
@@ -52,7 +52,7 @@ export const appGroups: AppGroup[] = [
               "en": "DaVinci Resolve proxy media"
             },
             "desc": {
-              "zh": "达芬奇代理媒体,重新生成可能需要数小时",
+              "zh": "达芬奇代理媒体，重新生成可能需要数小时",
               "en": "Proxy media — regenerating may take hours"
             }
           }
@@ -68,7 +68,7 @@ export const appGroups: AppGroup[] = [
               "en": "Premiere media cache"
             },
             "desc": {
-              "zh": "媒体加速缓存(peak/cfa 等),软件会自动重建",
+              "zh": "媒体加速缓存（peak/cfa 等），软件会自动重建",
               "en": "Accelerator media cache (peak/cfa files); rebuilt automatically"
             }
           }
@@ -84,7 +84,7 @@ export const appGroups: AppGroup[] = [
               "en": "After Effects disk cache"
             },
             "desc": {
-              "zh": "预览渲染的磁盘缓存,软件会自动重建",
+              "zh": "预览渲染的磁盘缓存，软件会自动重建",
               "en": "Preview render disk cache; rebuilt automatically"
             }
           }
@@ -100,7 +100,7 @@ export const appGroups: AppGroup[] = [
               "en": "JianYing (CapCut CN) cache"
             },
             "desc": {
-              "zh": "剪映的预览/解码缓存,不含草稿工程;重新生成需要时间",
+              "zh": "剪映的预览/解码缓存，不含草稿工程；重新生成需要时间",
               "en": "Preview/decode cache — not your drafts; regenerating takes time"
             }
           }
@@ -116,7 +116,7 @@ export const appGroups: AppGroup[] = [
               "en": "CapCut cache"
             },
             "desc": {
-              "zh": "CapCut 的预览/解码缓存,不含草稿工程;重新生成需要时间",
+              "zh": "CapCut 的预览/解码缓存，不含草稿工程；重新生成需要时间",
               "en": "Preview/decode cache — not your drafts; regenerating takes time"
             }
           }
@@ -157,7 +157,7 @@ export const appGroups: AppGroup[] = [
               "en": "Unreal derived data cache"
             },
             "desc": {
-              "zh": "引擎派生数据缓存(DDC),清理后重新编译着色器耗时较长",
+              "zh": "引擎派生数据缓存（DDC），清理后重新编译着色器耗时较长",
               "en": "Derived data cache (DDC); shaders take a while to recompile after cleaning"
             }
           }
@@ -173,7 +173,7 @@ export const appGroups: AppGroup[] = [
               "en": "Unity cache"
             },
             "desc": {
-              "zh": "Asset Store 下载与全局缓存,不含你的工程 Library",
+              "zh": "Asset Store 下载与全局缓存，不含你的工程 Library",
               "en": "Asset Store downloads and global cache; not your project Library"
             }
           }
@@ -198,7 +198,7 @@ export const appGroups: AppGroup[] = [
               "en": "Chrome cache"
             },
             "desc": {
-              "zh": "各 Profile 的网页缓存,不含书签密码历史",
+              "zh": "各 Profile 的网页缓存，不含书签密码历史",
               "en": "Per-profile web cache — no bookmarks, passwords, history"
             }
           }
@@ -214,7 +214,7 @@ export const appGroups: AppGroup[] = [
               "en": "Edge cache"
             },
             "desc": {
-              "zh": "各 Profile 的网页缓存,不含书签密码历史",
+              "zh": "各 Profile 的网页缓存，不含书签密码历史",
               "en": "Per-profile web cache — no bookmarks, passwords, history"
             }
           }
@@ -230,7 +230,7 @@ export const appGroups: AppGroup[] = [
               "en": "Firefox browser cache"
             },
             "desc": {
-              "zh": "各配置的磁盘缓存,不含书签、密码、历史与 Cookie",
+              "zh": "各配置的磁盘缓存，不含书签、密码、历史与 Cookie",
               "en": "Per-profile disk cache — no bookmarks, passwords, history, or cookies"
             }
           }
@@ -255,7 +255,7 @@ export const appGroups: AppGroup[] = [
               "en": "JetBrains caches & indexes"
             },
             "desc": {
-              "zh": "各 IDE 的缓存/索引/日志/临时目录,不含配置、插件与 Toolbox 安装的 IDE 本体",
+              "zh": "各 IDE 的缓存/索引/日志/临时目录，不含配置、插件与 Toolbox 安装的 IDE 本体",
               "en": "Per-IDE caches/index/log/tmp only — never settings, plugins, or Toolbox-installed IDEs"
             }
           }
@@ -271,7 +271,7 @@ export const appGroups: AppGroup[] = [
               "en": "Android Studio caches & indexes"
             },
             "desc": {
-              "zh": "缓存/索引/日志/临时目录,IDE 会自动重建,不含你的设置与项目",
+              "zh": "缓存/索引/日志/临时目录，IDE 会自动重建，不含你的设置与项目",
               "en": "caches/index/log/tmp only; rebuilt automatically, never your settings or projects"
             }
           }
@@ -287,7 +287,7 @@ export const appGroups: AppGroup[] = [
               "en": "Gradle build cache"
             },
             "desc": {
-              "zh": "已下载的依赖与构建产物,下次构建会重新下载/编译",
+              "zh": "已下载的依赖与构建产物，下次构建会重新下载/编译",
               "en": "Downloaded dependencies and build outputs; re-fetched on next build"
             }
           }
@@ -303,7 +303,7 @@ export const appGroups: AppGroup[] = [
               "en": "Flutter / Dart package cache"
             },
             "desc": {
-              "zh": "已下载的 Dart/Flutter 依赖包,下次 pub get 会重新下载",
+              "zh": "已下载的 Dart/Flutter 依赖包，下次 pub get 会重新下载",
               "en": "Downloaded Dart/Flutter packages; re-fetched on next pub get"
             }
           }
@@ -319,7 +319,7 @@ export const appGroups: AppGroup[] = [
               "en": "npm cache"
             },
             "desc": {
-              "zh": "npm 下载缓存,按需自动重建",
+              "zh": "npm 下载缓存，按需自动重建",
               "en": "npm download cache, rebuilt on demand"
             }
           }
@@ -335,7 +335,7 @@ export const appGroups: AppGroup[] = [
               "en": "Yarn package cache"
             },
             "desc": {
-              "zh": "Yarn 下载缓存(v1 / Berry),按需自动重建",
+              "zh": "Yarn 下载缓存（v1 / Berry），按需自动重建",
               "en": "Yarn download cache (v1 / Berry), rebuilt on demand"
             }
           }
@@ -351,7 +351,7 @@ export const appGroups: AppGroup[] = [
               "en": "pnpm content store"
             },
             "desc": {
-              "zh": "pnpm 全局内容寻址存储,清理后现有 node_modules 需重新安装",
+              "zh": "pnpm 全局内容寻址存储，清理后现有 node_modules 需重新安装",
               "en": "pnpm global content-addressable store; existing node_modules need reinstall after clearing"
             }
           }
@@ -383,7 +383,7 @@ export const appGroups: AppGroup[] = [
               "en": "node-gyp cache"
             },
             "desc": {
-              "zh": "node-gyp 下载的 Node 头文件缓存,按需重建",
+              "zh": "node-gyp 下载的 Node 头文件缓存，按需重建",
               "en": "Downloaded Node headers cache, rebuilt on demand"
             }
           }
@@ -395,11 +395,11 @@ export const appGroups: AppGroup[] = [
           {
             "risk": "expensive",
             "name": {
-              "zh": "Cargo 注册表缓存(Rust)",
+              "zh": "Cargo 注册表缓存（Rust）",
               "en": "Cargo registry cache (Rust)"
             },
             "desc": {
-              "zh": "已下载的 crate 源码与索引,下次构建会重新下载",
+              "zh": "已下载的 crate 源码与索引，下次构建会重新下载",
               "en": "Downloaded crate sources and index; re-fetched on next build"
             }
           }
@@ -415,7 +415,7 @@ export const appGroups: AppGroup[] = [
               "en": "Go module cache"
             },
             "desc": {
-              "zh": "已下载的 Go 模块;文件默认只读,建议开启谨慎模式或用 go clean -modcache",
+              "zh": "已下载的 Go 模块；文件默认只读，建议开启谨慎模式或用 go clean -modcache",
               "en": "Downloaded Go modules; files are read-only — use cautious mode or go clean -modcache"
             }
           }
@@ -431,7 +431,7 @@ export const appGroups: AppGroup[] = [
               "en": "Maven local repository"
             },
             "desc": {
-              "zh": "已下载的依赖 jar;下次构建会重新下载",
+              "zh": "已下载的依赖 jar；下次构建会重新下载",
               "en": "Downloaded dependency jars; re-fetched on next build"
             }
           }
@@ -447,7 +447,7 @@ export const appGroups: AppGroup[] = [
               "en": "NuGet global packages"
             },
             "desc": {
-              "zh": "已下载的 NuGet 包;下次还原会重新下载",
+              "zh": "已下载的 NuGet 包；下次还原会重新下载",
               "en": "Downloaded NuGet packages; re-fetched on next restore"
             }
           }
@@ -459,11 +459,11 @@ export const appGroups: AppGroup[] = [
           {
             "risk": "cache",
             "name": {
-              "zh": "Composer 缓存(PHP)",
+              "zh": "Composer 缓存（PHP）",
               "en": "Composer cache (PHP)"
             },
             "desc": {
-              "zh": "Composer 下载缓存,按需自动重建",
+              "zh": "Composer 下载缓存，按需自动重建",
               "en": "Composer download cache, rebuilt on demand"
             }
           }
@@ -475,11 +475,11 @@ export const appGroups: AppGroup[] = [
           {
             "risk": "cache",
             "name": {
-              "zh": "pip 缓存(Python)",
+              "zh": "pip 缓存（Python）",
               "en": "pip cache (Python)"
             },
             "desc": {
-              "zh": "pip 下载的 wheel 缓存,按需自动重建",
+              "zh": "pip 下载的 wheel 缓存，按需自动重建",
               "en": "pip downloaded wheel cache, rebuilt on demand"
             }
           }
@@ -495,7 +495,7 @@ export const appGroups: AppGroup[] = [
               "en": "VS Code cache & workspace storage"
             },
             "desc": {
-              "zh": "缓存与工作区存储(含 C/C++ 索引),不含你的设置与扩展",
+              "zh": "缓存与工作区存储（含 C/C++ 索引），不含你的设置与扩展",
               "en": "Cache and workspace storage (incl. C/C++ index); not your settings or extensions"
             }
           }
@@ -511,7 +511,7 @@ export const appGroups: AppGroup[] = [
               "en": "Conda package cache"
             },
             "desc": {
-              "zh": "已下载的 conda 包,按需重新下载(相当于 conda clean)",
+              "zh": "已下载的 conda 包，按需重新下载（相当于 conda clean）",
               "en": "Downloaded conda packages, re-fetched on demand (like conda clean)"
             }
           }
@@ -527,7 +527,7 @@ export const appGroups: AppGroup[] = [
               "en": "Android Emulator / SDK cache"
             },
             "desc": {
-              "zh": "`.android\\cache` 下的缓存,不含模拟器镜像与用户数据",
+              "zh": "`.android\\cache` 下的缓存，不含模拟器镜像与用户数据",
               "en": "Cache under .android\\cache; not emulator images or user data"
             }
           }
@@ -543,7 +543,7 @@ export const appGroups: AppGroup[] = [
               "en": "Docker data"
             },
             "desc": {
-              "zh": "WSL 虚拟磁盘占用,仅报告体积;请用 Docker 自带命令清理",
+              "zh": "WSL 虚拟磁盘占用，仅报告体积；请用 Docker 自带命令清理",
               "en": "WSL virtual disk usage, reported only — clean via Docker's own tools"
             }
           }
@@ -568,7 +568,7 @@ export const appGroups: AppGroup[] = [
               "en": "Spotify offline cache"
             },
             "desc": {
-              "zh": "已缓存的音频数据,清理后重新播放时需再次下载",
+              "zh": "已缓存的音频数据，清理后重新播放时需再次下载",
               "en": "Cached audio data; tracks re-download on next playback"
             }
           }
@@ -584,7 +584,7 @@ export const appGroups: AppGroup[] = [
               "en": "Photoshop Camera Raw cache"
             },
             "desc": {
-              "zh": "Adobe Camera Raw 预览缓存,可自动重建",
+              "zh": "Adobe Camera Raw 预览缓存，可自动重建",
               "en": "Adobe Camera Raw preview cache, rebuilt automatically"
             }
           }
@@ -600,7 +600,7 @@ export const appGroups: AppGroup[] = [
               "en": "Adobe crash dumps & logs"
             },
             "desc": {
-              "zh": "崩溃报告器留下的 dump 和日志,单个文件可达数 GB,可安全删除",
+              "zh": "崩溃报告器留下的 dump 和日志，单个文件可达数 GB，可安全删除",
               "en": "Dumps and logs left by the Crash Reporter; single files can reach several GB, safe to delete"
             }
           }
@@ -616,7 +616,7 @@ export const appGroups: AppGroup[] = [
               "en": "Figma desktop cache"
             },
             "desc": {
-              "zh": "Figma 桌面应用的网页/GPU 缓存,不含你的文件",
+              "zh": "Figma 桌面应用的网页/GPU 缓存，不含你的文件",
               "en": "Figma desktop web/GPU cache; not your files"
             }
           }
@@ -632,7 +632,7 @@ export const appGroups: AppGroup[] = [
               "en": "Douyin files & cache"
             },
             "desc": {
-              "zh": "抖音下载/缓存的视频与图片,可能含你保存的内容,仅报告体积不自动删除",
+              "zh": "抖音下载/缓存的视频与图片，可能含你保存的内容，仅报告体积不自动删除",
               "en": "Downloaded/cached videos and images, may include saved content — size only, never auto-deleted"
             }
           }
@@ -648,7 +648,7 @@ export const appGroups: AppGroup[] = [
               "en": "PotPlayer"
             },
             "desc": {
-              "zh": "播放历史与缩略图/解码缓存,仅报告体积不自动删除",
+              "zh": "播放历史与缩略图/解码缓存，仅报告体积不自动删除",
               "en": "Play history and thumbnail/decode cache — size only, never auto-deleted"
             }
           }
@@ -664,7 +664,7 @@ export const appGroups: AppGroup[] = [
               "en": "VLC"
             },
             "desc": {
-              "zh": "VLC 缩略图与插件缓存,仅报告体积不自动删除",
+              "zh": "VLC 缩略图与插件缓存，仅报告体积不自动删除",
               "en": "VLC thumbnail and plugin cache — size only, never auto-deleted"
             }
           }
@@ -680,7 +680,7 @@ export const appGroups: AppGroup[] = [
               "en": "QQ Music"
             },
             "desc": {
-              "zh": "在线播放缓存与封面,不含已下载歌曲;仅报告体积不自动删除",
+              "zh": "在线播放缓存与封面，不含已下载歌曲；仅报告体积不自动删除",
               "en": "Streaming cache and covers, not downloaded songs — size only, never auto-deleted"
             }
           }
@@ -696,7 +696,7 @@ export const appGroups: AppGroup[] = [
               "en": "NetEase Cloud Music"
             },
             "desc": {
-              "zh": "在线播放缓存与封面,不含已下载歌曲;仅报告体积不自动删除",
+              "zh": "在线播放缓存与封面，不含已下载歌曲；仅报告体积不自动删除",
               "en": "Streaming cache and covers, not downloaded songs — size only, never auto-deleted"
             }
           }
@@ -721,7 +721,7 @@ export const appGroups: AppGroup[] = [
               "en": "Epic Launcher web cache"
             },
             "desc": {
-              "zh": "Epic Games 启动器的网页缓存,可安全清理",
+              "zh": "Epic Games 启动器的网页缓存，可安全清理",
               "en": "Epic Games launcher web cache, safe to clear"
             }
           }
@@ -737,7 +737,7 @@ export const appGroups: AppGroup[] = [
               "en": "Battle.net cache"
             },
             "desc": {
-              "zh": "暴雪战网客户端缓存,可安全清理",
+              "zh": "暴雪战网客户端缓存，可安全清理",
               "en": "Blizzard Battle.net client cache, safe to clear"
             }
           }
@@ -753,7 +753,7 @@ export const appGroups: AppGroup[] = [
               "en": "Steam download & shader cache"
             },
             "desc": {
-              "zh": "下载临时块、着色器预缓存、网页缓存,不含游戏本体",
+              "zh": "下载临时块、着色器预缓存、网页缓存，不含游戏本体",
               "en": "Download temp, shader precache, web cache; not your games"
             }
           }
@@ -769,7 +769,7 @@ export const appGroups: AppGroup[] = [
               "en": "Ubisoft Connect cache"
             },
             "desc": {
-              "zh": "育碧启动器网页/下载缓存,可安全清理",
+              "zh": "育碧启动器网页/下载缓存，可安全清理",
               "en": "Ubisoft launcher web/download cache, safe to clear"
             }
           }
@@ -794,7 +794,7 @@ export const appGroups: AppGroup[] = [
               "en": "WPS Office cache"
             },
             "desc": {
-              "zh": "WPS 缓存目录,不含你的文档;路径随版本不同,可手动指定",
+              "zh": "WPS 缓存目录，不含你的文档；路径随版本不同，可手动指定",
               "en": "WPS cache dir; not your documents; path varies by version, set manually if needed"
             }
           }
@@ -810,7 +810,7 @@ export const appGroups: AppGroup[] = [
               "en": "Notion desktop cache"
             },
             "desc": {
-              "zh": "Notion 离线/网页缓存,不含笔记内容",
+              "zh": "Notion 离线/网页缓存，不含笔记内容",
               "en": "Notion offline/web cache; not your notes"
             }
           }
@@ -826,7 +826,7 @@ export const appGroups: AppGroup[] = [
               "en": "Obsidian cache"
             },
             "desc": {
-              "zh": "Obsidian 桌面端网页缓存,不含你的笔记库",
+              "zh": "Obsidian 桌面端网页缓存，不含你的笔记库",
               "en": "Obsidian desktop web cache; not your vault"
             }
           }
@@ -851,7 +851,7 @@ export const appGroups: AppGroup[] = [
               "en": "Sogou Input"
             },
             "desc": {
-              "zh": "词库/皮肤/表情等缓存与数据,仅报告体积不自动删除",
+              "zh": "词库/皮肤/表情等缓存与数据，仅报告体积不自动删除",
               "en": "Dictionary/skin/emoji cache and data — size only, never auto-deleted"
             }
           }
@@ -867,7 +867,7 @@ export const appGroups: AppGroup[] = [
               "en": "Baidu Netdisk"
             },
             "desc": {
-              "zh": "客户端缓存、缩略图与日志,不含已下载文件;仅报告体积不自动删除",
+              "zh": "客户端缓存、缩略图与日志，不含已下载文件；仅报告体积不自动删除",
               "en": "Client cache, thumbnails and logs, not downloaded files — size only, never auto-deleted"
             }
           }
@@ -883,7 +883,7 @@ export const appGroups: AppGroup[] = [
               "en": "Xunlei / Thunder"
             },
             "desc": {
-              "zh": "下载缓存、缩略图与素材,不含已下载文件;仅报告体积不自动删除",
+              "zh": "下载缓存、缩略图与素材，不含已下载文件；仅报告体积不自动删除",
               "en": "Download cache, thumbnails and assets, not downloaded files — size only, never auto-deleted"
             }
           }
@@ -899,7 +899,7 @@ export const appGroups: AppGroup[] = [
               "en": "IDM"
             },
             "desc": {
-              "zh": "临时分段文件与日志,不含已完成下载;仅报告体积不自动删除",
+              "zh": "临时分段文件与日志，不含已完成下载；仅报告体积不自动删除",
               "en": "Temp segment files and logs, not completed downloads — size only, never auto-deleted"
             }
           }
@@ -924,7 +924,7 @@ export const appGroups: AppGroup[] = [
               "en": "Zoom recordings"
             },
             "desc": {
-              "zh": "本地会议录制文件,仅报告体积;删除前请自行确认",
+              "zh": "本地会议录制文件，仅报告体积；删除前请自行确认",
               "en": "Local meeting recordings, reported only — review before deleting"
             }
           }
@@ -940,7 +940,7 @@ export const appGroups: AppGroup[] = [
               "en": "Microsoft Teams cache"
             },
             "desc": {
-              "zh": "网页/GPU/临时缓存,不含聊天记录与文件",
+              "zh": "网页/GPU/临时缓存，不含聊天记录与文件",
               "en": "Web/GPU/temp cache — no chats or files"
             }
           }
@@ -956,7 +956,7 @@ export const appGroups: AppGroup[] = [
               "en": "Slack cache"
             },
             "desc": {
-              "zh": "网页/GPU/临时缓存,不含消息与文件",
+              "zh": "网页/GPU/临时缓存，不含消息与文件",
               "en": "Web/GPU/temp cache — no messages or files"
             }
           }
@@ -972,7 +972,7 @@ export const appGroups: AppGroup[] = [
               "en": "Discord cache"
             },
             "desc": {
-              "zh": "网页/GPU/临时缓存,不含消息",
+              "zh": "网页/GPU/临时缓存，不含消息",
               "en": "Web/GPU/temp cache — no messages"
             }
           }
@@ -988,7 +988,7 @@ export const appGroups: AppGroup[] = [
               "en": "WeChat files & cache"
             },
             "desc": {
-              "zh": "微信接收的图片/视频/文件及缓存混在一起,仅报告体积不自动删除",
+              "zh": "微信接收的图片/视频/文件及缓存混在一起，仅报告体积不自动删除",
               "en": "Received images/videos/files mixed with cache — size only, never auto-deleted"
             }
           }
@@ -1004,7 +1004,7 @@ export const appGroups: AppGroup[] = [
               "en": "QQ / Tencent files"
             },
             "desc": {
-              "zh": "QQ 接收的文件与缓存,仅报告体积不自动删除",
+              "zh": "QQ 接收的文件与缓存，仅报告体积不自动删除",
               "en": "QQ received files and cache — size only, never auto-deleted"
             }
           }

@@ -21,6 +21,39 @@ function parseDict(src, lang) {
 const zh = parseDict(i18nSrc, "zh-CN");
 const en = parseDict(i18nSrc, "en-US");
 
+// 应用语言包用半角标点;官网按中文排版规范转为全角(仅紧邻中文时转换,路径等不受影响)
+const CJK = /[　-〿㐀-䶿一-鿿豈-﫿＀-￯「」『』——…·]/;
+const PUNCT = { ",": "，", ";": "；", ":": "：", "!": "！", "?": "？" };
+function toFullwidth(text) {
+  let out = "";
+  for (let i = 0; i < text.length; i++) {
+    if (text[i] === "(") {
+      const close = text.indexOf(")", i + 1);
+      const nested = text.indexOf("(", i + 1);
+      if (close !== -1 && (nested === -1 || nested > close)) {
+        const inner = text.slice(i + 1, close);
+        if (CJK.test(inner) || CJK.test(out[out.length - 1] || "")) {
+          out += "（" + inner + "）";
+          i = close;
+          continue;
+        }
+      }
+    }
+    out += text[i];
+  }
+  for (let pass = 0; pass < 2; pass++) {
+    let res = "";
+    for (let j = 0; j < out.length; j++) {
+      const c = out[j];
+      if (PUNCT[c] && (CJK.test(out[j - 1] || "") || CJK.test(out[j + 1] || ""))) res += PUNCT[c];
+      else res += c;
+    }
+    out = res;
+  }
+  return out;
+}
+for (const k of Object.keys(zh)) zh[k] = toFullwidth(zh[k]);
+
 const groupOrder = ["video", "3d", "browser", "dev", "media", "game", "office", "tools", "comm"];
 // 应用内浏览器缓存归在智能扫描类别里,语言包没有 group.browser,补上
 zh["group.browser"] = zh["group.browser"] || "浏览器";

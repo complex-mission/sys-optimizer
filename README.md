@@ -1,6 +1,6 @@
 # SysOptimizer(系统优化助手)
 
-> 看清磁盘去了哪,清得放心。
+> 磁盘空间去哪了，看得明白，清得放心。
 
 用 Rust 打造的开源 Windows 清理与系统洞察工具。Tauri 2(Rust)+ React,安装包约 1.5 MB。
 
