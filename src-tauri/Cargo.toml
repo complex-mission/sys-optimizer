@@ -3,6 +3,7 @@ name = "cache-insight"
 version = "1.0.0"
 description = "Cache Insight 智缓 — Windows 垃圾清理与系统洞察工具"
 authors = ["沈阳信商科技"]
+license = "GPL-3.0-only"
 edition = "2021"
 rust-version = "1.77"
 

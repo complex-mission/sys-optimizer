@@ -2,6 +2,7 @@
   "name": "cache-insight",
   "version": "1.0.0",
   "description": "系统优化助手 SysOptimizer — Windows 垃圾清理与系统洞察工具",
+  "license": "GPL-3.0-only",
   "type": "module",
   "scripts": {
     "dev": "vite",

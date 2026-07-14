@@ -208,8 +208,8 @@ const zh: HomeContent = {
       desc: "不到同类 Electron 工具的几十分之一。下载快、安装快、不占地方 —— 一个清理工具,自己先做到了轻。",
     },
     {
-      title: "开源软件",
-      desc: "代码完全公开,每一条清理规则、每一道安全闸都可以被审计。「关于」页列出全部开源组件许可。",
+      title: "开源软件(GPL-3.0)",
+      desc: "代码以 GPL-3.0 协议完全公开,每一条清理规则、每一道安全闸都可以被审计。「关于」页列出全部开源组件许可。",
       link: { href: "https://github.com/complex-mission/sys-optimizer", label: "GitHub 上查看源码 →" },
     },
     {
@@ -429,8 +429,8 @@ const en: HomeContent = {
       desc: "A fraction of the size of comparable Electron tools. Fast to download, fast to install — a cleaner that starts by being light itself.",
     },
     {
-      title: "Open source",
-      desc: "The code is fully public — every cleaning rule and every safety gate can be audited. The About page lists all open-source component licenses.",
+      title: "Open source (GPL-3.0)",
+      desc: "The code is fully public under GPL-3.0 — every cleaning rule and every safety gate can be audited. The About page lists all open-source component licenses.",
       link: { href: "https://github.com/complex-mission/sys-optimizer", label: "View the source on GitHub →" },
     },
     {
