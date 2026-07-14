@@ -40,9 +40,19 @@ const zh: Dict = {
   "features.f6.desc": "扫描与清理全部在本机完成,操作写入本地日志,随时可查;不上传你的任何文件信息。",
 
   "risk.title": "清理前,先看懂风险标识",
+  "risk.subtitle": "每一项待清理内容都标了颜色,这是整个应用最重要的约定。",
   "risk.cache": "缓存,可放心清理",
   "risk.expensive": "删除有代价,请确认后清理",
   "risk.report": "仅报告体积,不会清理",
+  "risk.cache.name": "无风险缓存",
+  "risk.cache.state": "默认勾选",
+  "risk.cache.desc": "删了系统或软件会自动重建,你几乎无感,可放心清理。",
+  "risk.expensive.name": "重建耗时",
+  "risk.expensive.state": "默认不勾",
+  "risk.expensive.desc": "删除不丢数据,但重新生成可能很慢或需重新下载,请确认后清理。",
+  "risk.report.name": "仅报告",
+  "risk.report.state": "无法删除",
+  "risk.report.desc": "属于你的内容,只显示体积,连删除按钮都不提供。",
   "risk.note":
     "配合「谨慎删除模式」(默认开启):重建耗时的琥珀色项删除时先进回收站,给你反悔的机会。",
 
@@ -127,9 +137,19 @@ const en: Dict = {
   "features.f6.desc": "Scanning and cleaning happen entirely on your machine, with a local action log you can inspect anytime. No file information ever leaves your PC.",
 
   "risk.title": "Understand the risk labels before you clean",
+  "risk.subtitle": "Everything cleanable carries a color — the single most important convention in the app.",
   "risk.cache": "Cache — safe to clean",
   "risk.expensive": "Costly to rebuild — confirm before cleaning",
   "risk.report": "Report only — never deleted",
+  "risk.cache.name": "Risk-free cache",
+  "risk.cache.state": "Pre-selected",
+  "risk.cache.desc": "Rebuilt automatically by the system or app — you'll barely notice. Clean with confidence.",
+  "risk.expensive.name": "Slow to rebuild",
+  "risk.expensive.state": "Unchecked by default",
+  "risk.expensive.desc": "No data is lost, but regenerating may be slow or require re-downloading. Confirm before cleaning.",
+  "risk.report.name": "Report only",
+  "risk.report.state": "Never deleted",
+  "risk.report.desc": "This is your content — size is shown, but there isn't even a delete button.",
   "risk.note":
     "Paired with cautious delete mode (on by default): amber slow-to-rebuild items go to the Recycle Bin first, so you can always change your mind.",
 

@@ -63,12 +63,32 @@ export default async function HomePage({ params }: { params: Promise<{ locale: s
       <section className="risk-strip">
         <div className="container">
           <h2 className="risk-title">{dict["risk.title"]}</h2>
-          <div className="risk-items">
-            <span className="risk-item"><i className="dot dot-cache" />{dict["risk.cache"]}</span>
-            <span className="risk-item"><i className="dot dot-expensive" />{dict["risk.expensive"]}</span>
-            <span className="risk-item"><i className="dot dot-report" />{dict["risk.report"]}</span>
+          <p className="risk-subtitle">{dict["risk.subtitle"]}</p>
+          <div className="risk-cards">
+            {(["cache", "expensive", "report"] as const).map((r) => (
+              <div className={`risk-card risk-card-${r}`} key={r}>
+                <div className="risk-card-head">
+                  <i className={`dot dot-${r}`} />
+                  <h3>{dict[`risk.${r}.name`]}</h3>
+                  <span className={`risk-state risk-state-${r}`}>{dict[`risk.${r}.state`]}</span>
+                </div>
+                <p>{dict[`risk.${r}.desc`]}</p>
+              </div>
+            ))}
           </div>
-          <p className="risk-note">{dict["risk.note"]}</p>
+          <div className="risk-note">
+            <svg className="risk-note-icon" viewBox="0 0 24 24" aria-hidden="true">
+              <path
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                d="M9 14L4 9l5-5M4 9h10.5a5.5 5.5 0 015.5 5.5v0a5.5 5.5 0 01-5.5 5.5H11"
+              />
+            </svg>
+            <span>{dict["risk.note"]}</span>
+          </div>
         </div>
       </section>
 
